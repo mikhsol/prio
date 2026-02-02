@@ -2,380 +2,406 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive marketing strategy for Jeeves, an AI-powered personal assistant mobile application. Our goal is to achieve 1 million downloads in the first year with a 5%+ conversion to paid subscriptions.
+This document outlines the marketing strategy for Jeeves, a privacy-first, offline-capable personal assistant powered by on-device AI. Our initial focus is the Android platform, targeting productivity-focused users who value privacy and simplicity. Goal: 100,000 downloads in the first 6 months with organic-first growth.
+
+---
+
+## Market Analysis
+
+### Competitive Landscape
+
+#### Direct Competitors (Todo/Productivity Apps)
+
+| App | Downloads | Strengths | Weaknesses | Opportunity |
+|-----|-----------|-----------|------------|-------------|
+| **Todoist** | 50M+ | Clean UI, cross-platform, integrations | No AI, cloud-required, subscription | Local AI + offline-first |
+| **TickTick** | 10M+ | Feature-rich, Pomodoro, Eisenhower | Cluttered, privacy concerns | Simpler UX + privacy |
+| **Microsoft To Do** | 50M+ | Free, Microsoft integration | Basic, no AI, cloud-only | AI features + independence |
+| **Any.do** | 50M+ | AI features, clean | Limited free, cloud-required | Better free tier + local |
+| **Google Tasks** | 100M+ | Free, Google integration | Very basic, no intelligence | AI + Eisenhower method |
+| **Notion** | 10M+ | Powerful, flexible | Complex, slow, cloud-only | Simple + fast + offline |
+
+#### AI Assistant Competitors
+
+| App | Approach | Strengths | Weaknesses | Opportunity |
+|-----|----------|-----------|------------|-------------|
+| **Google Assistant** | Cloud AI | Powerful, integrated | Privacy concerns, no productivity focus | Privacy + task focus |
+| **Apple Intelligence** | On-device + Cloud | Private, integrated | iOS only, limited features | Android + better features |
+| **Samsung Galaxy AI** | On-device | Fast, private | Samsung only | Any Android device |
+
+### Market Opportunity
+
+1. **Privacy-First Gap**: No major productivity app offers on-device AI with privacy guarantees
+2. **Eisenhower Underserved**: Popular methodology, poorly implemented in apps
+3. **Subscription Fatigue**: Users want lifetime/one-time purchase options
+4. **Android AI Gap**: iOS has Apple Intelligence; Android lacks equivalent
+
+### Target Market Size
+
+- **Productivity App Users (Android)**: ~200M globally
+- **Privacy-Conscious Segment**: ~20% = 40M
+- **Willing to Pay for Quality**: ~10% = 4M
+- **Addressable Market Year 1**: ~500K downloads
 
 ---
 
 ## Brand Identity
 
 ### Brand Name: Jeeves
-Inspired by the fictional valet Reginald Jeeves, known for his intelligence, discretion, and anticipating his employer's needs. The name conveys:
+Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticipatory. The name conveys:
 - **Intelligence**: Smart and capable
+- **Privacy**: Discreet and trustworthy
 - **Service**: Dedicated to helping
-- **Sophistication**: Premium but approachable
-- **Trust**: Reliable and discreet
+- **Sophistication**: Premium but accessible
 
 ### Brand Personality
-- **Helpful**: Always ready to assist
-- **Intelligent**: Provides smart, thoughtful responses
-- **Witty**: Subtle humor without being silly
-- **Discreet**: Respects privacy and boundaries
-- **Proactive**: Anticipates needs before asked
+- **Private**: Your data stays yours
+- **Intelligent**: Smart without being creepy
+- **Helpful**: Focused on productivity outcomes
+- **Honest**: Clear about capabilities and limitations
+- **Calm**: Reduces overwhelm, doesn't add to it
 
-### Tagline Options
-1. "Your intelligent companion" (primary)
-2. "Anticipating your needs"
-3. "Less doing, more living"
-4. "The assistant that actually helps"
+### Taglines
+1. **"Your priorities, clarified"** (primary)
+2. **"AI that stays on your phone"**
+3. **"Focus on what matters"**
+4. **"Private by design"**
 
 ### Visual Identity
-- **Primary Color**: Deep teal (#0D9488) - trustworthy, calm, intelligent
-- **Secondary Color**: Warm amber (#F59E0B) - friendly, energetic
-- **Typography**: Clean, modern sans-serif (Inter/SF Pro)
-- **Iconography**: Simple, elegant, minimal line icons
-- **Logo**: Stylized "J" with subtle bow tie element
-
----
-
-## Target Audience
-
-### Primary Segment: Professional Productivity Seekers
-- **Age**: 28-45
-- **Income**: $75K-200K
-- **Occupation**: Knowledge workers, managers, entrepreneurs
-- **Psychographics**: 
-  - Value time and efficiency
-  - Early tech adopters
-  - Overwhelmed by tasks and information
-  - Willing to pay for productivity tools
-- **Channels**: LinkedIn, Twitter, productivity podcasts, Hacker News
-
-### Secondary Segment: Organized Parents
-- **Age**: 32-50
-- **Status**: Parents with children under 18
-- **Psychographics**:
-  - Juggling family and work responsibilities
-  - Need help with scheduling and coordination
-  - Privacy-conscious
-  - Value reliability over novelty
-- **Channels**: Facebook, Instagram, parenting blogs, word of mouth
-
-### Tertiary Segment: Tech Enthusiasts
-- **Age**: 22-35
-- **Psychographics**:
-  - Love trying new tech
-  - Influencers in their circles
-  - Active on social media
-  - Provide early feedback
-- **Channels**: Reddit, Twitter/X, YouTube, Discord
+- **Primary Color**: Deep teal (#0D9488) - calm, trustworthy, focused
+- **Eisenhower Colors**: Red, Amber, Orange, Gray for quadrants
+- **Typography**: Clean, modern Roboto (Android system)
+- **Logo**: Stylized "J" with subtle checkmark element
+- **Iconography**: Material Symbols, outlined style
 
 ---
 
 ## Positioning
 
 ### Positioning Statement
-For busy professionals who are overwhelmed by daily tasks and decisions, Jeeves is the AI personal assistant that anticipates your needs and simplifies your life. Unlike Siri, Google Assistant, or Alexa, Jeeves is mobile-first, learns your personal preferences, and proactively helps before you ask—all while keeping your data private.
+For busy professionals who struggle with priorities and distrust cloud-based AI, Jeeves is the on-device personal assistant that brings clarity to your tasks using the Eisenhower Matrix—all while keeping your data private on your phone. Unlike Todoist or TickTick, Jeeves uses AI that runs locally, works offline, and never sends your personal data to the cloud.
 
 ### Key Differentiators
-1. **Proactive, Not Reactive**: Anticipates needs based on patterns
-2. **True Personalization**: Learns your preferences over time
-3. **Privacy-First**: Your data is encrypted and never sold
-4. **Mobile-First**: Designed for on-the-go productivity
-5. **Contextual Intelligence**: Understands your full life context
 
-### Competitive Positioning Matrix
+| Differentiator | What It Means | Why It Matters |
+|----------------|---------------|----------------|
+| **On-Device AI** | LLM runs on your phone | Privacy guaranteed, works offline |
+| **Eisenhower-First** | Priority matrix is core UX | Clarity on what matters |
+| **Goal-Connected** | Tasks link to goals | See progress toward outcomes |
+| **Offline-First** | No internet required | Reliable, no latency |
+| **Lifetime Option** | One-time purchase available | No subscription fatigue |
 
-|                    | Smart | Personal | Private | Proactive |
-|--------------------|-------|----------|---------|-----------|
-| Jeeves            | ✓✓    | ✓✓       | ✓✓      | ✓✓        |
-| Siri               | ✓     | ✓        | ✓✓      | ✓         |
-| Google Assistant   | ✓✓    | ✓✓       | ✗       | ✓         |
-| Alexa              | ✓✓    | ✓        | ✗       | ✓         |
+### Competitive Positioning
+
+```
+                    High AI Intelligence
+                           ↑
+                           │
+        Jeeves ────────────┼──────────── Google Assistant
+        (Private)          │             (Cloud)
+                           │
+    ←──────────────────────┼────────────────────────→
+    Privacy-First          │             Cloud-First
+                           │
+                           │
+        Todoist ───────────┼──────────── Notion
+        (Limited AI)       │             (Cloud, Complex)
+                           │
+                           ↓
+                    Low AI Intelligence
+```
+
+---
+
+## Target Audience
+
+### Primary Segment: Privacy-Conscious Professionals
+- **Age**: 28-45
+- **Occupation**: Knowledge workers, tech professionals, freelancers
+- **Income**: $60K-150K
+- **Psychographics**:
+  - Value privacy and data ownership
+  - Frustrated with subscription fatigue
+  - Prefer quality tools they can rely on
+  - Productivity-focused, not feature-obsessed
+- **Channels**: Reddit (r/productivity, r/privacy), Hacker News, tech podcasts
+
+### Secondary Segment: Productivity Enthusiasts
+- **Age**: 25-40
+- **Occupation**: Entrepreneurs, managers, students
+- **Psychographics**:
+  - Know about Eisenhower Matrix, GTD
+  - Looking for better implementation
+  - Active in productivity communities
+  - Willing to try new tools
+- **Channels**: YouTube (productivity), Twitter/X, productivity blogs
+
+### Tertiary Segment: Android Power Users
+- **Age**: 22-35
+- **Psychographics**:
+  - Early adopters of Android features
+  - Interested in on-device AI
+  - Active in tech communities
+  - Influence their circles
+- **Channels**: Reddit (r/Android), XDA, YouTube
 
 ---
 
 ## Go-to-Market Strategy
 
-### Phase 1: Pre-Launch (T-8 to T-4 weeks)
+### Phase 1: Pre-Launch (T-4 weeks)
 
-#### Waitlist Campaign
-- **Landing Page**: 
-  - Clear value proposition
-  - Email capture with incentive (early access)
-  - Social proof (testimonials from beta)
-  - Privacy promise prominent
-- **Goal**: 25,000 waitlist signups
-- **Incentive**: 3 months Premium free for first 10,000
+#### Landing Page & Waitlist
+- Privacy-first messaging
+- Eisenhower Matrix value proposition
+- On-device AI demonstration
+- Email capture with early access incentive
+- **Goal**: 5,000 waitlist signups
 
-#### Content Marketing
-- Launch blog with productivity content
-- Guest posts on productivity blogs
-- "Building Jeeves" engineering blog series
-- Podcast tour: productivity and tech podcasts
+#### Content Creation
+- "Building Jeeves" development blog series
+- Privacy in AI thought leadership
+- Eisenhower Matrix tutorial content
+- On-device LLM technical deep-dives
 
-#### Social Media Presence
-- Twitter/X: Product updates, behind-the-scenes
-- LinkedIn: Professional productivity content
-- Instagram: Visual brand building
-- TikTok: Quick productivity tips
-
-#### PR Preparation
-- Media kit preparation
-- Journalist relationship building
-- Embargo briefings with key outlets
+#### Community Seeding
+- Reddit: r/productivity, r/privacy, r/Android
+- Hacker News: Technical articles
+- Discord: Productivity communities
+- No paid promotion—organic only
 
 ### Phase 2: Launch (T-0 to T+2 weeks)
 
-#### Launch Day Activities
-- **Product Hunt Launch**
-  - Aim for #1 Product of the Day
-  - Coordinate maker availability
-  - Engage with all comments
-  
-- **Press Release**
-  - Major tech publications
-  - Exclusive angles for key outlets
-  - Embargo lift at 8am PT
+#### Launch Activities
 
-- **Influencer Activation**
-  - 20+ influencer reviews live on launch day
-  - Exclusive early access codes
-  - Social media takeovers
+**Week 1: Soft Launch**
+- Open access to waitlist users
+- Collect feedback and fix issues
+- Encourage early reviews
+- Monitor crash rates and performance
 
-- **Email Campaign**
-  - Waitlist notification sequence
-  - Staggered rollout for server stability
-  - Personalized onboarding
+**Week 2: Public Launch**
+- Product Hunt launch (Android category)
+- Press release to tech publications
+- Reddit AMAs in relevant communities
+- YouTube reviews with productivity creators
 
-#### App Store Optimization
-- **Keywords**: personal assistant, AI assistant, productivity, task manager, smart assistant
-- **Screenshots**: Feature-focused with captions
-- **Preview Video**: 30-second capability showcase
-- **Description**: Clear benefits, feature list, privacy assurance
+#### App Store Optimization (ASO)
+
+**Google Play Store**:
+- **Title**: Jeeves: AI Task Manager & Eisenhower Matrix
+- **Keywords**: productivity, task manager, eisenhower matrix, ai assistant, offline, privacy, goals, todo
+- **Short Description**: "Private AI assistant for task prioritization. Works offline, stays on your phone."
+- **Screenshots**: Eisenhower matrix view, goal progress, AI task creation, daily briefing
+- **Preview Video**: 30-second feature showcase
 
 ### Phase 3: Growth (T+2 weeks to T+6 months)
 
-#### Paid Acquisition
-- **Channels**:
-  - Apple Search Ads (highest intent)
-  - Google App Campaigns
-  - Meta (Instagram/Facebook)
-  - TikTok (brand awareness)
-  - YouTube (pre-roll, influencer)
+#### Organic Growth (Primary Focus)
+- **Content Marketing**: Weekly blog posts on productivity
+- **YouTube**: Tutorials, productivity tips, app walkthroughs
+- **SEO**: Target "eisenhower matrix app", "private todo app", "offline task manager"
+- **Community**: Active participation in productivity forums
+- **Referral**: In-app sharing with incentives
 
-- **Budget Allocation**:
-  - Apple Search Ads: 35%
-  - Google: 25%
-  - Meta: 25%
-  - TikTok/YouTube: 15%
-
-- **Target CAC**: $8-15 (free), $25-40 (paid conversion)
-
-#### Organic Growth
-- **SEO**: Target productivity and AI assistant keywords
-- **Content**: Weekly blog posts, monthly guides
-- **Social**: Daily presence, community engagement
-- **Referral Program**: Give 1 month, get 1 month Premium
-
-#### Partnerships
-- **Integration Partners**: Calendar apps, productivity tools
-- **Corporate**: B2B pilot programs
-- **Academic**: Student pricing, university partnerships
+#### Paid Acquisition (Limited Budget)
+- **Google Ads**: Search campaigns for high-intent keywords
+- **Reddit Ads**: Targeted to r/productivity users
+- **YouTube Ads**: Pre-roll on productivity content
+- **Budget**: $5,000/month maximum
+- **Target CAC**: $2-5 for free users
 
 ---
 
 ## Content Strategy
 
 ### Content Pillars
-1. **Productivity Tips**: Actionable advice for busy professionals
-2. **AI & Technology**: Demystifying AI assistants
-3. **Work-Life Balance**: Managing the modern life
-4. **Product Updates**: New features and improvements
+
+1. **Productivity & Prioritization**: Eisenhower Matrix guides, priority frameworks
+2. **Privacy in AI**: Why on-device AI matters, privacy best practices
+3. **Goal Achievement**: Goal-setting strategies, progress tracking
+4. **Product Updates**: New features, behind-the-scenes development
 5. **User Stories**: How Jeeves helps real people
 
-### Content Calendar (Monthly)
+### Content Calendar
 
-| Week | Blog | Social | Email | Video |
-|------|------|--------|-------|-------|
-| 1 | Productivity article | Daily tips | Newsletter | - |
-| 2 | Product deep-dive | Feature showcase | - | Tutorial |
-| 3 | Industry thought piece | User story | Engagement | - |
-| 4 | User story | Recap | Product update | Monthly recap |
+| Week | Blog | Social | Community | Video |
+|------|------|--------|-----------|-------|
+| 1 | Productivity deep-dive | Daily tips | Reddit engagement | - |
+| 2 | Privacy thought piece | Feature highlight | AMA prep | Tutorial |
+| 3 | User story | Tips thread | Community feature | - |
+| 4 | Product update | Recap | Feedback collection | Monthly wrap |
 
 ### SEO Target Keywords
-- "best ai personal assistant app"
-- "productivity app for busy professionals"
-- "smart task manager"
-- "ai calendar assistant"
-- "personal assistant app privacy"
+
+| Keyword | Volume | Difficulty | Intent |
+|---------|--------|------------|--------|
+| eisenhower matrix app | 5,400/mo | Medium | High |
+| offline task manager | 1,900/mo | Low | High |
+| private todo app | 720/mo | Low | High |
+| ai task manager android | 480/mo | Low | High |
+| goal tracking app | 9,900/mo | High | Medium |
 
 ---
 
-## User Acquisition Metrics
+## Pricing & Conversion Strategy
 
-### Funnel Metrics
+### Pricing Model
 
-```
-Impressions → Clicks → App Store View → Install → Signup → Active → Paid
+| Tier | Price | Features |
+|------|-------|----------|
+| **Free** | $0 | Full Eisenhower tasks, 5 goals, calendar read, daily briefings, on-device AI |
+| **Premium** | $4.99/mo or $39.99/yr | Unlimited goals, advanced analytics, meeting notes, cloud sync (encrypted) |
+| **Pro** | $9.99/mo or $79.99/yr | Premium + Cloud AI (GPT, Claude, Gemini, Grok), 5 custom AI agents, $5 AI credit |
+| **Power User** | $19.99/mo or $149.99/yr | Pro + Unlimited agents, marketplace access, $20 AI credit |
+| **Lifetime** | $99.99 (one-time) | All premium features forever (cloud AI requires active Pro/Power subscription) |
 
-Target Benchmarks:
-- Click-through Rate: 1-2%
-- App Store Conversion: 25-35%
-- Signup Rate: 60-70%
-- D7 Retention: 40%
-- D30 Retention: 25%
-- Free-to-Paid: 5-8%
-```
+### Premium Tier Positioning
 
-### Channel-Specific KPIs
+#### Pro Tier Value Proposition
+- **Cloud AI Choice**: "Use GPT-4o for complex planning, Claude for coaching, Gemini for analysis"
+- **Custom AI Agents**: "Create your personal fitness coach, career mentor, or project manager"
+- **Target User**: Power users who want more AI capability than on-device provides
 
-| Channel | CAC Target | Install-to-Paid | LTV:CAC |
-|---------|------------|-----------------|---------|
-| Organic | $0 | 8% | ∞ |
-| Apple Search | $12 | 7% | 4:1 |
-| Google | $10 | 5% | 3.5:1 |
-| Meta | $8 | 4% | 3:1 |
-| Referral | $5 | 10% | 6:1 |
+#### Agent Feature Marketing
+- Highlight pre-built templates: "7 expert agents ready to help"
+- Emphasize personalization: "Design an agent that speaks your language"
+- Goal linking: "Agents that know your objectives and keep you on track"
 
----
+### Why This Pricing
+- **Generous Free Tier**: Builds trust, enables word-of-mouth
+- **Affordable Premium**: Lower than competitors ($9.99/mo average)
+- **Pro for AI Power Users**: Covers cloud API costs with healthy margin
+- **Lifetime Option**: Appeals to subscription-fatigued users (Premium features only)
+- **Low Operational Cost**: On-device AI means we can be profitable at lower prices
 
-## Retention & Engagement
+### Conversion Strategy
 
-### Onboarding Optimization
-- **Day 0**: Welcome, core value demo, permission requests
-- **Day 1**: First morning briefing, habit formation
-- **Day 3**: Feature discovery push
-- **Day 7**: Weekly summary, upgrade prompt
-- **Day 14**: Power user tips
-- **Day 30**: Retention milestone, referral ask
+#### Free-to-Paid Triggers
+- After 5 goals created (goal limit soft paywall)
+- After 30 days active (analytics upgrade prompt)
+- After meeting notes used 3x (AI summarization premium feature)
+- End of free trial for cloud sync
 
-### Push Notification Strategy
-- **Frequency**: Max 2-3/day, respecting quiet hours
-- **Types**:
-  - Morning briefing (opt-in)
-  - Timely reminders
-  - Proactive suggestions
-  - Weekly insights
-- **Personalization**: Based on user behavior and preferences
-
-### Email Campaigns
-- **Welcome Series**: 5 emails over 14 days
-- **Re-engagement**: Trigger after 7 days inactive
-- **Feature Announcements**: Major updates only
-- **Upgrade Nudges**: Value-based, not spammy
+#### Messaging
+- Focus on value, not pressure
+- Show ROI: "Save 2 hours/week = worth $39.99/year"
+- Emphasize lifetime option for commitment-phobic users
 
 ---
 
-## Conversion Optimization
+## Launch Channels
 
-### Paywall Strategy
-- **Soft Paywall**: Limit to 50 queries/day on free
-- **Feature Gating**: Premium features clearly marked
-- **Trial Offer**: 7-day Premium trial after 3 days active
-- **Timing**: Upgrade prompts after value demonstrated
+### Organic Channels (Priority)
 
-### Pricing Communication
-- Emphasize annual savings (33% off)
-- Compare to hourly value of time saved
-- Money-back guarantee (7 days)
-- Family plan value proposition
+| Channel | Strategy | KPI |
+|---------|----------|-----|
+| **Product Hunt** | Launch day focus, engage all comments | Top 5 in Android |
+| **Reddit** | AMAs, helpful posts, community value | 1,000 upvotes |
+| **Hacker News** | Technical posts, Show HN | Front page |
+| **YouTube** | Partner with productivity creators | 50K views |
+| **SEO** | Blog + landing pages | 10K organic visitors/mo |
 
-### A/B Tests
-- Pricing page layout
-- Trial length (7 vs 14 days)
-- Upgrade prompt timing
-- Feature comparison tables
-- CTA copy and colors
+### Paid Channels (Secondary)
 
----
-
-## Budget Allocation (Year 1)
-
-### Total Marketing Budget: $2.4M
-
-| Category | % | Amount | Notes |
-|----------|---|--------|-------|
-| Paid Acquisition | 50% | $1.2M | Primary growth driver |
-| Content & SEO | 15% | $360K | Long-term organic |
-| Influencer/PR | 15% | $360K | Awareness and credibility |
-| Brand & Creative | 10% | $240K | Assets, video, design |
-| Tools & Analytics | 5% | $120K | Attribution, automation |
-| Events & Community | 5% | $120K | User events, sponsorships |
-
-### Monthly Spend Curve
-- Months 1-2: Heavy launch spend ($400K/mo)
-- Months 3-6: Optimization phase ($200K/mo)
-- Months 7-12: Scaled growth ($150K/mo)
+| Channel | Budget/Month | Target |
+|---------|--------------|--------|
+| Google Search Ads | $2,000 | High-intent keywords |
+| Reddit Ads | $1,500 | r/productivity, r/Android |
+| YouTube Pre-roll | $1,500 | Productivity content |
+| **Total** | $5,000 | |
 
 ---
 
 ## Success Metrics
 
+### Launch Metrics (First Month)
+
+| Metric | Target |
+|--------|--------|
+| Downloads | 10,000 |
+| Day 1 Retention | 50% |
+| Day 7 Retention | 35% |
+| Play Store Rating | 4.0+ |
+| Crash-free Rate | 99% |
+
+### Growth Metrics (6 Months)
+
+| Metric | Target |
+|--------|--------|
+| Total Downloads | 100,000 |
+| Monthly Active Users | 40,000 |
+| Day 30 Retention | 25% |
+| Play Store Rating | 4.3+ |
+| Free-to-Paid Conversion | 3% |
+| Lifetime Purchases | 500+ |
+| MRR | $5,000 |
+
 ### Year 1 Goals
 
 | Metric | Target |
 |--------|--------|
-| Total Downloads | 1,000,000 |
-| Monthly Active Users | 300,000 |
-| Paid Subscribers | 50,000 |
-| MRR | $400,000 |
-| App Store Rating | 4.5+ |
-| NPS | 50+ |
-| CAC Blended | $15 |
-| LTV:CAC | 4:1 |
+| Total Downloads | 500,000 |
+| Monthly Active Users | 150,000 |
+| Paid Subscribers | 5,000 |
+| Lifetime Purchases | 2,000 |
+| MRR | $15,000 |
+| Play Store Rating | 4.5+ |
 
-### Reporting Cadence
-- **Daily**: Installs, active users, revenue
-- **Weekly**: Channel performance, conversion rates
-- **Monthly**: Full funnel analysis, cohort analysis
-- **Quarterly**: Strategic review, budget reallocation
+---
+
+## Budget Allocation (6 Months)
+
+### Total Marketing Budget: $50,000
+
+| Category | % | Amount | Notes |
+|----------|---|--------|-------|
+| Paid Acquisition | 60% | $30,000 | $5K/mo, conservative |
+| Content Creation | 20% | $10,000 | Blog, video, design |
+| PR & Influencers | 10% | $5,000 | YouTuber partnerships |
+| Tools & Analytics | 10% | $5,000 | ASO tools, analytics |
+
+### Cost Efficiency Focus
+- Organic-first strategy reduces paid dependency
+- On-device AI = low server costs = sustainable at lower price points
+- Community-driven growth over paid acquisition
 
 ---
 
 ## Risk Mitigation
 
-### Potential Challenges
-
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| High CAC | Revenue impact | Optimize channels, improve organic |
-| Low retention | LTV impact | Improve onboarding, product feedback loop |
-| Privacy concerns | Trust impact | Transparent communication, certifications |
-| Competitive response | Market share | Speed to market, differentiation focus |
-| Platform policy changes | Distribution | Diversify channels, web presence |
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| Low initial downloads | Growth stall | Medium | Strong organic content, community focus |
+| Negative reviews (performance) | Reputation damage | Medium | Extensive device testing, clear requirements |
+| Competition from Google/Samsung | Market share loss | Low | Privacy differentiator, niche focus |
+| Conversion below target | Revenue shortfall | Medium | Generous free tier builds trust for long-term |
+| Model download issues | User frustration | Medium | Progressive download, skip option |
 
 ---
 
-## Appendix: Launch Checklist
+## Post-Launch Roadmap
 
-### Pre-Launch (T-1 week)
-- [ ] App Store assets finalized
-- [ ] Press embargo set
-- [ ] Influencer content scheduled
-- [ ] Email sequences ready
-- [ ] Landing page updated
-- [ ] Analytics tracking verified
-- [ ] Team availability confirmed
+### Month 1-2: Stabilize
+- Fix critical bugs
+- Respond to reviews
+- Gather user feedback
+- Optimize onboarding
 
-### Launch Day
-- [ ] Product Hunt live at midnight PT
-- [ ] Press release distributed
-- [ ] Social media campaign live
-- [ ] Email blast to waitlist
-- [ ] Paid ads activated
-- [ ] War room staffed
-- [ ] Monitoring dashboards active
+### Month 3-4: Iterate
+- Release feature updates
+- A/B test conversion flows
+- Expand content marketing
+- Build creator partnerships
 
-### Post-Launch (T+1 week)
-- [ ] First week metrics report
-- [ ] Media coverage compilation
-- [ ] User feedback synthesis
-- [ ] Hotfix priority list
-- [ ] Paid ad optimization
-- [ ] Thank you communications
+### Month 5-6: Scale
+- Increase paid acquisition (if CAC targets met)
+- Launch referral program
+- Prepare iOS development
+- Explore B2B/team features
 
 ---
 
 *Document Owner: Marketing Expert*
-*Last Updated: August 2025*
-*Status: Draft for Review*
+*Last Updated: February 2026*
+*Status: Approved for MVP Launch*

@@ -4,20 +4,23 @@
 
 ### Core Principles
 
-#### 1. Invisible Design
-The best interface is one you don't notice. Jeeves should feel like a natural extension of thought—minimal friction, maximum utility.
+#### 1. 80/20 Focus
+Design for the 20% of features that deliver 80% of value. Every element must earn its place. Remove friction from the most common actions.
 
-#### 2. Conversational First
-Voice and natural language are the primary interaction modes. Visual UI supports and enhances the conversation, never replaces it.
+#### 2. Clarity Over Complexity
+Every screen has one clear purpose. Eisenhower prioritization powers the app—showing users what matters most, fast.
+
+#### 2. Offline-First Experience
+Design for no connectivity as the default. Never show loading spinners for local operations. Cloud features are graceful enhancements.
 
 #### 3. Anticipatory UX
-Design for what users will need next. Proactive suggestions and intelligent defaults reduce cognitive load.
+Design for what users will need next. AI suggestions surface at the right moment. Morning briefings prepare; evening summaries reflect.
 
-#### 4. Trust Through Transparency
-Privacy and security should be visible and understandable. Users should always know what Jeeves knows about them.
+#### 4. Modern & Minimal
+Clean Android Material Design 3 aesthetics. Generous whitespace. Purposeful animations. The UI should feel premium but lightweight.
 
-#### 5. Delightful Details
-Micro-interactions, subtle animations, and personality in responses create emotional connection without sacrificing efficiency.
+#### 5. Pluggable Extensibility  
+Each feature is a self-contained module. Navigation adapts to enabled plugins. Future features integrate seamlessly.
 
 ---
 
@@ -26,179 +29,391 @@ Micro-interactions, subtle animations, and personality in responses create emoti
 ### Key Findings from User Research
 
 #### Pain Points
-1. **Information Overload**: Users check 5+ apps daily for tasks, calendar, notes
-2. **Friction in Input**: Typing on mobile is slow; voice is underutilized
-3. **Forgotten Context**: Assistants don't remember previous conversations
-4. **Privacy Anxiety**: Users want AI help but fear data misuse
-5. **Notification Fatigue**: Too many alerts lead to ignoring all alerts
+1. **Priority Paralysis**: Users don't know what to do first among 50+ tasks
+2. **No Goal Connection**: Tasks feel disconnected from meaningful outcomes
+3. **App Overload**: Switching between todo, calendar, notes, goals apps
+4. **Meeting Black Holes**: Meetings end without captured action items
+5. **Privacy Concerns**: Distrust of cloud-based AI assistants
 
 #### User Needs
-1. Quick capture of thoughts and tasks
-2. Intelligent scheduling without manual input
-3. Personalized, context-aware responses
-4. Clear visibility into what the assistant knows
-5. Seamless integration with existing tools
+1. Clear visual priority system (Eisenhower is known but poorly implemented)
+2. Connect daily tasks to quarterly/yearly goals
+3. Single app for productivity needs
+4. AI that helps without requiring internet
+5. Quick capture without friction
 
 ### Personas
 
 #### Persona 1: Alex (Primary)
 - **Role**: Product Manager, 34
-- **Quote**: "I need an assistant that thinks ahead so I don't have to"
+- **Quote**: "I need to see what's truly important, not just urgent"
 - **Goals**: 
-  - Never miss important meetings
-  - Quick task capture during walks
-  - Daily preparation without effort
+  - Clear priorities each morning
+  - Track progress on quarterly OKRs
+  - Capture meeting action items instantly
 - **Frustrations**:
-  - Siri doesn't understand context
-  - Too many apps to check
-  - Constantly context-switching
+  - Existing todo apps don't prioritize intelligently
+  - Loses track of goals among daily fires
+  - Privacy concerns with AI assistants
 
-#### Persona 2: Maya (Secondary)
+#### Persona 2: Maya (Secondary - Organized Parent)
 - **Role**: Working Parent, 41
 - **Quote**: "I'm the family calendar, and I need backup"
 - **Goals**:
-  - Coordinate family schedules
-  - Remember school events and activities
-  - Reduce mental load
+  - Keep family and work organized
+  - Quick capture when hands are full
+  - Reliable reminders at the right time
 - **Frustrations**:
-  - Shared calendars are clunky
   - Reminders come at wrong times
   - Kids' schedules constantly change
+  - Too many apps to check
 
 ---
 
 ## Information Architecture
 
-### App Structure
+### App Structure (MVP)
 
 ```
 Jeeves App
-├── Home (Conversation)
-│   ├── Voice Input
-│   ├── Text Input
-│   ├── Suggestions
-│   └── Conversation History
-├── Today
-│   ├── Schedule Timeline
-│   ├── Tasks Due Today
-│   ├── Briefing Summary
-│   └── Quick Actions
+├── Today (Home)
+│   ├── Morning/Evening Briefing Card
+│   ├── Eisenhower Quick View (2x2 counts)
+│   ├── Today's Top 3 Priorities
+│   ├── Calendar Timeline
+│   └── Goal Progress Highlights
+│
 ├── Tasks
-│   ├── Inbox
-│   ├── Today
-│   ├── Upcoming
-│   ├── Projects
+│   ├── List View (default - prioritized list with quadrant badges)
+│   ├── Focus View (Q1 + top Q2 only)
+│   ├── Matrix View (optional 2x2 grid)
+│   │   ├── Q1: Do Now (Urgent + Important)
+│   │   ├── Q2: Schedule (Important, Not Urgent)  
+│   │   ├── Q3: Delegate (Urgent, Not Important)
+│   │   └── Q4: Drop/Eliminate (Neither)
+│   ├── Inbox (uncategorized)
 │   └── Completed
+│
+├── Goals
+│   ├── Active Goals (cards with progress)
+│   ├── Goal Detail
+│   │   ├── Progress Chart
+│   │   ├── Linked Tasks
+│   │   ├── Milestones
+│   │   └── Analytics
+│   ├── Add/Edit Goal
+│   └── Completed Goals
+│
 ├── Calendar
-│   ├── Day View
+│   ├── Day View with Tasks
 │   ├── Week View
-│   ├── Month View
-│   └── Event Details
-├── Notes
-│   ├── Quick Notes
-│   ├── Voice Memos
-│   └── Organized Notes
+│   ├── Meeting Detail
+│   │   ├── Agenda/Checklist
+│   │   ├── Notes
+│   │   └── Action Items
+│   └── Briefings History
+│
+├── Insights (Analytics)
+│   ├── Productivity Dashboard
+│   ├── Task Completion Trends
+│   ├── Goal Progress Charts
+│   ├── Missed Deadlines Analysis
+│   └── Weekly/Monthly Reports
+│
 └── Settings
     ├── Profile
-    ├── Preferences
-    ├── Integrations
-    ├── Privacy
+    ├── AI & Model Settings
     ├── Notifications
-    └── Subscription
+    ├── Eisenhower Defaults
+    ├── Plugins (enabled features)
+    ├── Sync & Backup
+    └── Privacy
 ```
 
 ### Navigation Patterns
 
 #### Primary Navigation
-- **Tab Bar** (iOS) / **Bottom Navigation** (Android)
-- 4 main tabs: Home, Today, Tasks, More
-- Floating Action Button for quick capture
+- **Bottom Navigation Bar** (Material 3)
+- 4 main tabs: Today, Tasks, Goals, More
+- FAB for quick task capture (always visible)
+- Badge indicators for overdue/urgent items
 
 #### Secondary Navigation
-- Contextual menus
-- Bottom sheets for actions
-- Swipe gestures for quick actions
+- Top app bar with contextual actions
+- Bottom sheets for quick actions
+- Swipe gestures for task actions
 - Long-press for power features
+- Pull-to-refresh where applicable
 
 ---
 
-## Conversational UX
+## Task Views UX (Eisenhower-Powered Prioritization)
 
-### Conversation Flow Principles
+The Eisenhower prioritization engine automatically categorizes tasks into four quadrants behind the scenes. Users can choose their preferred view while benefiting from AI-driven priority suggestions.
 
-#### 1. Progressive Disclosure
-Start with simple responses, offer details on request
-```
-User: "What's my day look like?"
-Jeeves: "You have 3 meetings today, starting with your 9am standup. 
-        Want me to walk through each one?"
-```
+### 1. List View (Default)
 
-#### 2. Contextual Memory
-Remember and reference previous context
 ```
-User: "Remind me about the thing with Sarah"
-Jeeves: "Got it. I'll remind you about the Q3 budget review 
-        with Sarah tomorrow at 9am. Sound good?"
-```
-
-#### 3. Graceful Failure
-Handle uncertainty with options, not errors
-```
-User: "Schedule lunch with John"
-Jeeves: "I found 3 Johns in your contacts. Which one?
-        • John Smith (Work)
-        • John Doe (Family)
-        • John Wilson (Gym)"
-```
-
-#### 4. Confirmation Without Friction
-Confirm critical actions, streamline routine ones
-```
-// Low stakes - no confirmation needed
-User: "Add milk to my shopping list"
-Jeeves: "Added milk to Shopping List ✓"
-
-// High stakes - confirm
-User: "Cancel my 2pm meeting"
-Jeeves: "Cancel 'Client Review' at 2pm with 4 attendees?
-        I'll notify them of the cancellation."
-        [Cancel Meeting] [Keep It]
+┌─────────────────────────────────────────────────────────────────┐
+│                    TODAY'S TASKS                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  🔴 DO FIRST (3)                                    [Collapse]  │
+│  ├─ ✅ Call dentist about appointment          Due: 2pm        │
+│  ├─ ⬜ Submit quarterly report                 Due: 5pm        │
+│  └─ ⬜ Review team's PRs                       Due: EOD        │
+│                                                                  │
+│  🟡 SCHEDULE (5)                                    [Collapse]  │
+│  ├─ ⬜ Research vacation destinations          This week       │
+│  ├─ ⬜ Start online course module 3            By Friday       │
+│  └─ ... +3 more                                                 │
+│                                                                  │
+│  🟠 CONSIDER DELEGATING (2)                         [Collapse]  │
+│  └─ ⬜ Organize team lunch                     Next week       │
+│                                                                  │
+│  ⚪ MAYBE LATER (4)                                 [Collapse]  │
+│  └─ ⬜ Reorganize bookshelf                    No due date     │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Voice Interaction Design
+**Features:**
+- Grouped by Eisenhower priority (collapsible sections)
+- Color-coded priority indicators
+- Focus on "Do First" tasks prominently
+- Shows task counts per category
+- Swipe actions (complete, reschedule, snooze)
 
-#### Wake Word
-- "Hey Jeeves" or customizable
-- Visual indicator when listening
-- Haptic feedback on activation
+### 2. Focus View (Minimal)
 
-#### Voice Feedback
-- Concise spoken responses
-- Visual text backup
-- Non-disruptive audio levels
-
-#### Error Recovery
 ```
-Jeeves: "I didn't catch that. Could you try again?"
-[Shows what was heard with option to edit]
+┌─────────────────────────────────────────────────────────────────┐
+│                    FOCUS MODE                                    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│                    Your next task:                               │
+│                                                                  │
+│                 ┌────────────────────┐                          │
+│                 │                    │                          │
+│                 │  Submit quarterly  │                          │
+│                 │      report        │                          │
+│                 │                    │                          │
+│                 │    Due: 5:00 PM    │                          │
+│                 │    ⏱️ ~45 min      │                          │
+│                 │                    │                          │
+│                 └────────────────────┘                          │
+│                                                                  │
+│            [✓ Done]    [⏰ Snooze]    [→ Skip]                  │
+│                                                                  │
+│            2 more urgent tasks after this                       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Response Personality
+**Features:**
+- Shows one task at a time
+- Eliminates decision fatigue
+- Clear action buttons
+- Minimal distractions
 
-#### Tone Guidelines
-- **Helpful**: Always prioritize being useful
-- **Concise**: Get to the point, offer more if needed
-- **Warm**: Friendly but not overly casual
-- **Intelligent**: Show competence through accuracy
+### 3. Matrix View (Optional - Classic Eisenhower)
 
-#### Examples
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    MATRIX VIEW                                   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│                    URGENT          NOT URGENT                    │
+│               ┌──────────────┬──────────────┐                   │
+│               │              │              │                   │
+│   IMPORTANT   │   🔴 DO      │   🟡 SCHEDULE │                   │
+│               │   FIRST      │              │                   │
+│               │   (3 tasks)  │   (7 tasks)  │                   │
+│               │              │              │                   │
+│               ├──────────────┼──────────────┤                   │
+│               │              │              │                   │
+│   NOT         │   🟠 DELEGATE│   ⚪ LATER   │                   │
+│   IMPORTANT   │              │              │                   │
+│               │   (2 tasks)  │   (5 tasks)  │                   │
+│               │              │              │                   │
+│               └──────────────┴──────────────┘                   │
+│                                                                  │
+│   [Tap quadrant to expand • Drag tasks between quadrants]       │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-| Context | Too Casual | Too Formal | Just Right |
-|---------|------------|------------|------------|
-| Task complete | "Yay! Done!" | "Task completion confirmed." | "Done! ✓" |
-| Error | "Oops my bad" | "An error has occurred." | "Hmm, that didn't work. Let me try again." |
-| Greeting | "Hey hey!" | "Good morning." | "Good morning, Alex. Ready for your 9am?" |
+**Features:**
+- Classic 2x2 grid for visual learners
+- Drag-and-drop between quadrants
+- Tap to expand quadrant list
+- Good for weekly reviews
+
+### View Switching
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  📋 List  │  🎯 Focus  │  ⊞ Matrix  │  📅 Calendar             │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+Users can switch views via bottom tab or settings. Default: List View (80/20: most users prefer lists).
+
+### Quadrant Interaction (All Views)
+
+#### Expanded Quadrant View
+- Full task list for selected quadrant/priority
+- Swipe actions (complete, reschedule, delegate)
+- Drag to reorder within quadrant
+- Tap task for detail sheet
+
+### Task Quick Capture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    QUICK CAPTURE (FAB tap)                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ 🎤  "Call mom about birthday party tomorrow"               │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  AI Interpretation:                                              │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ 📋 Call mom about birthday party                           │ │
+│  │ 📅 Tomorrow (Feb 3)                                        │ │
+│  │ 🎯 Suggested: Q1 - Do First (urgent + family)              │ │
+│  │ 🔗 Goal: None detected                                     │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  [Edit Details]              [✓ Create Task]                    │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Goals & Progress UX
+
+### Goal Card Design
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  🎯 CAREER                                        ⋯            │
+│                                                                 │
+│  Get promoted to Senior PM                                     │
+│                                                                 │
+│  ████████████░░░░░░░░░░░░░░░░░░  42%                          │
+│                                                                 │
+│  📅 Target: June 2026  •  ⏱️ 4 months left                    │
+│  ✅ 5/12 milestones  •  📋 3 linked tasks                      │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Progress Analytics
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    INSIGHTS DASHBOARD                           │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  This Week                                                     │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │  Tasks Completed: 23  (+15% vs last week)                │  │
+│  │  Deadlines Met:   91%  🟢                                │  │
+│  │  Goal Progress:   +8%  across 4 active goals             │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  Completion Trend (30 days)                                    │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │    ▄▄                                                    │  │
+│  │   ▄██▄   ▄▄                    ▄▄▄                       │  │
+│  │  ▄████▄ ▄██▄▄▄   ▄▄▄   ▄▄▄   ▄███▄▄▄▄                   │  │
+│  │ ▄██████████████ ████▄ ▄███▄ ▄████████▄                   │  │
+│  │ ─────────────────────────────────────                    │  │
+│  │ Jan 3                              Feb 2                 │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  ⚠️ Patterns Detected:                                         │
+│  • You miss deadlines on Fridays (3x more likely)              │
+│  • Q2 tasks often become Q1 (schedule earlier)                 │
+│  • Health goals stall mid-week                                 │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Daily Briefing UX
+
+### Morning Briefing
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    ☀️ GOOD MORNING, ALEX                        │
+│                    Tuesday, February 3                          │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  📊 Today's Focus                                              │
+│  ───────────────────────────────────────                       │
+│  You have 3 urgent tasks and 2 meetings.                       │
+│  Your most important task: "Finalize Q1 roadmap"               │
+│                                                                 │
+│  🔴 Do First (3)                                               │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ 1. Finalize Q1 roadmap          📅 Due today            │  │
+│  │ 2. Review Sarah's proposal       📅 Due today            │  │
+│  │ 3. Call client re: contract      📅 Due today            │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  📅 Schedule                                                   │
+│  ───────────────────────────────────────                       │
+│  9:00  Team standup (15 min)                                   │
+│  11:00 Client call (1 hr)                                      │
+│  ░░░░░ 3 hours focus time available                            │
+│                                                                 │
+│  🎯 Goal Check-in                                              │
+│  ───────────────────────────────────────                       │
+│  "Get promoted" - Complete today's tasks to stay on track      │
+│                                                                 │
+│  [Start My Day →]                                              │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Evening Summary
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    🌙 DAY COMPLETE                              │
+│                    Tuesday, February 3                          │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ✅ Accomplishments                                            │
+│  ───────────────────────────────────────                       │
+│  • Completed 7 of 9 tasks (78%)                                │
+│  • All urgent items handled ✓                                  │
+│  • 2 meetings with action items captured                       │
+│                                                                 │
+│  📋 Moved to Tomorrow                                          │
+│  ───────────────────────────────────────                       │
+│  • Review budget proposal (rescheduled)                        │
+│  • Gym session (moved, again... 😅)                            │
+│                                                                 │
+│  🎯 Goal Progress                                              │
+│  ───────────────────────────────────────                       │
+│  "Get promoted" +2% today (now 44%)                            │
+│                                                                 │
+│  💡 Tomorrow's Priority                                        │
+│  ───────────────────────────────────────                       │
+│  "Quarterly review prep" - Start early, big task               │
+│                                                                 │
+│  [Plan Tomorrow →]                                             │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -206,99 +421,392 @@ Jeeves: "I didn't catch that. Could you try again?"
 
 ### Color Palette
 
-#### Primary Colors
+#### Eisenhower Quadrant Colors
 ```css
---color-primary: #0D9488;        /* Teal - main brand */
---color-primary-light: #14B8A6;  /* Hover/active states */
---color-primary-dark: #0F766E;   /* Pressed states */
+/* Quadrant colors - clear visual distinction */
+--color-q1-do:        #DC2626;  /* Red - urgent + important */
+--color-q1-bg:        #FEF2F2;
+--color-q2-schedule:  #F59E0B;  /* Amber - important, not urgent */
+--color-q2-bg:        #FFFBEB;
+--color-q3-delegate:  #F97316;  /* Orange - urgent, not important */
+--color-q3-bg:        #FFF7ED;
+--color-q4-eliminate: #6B7280;  /* Gray - neither */
+--color-q4-bg:        #F9FAFB;
 ```
 
-#### Secondary Colors
+#### Primary Colors (Material 3)
 ```css
---color-accent: #F59E0B;         /* Amber - CTAs, highlights */
---color-accent-light: #FBBF24;
---color-accent-dark: #D97706;
+--md-primary:         #0D9488;  /* Teal - main brand */
+--md-on-primary:      #FFFFFF;
+--md-primary-container: #A7F3D0;
+--md-secondary:       #F59E0B;  /* Amber - accent */
+--md-tertiary:        #6366F1;  /* Indigo - special */
 ```
 
 #### Semantic Colors
 ```css
---color-success: #10B981;        /* Completed, confirmed */
---color-warning: #F59E0B;        /* Attention needed */
---color-error: #EF4444;          /* Errors, destructive */
---color-info: #3B82F6;           /* Informational */
+--color-success: #10B981;  /* Completed, achieved */
+--color-warning: #F59E0B;  /* Attention, approaching */
+--color-error:   #EF4444;  /* Overdue, failed */
+--color-info:    #3B82F6;  /* Informational */
 ```
 
-#### Neutral Palette
+#### Neutral Palette (Material 3)
 ```css
-/* Light Mode */
---color-bg-primary: #FFFFFF;
---color-bg-secondary: #F9FAFB;
---color-bg-tertiary: #F3F4F6;
---color-text-primary: #111827;
---color-text-secondary: #6B7280;
---color-text-tertiary: #9CA3AF;
---color-border: #E5E7EB;
+/* Light Theme */
+--md-surface:        #FEFEFE;
+--md-surface-variant: #F3F4F6;
+--md-on-surface:     #1F2937;
+--md-on-surface-variant: #6B7280;
+--md-outline:        #E5E7EB;
 
-/* Dark Mode */
---color-bg-primary-dark: #111827;
---color-bg-secondary-dark: #1F2937;
---color-bg-tertiary-dark: #374151;
---color-text-primary-dark: #F9FAFB;
---color-text-secondary-dark: #9CA3AF;
---color-text-tertiary-dark: #6B7280;
---color-border-dark: #374151;
+/* Dark Theme */
+--md-surface-dark:        #1F2937;
+--md-surface-variant-dark: #374151;
+--md-on-surface-dark:     #F9FAFB;
+--md-outline-dark:        #4B5563;
 ```
 
-### Typography
+### Typography (Material 3)
 
-#### Font Family
-- **iOS**: SF Pro (system)
-- **Android**: Roboto (system)
-- **Web**: Inter
-
-#### Type Scale
 ```css
---font-xs: 12px;     /* Captions, labels */
---font-sm: 14px;     /* Secondary text */
---font-base: 16px;   /* Body text */
---font-lg: 18px;     /* Subtitles */
---font-xl: 20px;     /* Section headers */
---font-2xl: 24px;    /* Page titles */
---font-3xl: 30px;    /* Large titles */
-```
-
-#### Font Weights
-```css
---font-normal: 400;
---font-medium: 500;
---font-semibold: 600;
---font-bold: 700;
+/* Android - Roboto */
+--font-display-large:   57px / 64px;
+--font-display-medium:  45px / 52px;
+--font-headline-large:  32px / 40px;
+--font-headline-medium: 28px / 36px;
+--font-title-large:     22px / 28px;
+--font-title-medium:    16px / 24px;  /* Semibold */
+--font-body-large:      16px / 24px;
+--font-body-medium:     14px / 20px;
+--font-label-large:     14px / 20px;  /* Medium */
+--font-label-medium:    12px / 16px;
 ```
 
 ### Spacing System
 
 ```css
---space-1: 4px;
---space-2: 8px;
---space-3: 12px;
---space-4: 16px;
---space-5: 20px;
---space-6: 24px;
---space-8: 32px;
+--space-1:  4px;
+--space-2:  8px;
+--space-3:  12px;
+--space-4:  16px;
+--space-5:  20px;
+--space-6:  24px;
+--space-8:  32px;
 --space-10: 40px;
 --space-12: 48px;
 --space-16: 64px;
 ```
 
-### Border Radius
+### Elevation (Material 3)
 
 ```css
---radius-sm: 4px;    /* Buttons, inputs */
---radius-md: 8px;    /* Cards, containers */
---radius-lg: 12px;   /* Modals, sheets */
---radius-xl: 16px;   /* Large cards */
---radius-full: 9999px; /* Pills, avatars */
+/* Tonal elevation for M3 */
+--elevation-1: 1dp;   /* Cards */
+--elevation-2: 3dp;   /* FAB resting */
+--elevation-3: 6dp;   /* Bottom sheets */
+--elevation-4: 8dp;   /* Dialogs */
+--elevation-5: 12dp;  /* FAB pressed */
 ```
+
+---
+
+## Component Library
+
+### Task Card (Eisenhower)
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                     TASK CARD VARIANTS                          │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Standard Task Card:                                           │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ 🔴 │ ○ Finalize Q1 roadmap                           ⋯ │  │
+│  │    │   📅 Today  •  🎯 Career Goal                      │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  Overdue Task Card:                                            │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ ⚠️ │ ○ Review budget                                 ⋯ │  │
+│  │    │   📅 Overdue (2 days)  •  ⏰ Snooze               │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  Completed Task Card:                                          │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ ✅ │ ✓ Submit expense report          ━━━━━━━━━━━━━ ⋯ │  │
+│  │    │   Completed 2h ago                                 │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Goal Progress Card
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │                                                          │  │
+│  │  🎯 Get promoted to Senior PM                    ⋯     │  │
+│  │                                                          │  │
+│  │  ████████████████░░░░░░░░░░░░░░  44%                   │  │
+│  │                                                          │  │
+│  │  📅 Jun 2026  •  ✅ 5/12 milestones  •  📋 3 tasks     │  │
+│  │                                                          │  │
+│  │  On track - Complete "Q1 roadmap" to advance            │  │
+│  │                                                          │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Meeting Card
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ █                                                        │  │
+│  │ █  9:00 - 9:15 AM                                       │  │
+│  │ █  Team Standup                                         │  │
+│  │ █                                                        │  │
+│  │ █  📍 Zoom  •  👥 5 attendees                           │  │
+│  │ █                                                        │  │
+│  │ █  [📋 Agenda]  [📝 Notes]  [✅ Actions: 2]             │  │
+│  │ █                                                        │  │
+│  └──────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Bottom Navigation (Material 3)
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐       │
+│  │   ☀️     │  │   📋     │  │   🎯     │  │   ⋯     │       │
+│  │  Today   │  │  Tasks   │  │  Goals   │  │  More   │       │
+│  │          │  │   (3)    │  │          │  │         │       │
+│  └──────────┘  └──────────┘  └──────────┘  └──────────┘       │
+│                                                                 │
+│                     [  ➕  ]  FAB                               │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Gestures & Interactions
+
+### Task Gestures
+
+| Gesture | Action | Visual Feedback |
+|---------|--------|-----------------|
+| Tap | Open task detail | Ripple + sheet slides up |
+| Long press | Multi-select mode | Haptic + selection highlight |
+| Swipe left | Delete/Archive | Red background reveal |
+| Swipe right | Complete | Green background + checkmark |
+| Drag | Reorder or change quadrant | Elevation increase + shadow |
+
+### Animation Guidelines
+
+```css
+/* Material 3 Motion */
+--motion-standard:   300ms cubic-bezier(0.4, 0, 0.2, 1);
+--motion-emphasized: 500ms cubic-bezier(0.2, 0, 0, 1);
+--motion-decelerate: 400ms cubic-bezier(0, 0, 0, 1);
+
+/* Durations */
+--duration-quick: 100ms;   /* Immediate feedback */
+--duration-short: 200ms;   /* State changes */
+--duration-medium: 300ms;  /* Navigation */
+--duration-long: 500ms;    /* Complex transitions */
+```
+
+### Task Completion Animation
+1. Checkbox scales up with bounce (spring curve)
+2. Task text gets strikethrough (left to right, 200ms)
+3. Card fades and shrinks (300ms)
+4. Celebratory haptic pulse
+
+---
+
+## Accessibility
+
+### WCAG 2.1 AA Compliance
+
+#### Visual
+- Minimum contrast: 4.5:1 (text), 3:1 (large text)
+- Eisenhower colors have sufficient contrast
+- Never rely on color alone (icons + labels)
+- Support for font scaling (up to 200%)
+
+#### Motor
+- Touch targets: 48x48dp minimum
+- Adequate spacing: 8dp between targets
+- Full TalkBack navigation
+- External keyboard support
+
+#### Cognitive
+- Consistent navigation patterns
+- Clear, simple language
+- Undo for destructive actions (5 seconds)
+- Progress saving on interruption
+
+### Android Accessibility Features
+
+- contentDescription for all interactive elements
+- Semantic headings for screen structure
+- Custom actions for complex components
+- Focus management for modals
+
+---
+
+## Offline-First UX Patterns
+
+### No Connectivity State
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  [Status Bar]                                  📵 Offline     │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  All features work normally.                                   │
+│  Everything is saved locally.                                  │
+│                                                                 │
+│  (Content continues with no degradation)                       │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### Key Principles
+- **No Loading Spinners** for local operations
+- **Optimistic UI**: Changes appear immediately
+- **Background Sync**: Sync happens invisibly when connected
+- **Conflict Resolution**: Last-write-wins with history
+
+---
+
+## AI Interaction Patterns
+
+### Natural Language Input
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│                    AI INPUT PATTERNS                            │
+├────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  Voice Input:                                                  │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │        🎤                                                │  │
+│  │   ┌──────────┐                                           │  │
+│  │   │  ▁▃▅▇▅▃▁ │  "Call mom about..."                     │  │
+│  │   └──────────┘                                           │  │
+│  │                                                          │  │
+│  │   [Cancel]                      Processing locally...    │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+│  Text Input:                                                   │
+│  ┌──────────────────────────────────────────────────────────┐  │
+│  │ 🎤  Add "review proposal" for tomorrow morning           │  │
+│  │     ──────────────────────────────────────────           │  │
+│  │     AI suggestions:                                      │  │
+│  │     • Set deadline: Tomorrow 9 AM                        │  │
+│  │     • Quadrant: Q2 (Important, schedule it)              │  │
+│  │     • Link to goal: "Get promoted"                       │  │
+│  └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└────────────────────────────────────────────────────────────────┘
+```
+
+### AI Suggestion Cards
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  💡 Jeeves Suggestion                                          │
+│  ─────────────────────────────────────────                     │
+│  "You have 5 tasks in Q3 (Delegate). Consider:                 │
+│   delegating to team members or declining"                     │
+│                                                                 │
+│  [Dismiss]  [Review Q3 Tasks →]                                │
+└────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## First-Time User Experience
+
+### Onboarding Flow
+
+```
+1. Welcome Screen
+   ├── "Welcome to Jeeves"
+   ├── Privacy-first messaging
+   └── [Get Started]
+
+2. Value Proposition (3 slides)
+   ├── Slide 1: Eisenhower Matrix intro
+   ├── Slide 2: Goals connected to tasks
+   ├── Slide 3: AI that works offline
+   └── [Continue]
+
+3. AI Model Setup
+   ├── "Download AI model for offline use"
+   ├── Size: ~1.5GB, progress indicator
+   ├── "Skip for now" option (limited features)
+   └── [Download] or [Skip]
+
+4. Quick Personalization
+   ├── Name
+   ├── Work schedule (optional)
+   ├── Notification preferences
+   └── [Continue]
+
+5. First Task Creation
+   ├── Guided voice/text task creation
+   ├── See Eisenhower classification
+   ├── Success moment
+   └── [Enter App]
+```
+
+---
+
+## Design Handoff
+
+### Figma Structure
+
+```
+Jeeves Design System/
+├── 🎨 Foundations/
+│   ├── Material 3 Colors
+│   ├── Typography
+│   ├── Spacing & Grid
+│   ├── Icons (Material Symbols)
+│   └── Eisenhower Colors
+├── 🧩 Components/
+│   ├── Task Cards
+│   ├── Goal Cards
+│   ├── Meeting Cards
+│   ├── Briefing Cards
+│   ├── Navigation
+│   ├── Inputs (NL, Voice)
+│   ├── Charts/Progress
+│   └── Dialogs/Sheets
+├── 📱 Screens/
+│   ├── Onboarding/
+│   ├── Today/
+│   ├── Tasks (Eisenhower)/
+│   ├── Goals/
+│   ├── Calendar/
+│   ├── Insights/
+│   └── Settings/
+└── 🎬 Prototypes/
+    └── Key Flows
+```
+
+---
+
+*Document Owner: Principal UX Designer*
+*Last Updated: February 2026*
+*Status: Approved for MVP Development*
 
 ### Elevation (Shadows)
 
@@ -672,6 +1180,337 @@ Android/Cards/Task/WithDate/Selected
 
 ---
 
+## Post-MVP Feature UX: AI Model Selection & Custom Agents
+
+### AI Model Selection (Settings Screen)
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    ⚙️ AI SETTINGS                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Current Plan: Pro ($9.99/mo)      [Upgrade]                    │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ 💰 AI Credits                                               │ │
+│  │                                                              │ │
+│  │ ████████████░░░░░░░░░░░░░  $3.47 of $5.00 used             │ │
+│  │                                                              │ │
+│  │ Resets Feb 28  •  [View Usage Details]                      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Default AI Model                                               │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ ● On-Device (Phi-3)         Free, Private, Works Offline  │ │
+│  │ ○ Claude Sonnet             Balanced quality & cost        │ │
+│  │ ○ GPT-4o                    Fast, general purpose          │ │
+│  │ ○ Gemini 1.5 Pro            Long context, multimodal       │ │
+│  │ ○ Grok-2                    Creative, real-time info       │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  🧠 Smart Routing                                    [ON]       │
+│  Auto-select model based on task complexity                     │
+│                                                                  │
+│  Model Per Feature                            [Configure >]     │
+│  Currently: On-device for simple, Claude for complex           │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Model Per Feature Configuration
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back           MODEL PREFERENCES                             │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  Choose which model to use for each feature:                    │
+│                                                                  │
+│  Task Categorization                                            │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ On-Device (Phi-3)                                    ▼    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  Simple task → fast local processing                            │
+│                                                                  │
+│  Daily Briefing                                                 │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Claude Sonnet                                        ▼    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  Complex summary → higher quality                               │
+│                                                                  │
+│  Meeting Notes Analysis                                         │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ GPT-4o                                               ▼    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  Action extraction → good balance                               │
+│                                                                  │
+│  Goal Coaching (Agents)                                         │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Claude Sonnet                                        ▼    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  Conversational → nuanced responses                             │
+│                                                                  │
+│                              [Reset to Defaults]                │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Custom Agents - Agent List
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                      🤖 MY AGENTS                                │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  [+ Create New Agent]                     [Browse Templates]    │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  🏃 Fitness Coach                                    ▸    │ │
+│  │  Helps with workout goals • Linked to "Run 5K" goal        │ │
+│  │  Last chat: 2 hours ago                                    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  💼 Career Mentor                                    ▸    │ │
+│  │  Career development guidance • Linked to "Get promoted"   │ │
+│  │  Last chat: Yesterday                                      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  📊 Project Helper                                   ▸    │ │
+│  │  Sprint planning & deadlines • Custom agent               │ │
+│  │  Last chat: 3 days ago                                     │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ────────────────────────────────────────────────────────────   │
+│                                                                  │
+│  📚 TEMPLATES                                                   │
+│                                                                  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
+│  │  📊 Project │ │  💰 Finance │ │  📚 Learning│               │
+│  │   Manager   │ │   Advisor   │ │    Coach    │               │
+│  │   [Add]     │ │   [Add]     │ │   [Add]     │               │
+│  └─────────────┘ └─────────────┘ └─────────────┘               │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Agent Builder Wizard
+
+#### Step 1: Purpose
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Cancel        NEW AGENT (1/5)                        Next → │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│                  What should your agent help with?              │
+│                                                                  │
+│  Popular Categories:                                            │
+│                                                                  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
+│  │     💼      │ │     🏃      │ │     📚      │               │
+│  │   Career    │ │   Fitness   │ │  Learning   │               │
+│  └─────────────┘ └─────────────┘ └─────────────┘               │
+│                                                                  │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐               │
+│  │     💰      │ │     ✍️      │ │     🏠      │               │
+│  │   Finance   │ │   Writing   │ │    Home     │               │
+│  └─────────────┘ └─────────────┘ └─────────────┘               │
+│                                                                  │
+│  Or describe your custom purpose:                               │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Help me stay focused on my side project after work...     │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  💡 AI will help refine your agent based on your description   │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 2: Personality
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back          NEW AGENT (2/5)                        Next → │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│              How should your agent communicate?                 │
+│                                                                  │
+│  Tone                                                           │
+│  Casual  ●────────────────○────────────────────○  Formal       │
+│          ▲                                                      │
+│                                                                  │
+│  Detail Level                                                   │
+│  Brief   ○────────────────●────────────────────○  Detailed     │
+│                           ▲                                     │
+│                                                                  │
+│  Style                                                          │
+│  Direct  ○────────────────○────────────────────●  Encouraging  │
+│                                                 ▲               │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Preview:                                                    │ │
+│  │                                                             │ │
+│  │ "Great progress on your workout streak! 🎉 You've been     │ │
+│  │ consistent for 5 days. Ready to push a bit harder today?   │ │
+│  │ I noticed you usually have energy around 6pm."             │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  [✓] Use emojis                                                 │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 3: Expertise
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back          NEW AGENT (3/5)                        Next → │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│              What should your agent know about?                 │
+│                                                                  │
+│  Expertise Areas (select all that apply):                       │
+│                                                                  │
+│  [✓] Fitness & Exercise      [ ] Nutrition                     │
+│  [✓] Habit Building          [ ] Sleep & Recovery              │
+│  [✓] Motivation              [ ] Sports Training               │
+│                                                                  │
+│  ────────────────────────────────────────────────────────────   │
+│                                                                  │
+│  Custom Instructions (optional):                                │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ I'm training for my first 5K race in April. I prefer       │ │
+│  │ running outdoors. I have a knee injury history so be       │ │
+│  │ careful with high-impact suggestions.                      │ │
+│  │                                                             │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Link to Goal (optional):                                       │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ 🏃 Run a 5K in under 30 minutes              [Change]      │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 4: Permissions
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back          NEW AGENT (4/5)                        Next → │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│              What can your agent access?                        │
+│                                                                  │
+│  Your agent needs access to help you effectively.               │
+│  You control what it can see and do.                           │
+│                                                                  │
+│  READ ACCESS                                                    │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ [✓] Tasks         See your tasks and priorities            │ │
+│  │ [✓] Goals         Track progress on linked goals           │ │
+│  │ [✓] Calendar      Know your schedule and availability      │ │
+│  │ [ ] Notes         Read your meeting notes                   │ │
+│  │ [✓] Analytics     Understand your productivity patterns    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ACTION PERMISSIONS                                             │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ [✓] Suggest tasks        Agent can recommend tasks         │ │
+│  │ [ ] Create tasks         Agent can add tasks directly      │ │
+│  │ [✓] Create reminders     Agent can set reminders           │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  ⓘ You can change these permissions anytime in settings        │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+#### Step 5: Test & Save
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back          NEW AGENT (5/5)                     [Create] │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│              Test your agent!                                   │
+│                                                                  │
+│  Agent Name:                                                    │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ 🏃 5K Coach                                                │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Try chatting to make sure it feels right:                      │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │                                                             │ │
+│  │  🏃 Hey! I'm your 5K Coach. I see you're training for     │ │
+│  │     your first 5K - that's exciting! I noticed you         │ │
+│  │     haven't logged a run in 3 days. Ready to get back      │ │
+│  │     out there? The weather looks good this evening! 🌤️     │ │
+│  │                                                             │ │
+│  │                    You: I'm feeling tired today            │ │
+│  │                                                             │ │
+│  │  🏃 I hear you! Rest is part of training too. How about   │ │
+│  │     a light 15-minute walk instead? It keeps the habit     │ │
+│  │     alive without pushing too hard. Your knee will         │ │
+│  │     thank you! Tomorrow we can try an easy run. 💪         │ │
+│  │                                                             │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Type a message to test...                              🎤 │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  [Adjust Settings]                            [✓ Create Agent] │
+│                                                                  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Agent Chat Screen
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Back       🏃 5K Coach                              ⚙️ ⋮    │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  🏃 Good morning! Ready for your training today?           │ │
+│  │     I checked your calendar - you have a free slot at      │ │
+│  │     5:30pm. Perfect for a 25-minute easy run! 🌅           │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│                                    ┌──────────────────────────┐ │
+│                                    │ Sounds good, remind me   │ │
+│                                    │ at 5pm?                  │ │
+│                                    └──────────────────────────┘ │
+│                                                                  │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │  🏃 Done! I'll ping you at 5pm with a reminder and         │ │
+│  │     today's weather. Here's your suggested route: 🗺️       │ │
+│  │                                                             │ │
+│  │     ┌──────────────────────────────────────────────────┐   │ │
+│  │     │ ⏰ Reminder Created                               │   │ │
+│  │     │ "5K Training - Easy Run"                         │   │ │
+│  │     │ Today at 5:00 PM                                 │   │ │
+│  │     └──────────────────────────────────────────────────┘   │ │
+│  │                                                             │ │
+│  │     Any specific focus for today's run?                    │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Quick Replies:                                                 │
+│  [Focus on pace] [Just enjoy it] [Interval training]           │
+│                                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ Message 5K Coach...                               🎤  ➤  │ │
+│  └────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 *Document Owner: Principal UX Designer*
-*Last Updated: August 2025*
+*Last Updated: February 2026*
 *Status: Living Document*

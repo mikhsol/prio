@@ -1,80 +1,111 @@
 # Jeeves - Personal Assistant
 
-> Your intelligent companion for a more organized life
+> Your priorities, clarified. AI that stays on your phone.
 
-![Status](https://img.shields.io/badge/status-in%20development-yellow)
+![Status](https://img.shields.io/badge/status-MVP%20development-blue)
+![Platform](https://img.shields.io/badge/platform-Android-green)
 ![License](https://img.shields.io/badge/license-proprietary-red)
 
 ## Overview
 
-Jeeves is an AI-powered personal assistant mobile application that anticipates your needs, simplifies daily tasks, and helps you achieve more while doing less. Unlike generic assistants, Jeeves learns your preferences, adapts to your lifestyle, and becomes your indispensable digital companion.
+Jeeves is a **privacy-first, offline-capable** personal assistant powered by **on-device AI**. Built around the Eisenhower Matrix methodology, Jeeves helps you focus on what truly matters—without sending your data to the cloud.
 
-## Key Features
+### Why Jeeves?
 
-- 🧠 **Smart Task Management** - Natural language task creation with intelligent scheduling
-- 📅 **Calendar Intelligence** - Context-aware scheduling and conflict resolution
-- ☀️ **Daily Briefings** - Personalized morning summaries
-- 🎯 **Proactive Suggestions** - Anticipate needs before you ask
-- 🔒 **Privacy-First** - End-to-end encryption, your data stays yours
+- 🧠 **On-Device AI** - LLM runs locally on your phone. No internet required.
+- 🎯 **Eisenhower Matrix** - Visual priority system: Do, Schedule, Delegate, Eliminate
+- 📊 **Goal Tracking** - Connect daily tasks to long-term objectives  
+- 📅 **Smart Calendar** - Daily briefings, meeting notes, action items
+- 🔒 **Privacy-First** - Your data never leaves your device (sync is optional)
+- 💰 **Cost-Efficient** - Minimal backend = fair pricing, lifetime option available
+
+## MVP Features
+
+### Core (100% Offline)
+- ✅ Eisenhower Matrix task management with AI categorization
+- ✅ Natural language task creation
+- ✅ Goal setting and progress tracking
+- ✅ Smart priority engine based on deadlines and importance
+- ✅ Calendar integration with daily briefings
+- ✅ Meeting notes with action item extraction
+- ✅ Performance analytics and insights
+- ✅ Smart reminders and nudges
+
+### Post-MVP (Planned)
+- 🤖 **AI Model Selection** - Choose GPT, Claude, Gemini, or Grok for premium features
+- 🧩 **Custom AI Agents** - Build specialized agents for goals (fitness coach, career advisor, etc.)
+- 📧 Email integration and summarization
+- 💬 Messenger integration (WhatsApp, Telegram)
+- ✈️ End-to-end trip planning
+- 💪 Health goals integration
+- 🍎 iOS app
+- 🌐 Web companion
 
 ## Documentation
 
 | Document | Description |
 |----------|-------------|
-| [Team Agent](TEAM_AGENT.md) | AI team configuration and workflows |
-| [Product Brief](docs/PRODUCT_BRIEF.md) | Product vision and requirements |
-| [Architecture](docs/ARCHITECTURE.md) | Technical architecture design |
-| [Marketing Strategy](docs/MARKETING_STRATEGY.md) | Go-to-market and growth plans |
-| [UX Design System](docs/UX_DESIGN_SYSTEM.md) | Design guidelines and components |
+| [Product Brief](docs/PRODUCT_BRIEF.md) | Product vision, features, MVP definition |
+| [Action Plan](docs/ACTION_PLAN.md) | MVP development roadmap with SMART tasks |
+| [Architecture](docs/ARCHITECTURE.md) | Technical architecture, on-device AI design |
+| [UX Design System](docs/UX_DESIGN_SYSTEM.md) | Design guidelines, Eisenhower UX |
+| [Marketing Strategy](docs/MARKETING_STRATEGY.md) | Go-to-market, competitive analysis |
 | [Security Guidelines](docs/SECURITY_GUIDELINES.md) | Security and privacy standards |
 | [DevOps Guide](docs/DEVOPS_GUIDE.md) | Infrastructure and deployment |
+| [Team Agent](TEAM_AGENT.md) | AI team configuration and guidelines |
 
 ## Tech Stack
 
-### Mobile
-- **iOS**: Swift 5.9+, SwiftUI, Combine
-- **Android**: Kotlin, Jetpack Compose, Coroutines
+### Android (MVP)
+- **Language**: Kotlin 2.0+
+- **UI**: Jetpack Compose, Material Design 3
+- **Architecture**: MVVM, Clean Architecture
+- **Database**: Room (SQLCipher encrypted)
+- **AI**: llama.cpp via JNI (Phi-3-mini / Gemma 2B)
+- **Preferences**: DataStore
 
-### Backend
-- **API Services**: Go 1.22+
-- **AI Engine**: Rust 2024
-- **Message Queue**: NATS
-- **Database**: PostgreSQL 16, Redis 7
+### Backend (Optional - Premium Features)
+- **Auth & Sync**: Go 1.22+
+- **Database**: PostgreSQL 16
+- **Storage**: S3-compatible (encrypted backups)
 
-### Infrastructure
-- **Cloud**: AWS / GCP
-- **Orchestration**: Kubernetes (EKS/GKE)
-- **IaC**: Terraform
-- **CI/CD**: GitHub Actions + ArgoCD
+### Future (Post-MVP)
+- **iOS**: Swift 5.9+, SwiftUI
+- **Shared Logic**: Kotlin Multiplatform
 
 ## Project Structure
 
 ```
 jeeves/
 ├── README.md
-├── TEAM_AGENT.md              # AI team configuration
+├── TEAM_AGENT.md              # AI team config & action plan
 ├── docs/                      # Documentation
-│   ├── PRODUCT_BRIEF.md
-│   ├── ARCHITECTURE.md
-│   ├── MARKETING_STRATEGY.md
-│   ├── UX_DESIGN_SYSTEM.md
-│   ├── SECURITY_GUIDELINES.md
-│   └── DEVOPS_GUIDE.md
-├── apps/                      # Client applications
-│   ├── ios/                   # iOS app (Swift)
-│   ├── android/               # Android app (Kotlin)
-│   └── web/                   # Web companion (Next.js)
-├── services/                  # Backend services
-│   ├── api/                   # Core API (Go)
-│   ├── ai-engine/             # AI processing (Rust)
+│   ├── PRODUCT_BRIEF.md       # Product vision & MVP
+│   ├── ARCHITECTURE.md        # Technical architecture
+│   ├── UX_DESIGN_SYSTEM.md    # Design system
+│   ├── MARKETING_STRATEGY.md  # Go-to-market
+│   ├── SECURITY_GUIDELINES.md # Security standards
+│   └── DEVOPS_GUIDE.md        # DevOps guide
+├── apps/
+│   └── android/               # Android app (MVP)
+│       ├── app/               # Main application
+│       ├── core/              # Core modules
+│       │   ├── common/
+│       │   ├── ui/            # Design system
+│       │   ├── data/          # Room, DataStore
+│       │   ├── domain/        # Use cases
+│       │   ├── ai/            # LLM engine
+│       │   └── analytics/
+│       ├── plugins/           # Feature plugins
+│       │   ├── tasks/         # Eisenhower tasks
+│       │   ├── goals/         # Goals & progress
+│       │   └── calendar/      # Smart calendar
+│       └── sync/              # Optional cloud sync
+├── services/                  # Backend (optional)
 │   ├── auth/                  # Authentication (Go)
-│   ├── sync/                  # Data sync (Rust)
-│   └── notifier/              # Notifications (Go)
-├── infrastructure/            # IaC and deployment
-│   ├── terraform/
-│   └── kubernetes/
-├── shared/                    # Shared libraries
-│   └── proto/                 # Protocol buffers
+│   └── sync/                  # Sync service (Rust)
+├── models/                    # LLM models
+│   └── README.md              # Model download instructions
 └── scripts/                   # Development scripts
 ```
 
@@ -82,64 +113,111 @@ jeeves/
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Go 1.22+
-- Rust 1.79+
-- Node.js 20+
-- Xcode 15+ (for iOS)
-- Android Studio (for Android)
+- Android Studio Hedgehog (2023.1.1) or newer
+- JDK 17+
+- Android SDK 34
+- Device with 4GB+ RAM (for on-device LLM)
 
-### Local Development
+### Setup
 
 ```bash
 # Clone repository
 git clone https://github.com/your-org/jeeves.git
 cd jeeves
 
-# Start infrastructure
-docker-compose up -d postgres redis nats
+# Open in Android Studio
+studio apps/android
 
-# Run backend services
-cd services/api && go run ./cmd/api
-cd services/ai-engine && cargo run -j 2
-
-# Run mobile apps
-cd apps/ios && open Jeeves.xcworkspace
+# Build debug APK
 cd apps/android && ./gradlew assembleDebug
+
+# Run tests
+./gradlew test
+```
+
+### On-Device LLM Setup
+
+The AI model (~1.5GB) downloads on first launch. For development:
+
+```bash
+# Download model manually (optional)
+cd models
+./download-phi3-mini.sh
 ```
 
 ### Running Tests
 
 ```bash
-# Backend tests
-cd services/api && go test ./...
-cd services/ai-engine && cargo test -j 2 -- --test-threads=4
-
-# Mobile tests
-cd apps/ios && xcodebuild test -scheme Jeeves
+# Unit tests
 cd apps/android && ./gradlew test
+
+# UI tests
+./gradlew connectedAndroidTest
+
+# Lint checks
+./gradlew lint
 ```
+
+## Architecture Highlights
+
+### Offline-First Design
+- All core features work without internet
+- Local Room database with SQLCipher encryption
+- On-device LLM (llama.cpp) for AI features
+- Optional encrypted cloud sync for premium users
+
+### Pluggable Features
+- Each feature is a self-contained module (plugin)
+- Easy to enable/disable features
+- Third-party plugin support planned
+
+### Privacy Guarantees
+- No analytics without consent
+- No data leaves device by default
+- E2E encryption for optional sync
+- No third-party tracking SDKs
 
 ## Development Workflow
 
-1. **Design** - Create PRD, technical design, UX specs
-2. **Develop** - TDD, code reviews, documentation
-3. **Test** - Unit, integration, E2E tests
-4. **Deploy** - Staging → Canary → Production
-5. **Monitor** - Metrics, alerts, user feedback
-6. **Iterate** - Continuous improvement
+1. **Design** - Product requirements, UX specs
+2. **TDD** - Write tests first, then implementation
+3. **Build** - `./gradlew build -j 2`
+4. **Test** - Unit, integration, UI tests
+5. **Review** - Code review, design review
+6. **Release** - Internal testing → Beta → Production
+
+## Current Status
+
+**Phase**: MVP Development  
+**Platform**: Android  
+**Target Launch**: Q2 2026
+
+### Milestones
+- [x] Product requirements complete
+- [x] Architecture design complete
+- [x] UX design system complete
+- [ ] Core database and models
+- [ ] AI engine integration
+- [ ] Eisenhower task plugin
+- [ ] Goals plugin
+- [ ] Calendar plugin
+- [ ] Beta testing
+- [ ] Play Store launch
 
 ## Team
 
 This project is developed by a cross-functional AI agent team:
 
-- **Principal Product Manager** - Product vision and roadmap
-- **Marketing Expert** - Growth and acquisition
-- **Principal UX Designer** - User experience and design
-- **Principal Frontend/Full-Stack Engineer** - Mobile and web apps
-- **Principal Android/iOS Developer** - Native development
-- **Principal Backend/Infrastructure Engineer** - Backend and DevOps
-- **Security Expert** - Security and compliance
+- **Principal Product Manager** - Product vision, MVP definition, roadmap
+- **Marketing Expert** - Go-to-market, competitive analysis, ASO
+- **Principal UX Designer** - Eisenhower UX, Material Design 3
+- **Principal Android Developer** - Kotlin, Compose, on-device AI
+- **Principal Backend/Infrastructure Engineer** - Optional sync services
+- **Security Expert** - Privacy-first design, encryption
+
+## Contributing
+
+See [TEAM_AGENT.md](TEAM_AGENT.md) for development guidelines and action plan.
 
 ## License
 
@@ -147,4 +225,4 @@ Proprietary - All rights reserved
 
 ---
 
-*Built with ❤️ by the Jeeves Team*
+*Built with ❤️ and on-device AI by the Jeeves Team*

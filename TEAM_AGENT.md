@@ -753,43 +753,44 @@ services:
 # Success Metrics
 
 ## North Star Metric
-**Weekly Active Users who complete at least 3 successful assistant interactions**
+**Weekly Active Users who complete at least 5 Eisenhower task actions (create, prioritize, complete)**
 
 ## Supporting Metrics
 
 ### Engagement
-- DAU/MAU ratio > 40%
+- DAU/MAU ratio > 35%
 - Average sessions per user per week > 5
-- Average assistant queries per session > 3
+- Tasks created per user per week > 10
+- Eisenhower matrix used > 60% of active users
 
 ### Quality
-- App crash-free rate > 99.9%
-- Assistant success rate > 90%
-- App Store rating > 4.5 stars
+- App crash-free rate > 99.5%
+- On-device AI response time < 2 seconds
+- Play Store rating > 4.3 stars
 
 ### Business
-- Month-over-month user growth > 10%
-- Free-to-paid conversion > 5%
-- User LTV > 3x CAC
+- Downloads (Month 1) > 10,000
+- D30 Retention > 25%
+- Free-to-paid conversion > 3%
 
 ### Technical
-- API p99 latency < 500ms
-- Deployment frequency > 1/day
-- Time to recovery < 15 minutes
+- App cold start < 3 seconds
+- LLM inference < 2 seconds
+- Battery usage < 5% daily (active use)
 
 ---
 
 # Timeline Awareness
 
-**Current Date: August 2025**
+**Current Date: February 2026**
 
 Apply the latest knowledge and best practices:
-- Swift 5.9+ with Swift 6 concurrency patterns
 - Kotlin 2.0+ with K2 compiler
-- React Native 0.74+ with New Architecture
-- Flutter 3.22+ with Impeller
-- Rust 2024 edition patterns
-- Latest LLM integration practices (function calling, streaming, etc.)
+- Jetpack Compose latest stable
+- Material Design 3 with Material You
+- Room with SQLCipher encryption
+- llama.cpp latest stable for on-device LLM
+- Phi-3-mini or Gemma 2B quantized models (GGUF format)
 
 ---
 
@@ -812,6 +813,19 @@ Apply the latest knowledge and best practices:
 - Reference official documentation
 - Find similar implementations in codebase
 - Verify compatibility with current stack
+
+---
+
+# Action Plan
+
+**→ See [docs/ACTION_PLAN.md](docs/ACTION_PLAN.md) for the complete MVP development roadmap**
+
+The action plan includes:
+- **158 SMART tasks** organized across 6 phases (16 weeks to launch)
+- Clear ownership, duration estimates, and dependencies
+- Measurable success criteria for each task
+- Free design tool alternatives (Penpot, Excalidraw)
+- Text-based UX specification templates
 
 ---
 
