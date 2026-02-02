@@ -51,21 +51,22 @@ Each task follows this format:
 
 ### Milestone 0.2: On-Device LLM Technical Research
 **Goal**: Select optimal LLM model and integration approach for Android  
-**Owner**: Backend Engineer + Android Developer
+**Owner**: Android Developer
+
+*Note: LLM integration via JNI/NDK is Android-native work. Backend Engineer assists with prompt design only.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 0.2.1 | Set up llama.cpp Android test project | Backend Engineer | 3h | Working Android project that can load a GGUF model |
-| 0.2.2 | Benchmark Phi-3-mini-4k-instruct (Q4_K_M) on 3 reference devices | Android Developer | 4h | Performance report: tokens/sec, memory usage, first inference time on Pixel 6, Samsung A54, older device |
-| 0.2.3 | Benchmark Gemma-2B (Q4_K_M) on same 3 devices | Android Developer | 3h | Same metrics as 0.2.2 for comparison |
-| 0.2.4 | Test task categorization accuracy with 20 sample prompts | Backend Engineer | 2h | Accuracy report: % correct Eisenhower classification for each model |
-| 0.2.5 | Document memory/storage requirements and device compatibility | Android Developer | 2h | Compatibility matrix: minimum device specs, storage needs, recommended devices |
-| 0.2.6 | Write LLM selection recommendation with fallback strategy | Backend Engineer | 2h | 2-page technical recommendation doc with primary model, fallback approach |
+| 0.2.1 | Set up llama.cpp Android test project with JNI | Android Developer | 4h | Working Android project that can load a GGUF model via NDK |
+| 0.2.2 | Benchmark Phi-3-mini-4k-instruct (Q4_K_M) on 2 reference devices | Android Developer | 3h | Performance report: tokens/sec, memory usage, first inference time on Pixel 6/7 and Samsung mid-range |
+| 0.2.3 | Test task categorization accuracy with 20 sample prompts | Android Developer | 2h | Accuracy report: % correct Eisenhower classification |
+| 0.2.4 | Document memory/storage requirements and device compatibility | Android Developer | 1h | Compatibility matrix: minimum device specs, storage needs |
+| 0.2.5 | Write LLM selection recommendation with rule-based fallback | Android Developer | 1h | 1-page technical recommendation doc with primary model, regex fallback approach |
 
 **Milestone Exit Criteria**:
-- [ ] Both models benchmarked on 3+ device tiers
+- [ ] Phi-3-mini benchmarked on 2 device tiers (high-end, mid-range)
 - [ ] Task categorization accuracy >80%
-- [ ] Clear model recommendation documented
+- [ ] Model recommendation documented with fallback strategy
 
 ### Milestone 0.3: MVP Definition & Validation
 **Goal**: Define minimal feature set that delivers 80% of value, validated with target users  
@@ -168,12 +169,13 @@ Each task follows this format:
 | 1.2.2 | Configure build variants (debug, release, benchmark) | Android Developer | 1h | 3 build variants configured with appropriate flags |
 | 1.2.3 | Set up multi-module structure | Android Developer | 2h | Modules created: :app, :core:common, :core:ui, :core:data, :core:domain, :core:ai |
 | 1.2.4 | Configure Hilt dependency injection | Android Developer | 2h | Hilt set up in all modules, sample injection working |
-| 1.2.5 | Set up Room database with SQLCipher encryption | Android Developer | 3h | Encrypted database initializes, sample entity CRUD works |
+| 1.2.5 | Set up Room database | Android Developer | 2h | Database initializes, sample entity CRUD works (encryption deferred to v1.1) |
 | 1.2.6 | Configure DataStore for preferences | Android Developer | 1h | UserPreferences DataStore created with sample preferences |
 | 1.2.7 | Set up Compose navigation with type-safe routes | Android Developer | 2h | Navigation graph with 5+ placeholder destinations |
 | 1.2.8 | Create Material 3 theme (colors, typography) | Android Developer | 2h | Theme applied, light/dark mode working |
 | 1.2.9 | Set up testing infrastructure | Android Developer | 2h | JUnit 5, MockK, Turbine configured, sample test passing |
-| 1.2.10 | Configure GitHub Actions CI | Backend Engineer | 3h | CI runs on PR: build, lint, test |
+| 1.2.10 | Configure GitHub Actions CI | Android Developer | 2h | CI runs on PR: build, lint, test |
+| 1.2.11 | Set up Firebase Crashlytics | Android Developer | 1h | Crash reporting configured for debug and release builds |
 
 **Milestone Exit Criteria**:
 - [ ] Project builds and runs on emulator
@@ -225,27 +227,27 @@ Each task follows this format:
 
 ### Milestone 2.2: AI Engine
 **Goal**: Integrate on-device LLM and create inference interface  
-**Owner**: Backend Engineer + Android Developer
+**Owner**: Android Developer (Backend Engineer assists with prompts only)
+
+*Note: JNI/NDK integration is Android work. Streaming deferred to post-MVP; sync inference is sufficient.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 2.2.1 | Integrate llama.cpp via JNI | Backend Engineer | 4h | JNI wrapper compiles, basic inference works in test app |
-| 2.2.2 | Create LlmEngine interface | Backend Engineer | 2h | Interface with generateResponse(), classifyTask(), extractEntities() |
-| 2.2.3 | Implement LlamaCppEngine | Backend Engineer | 3h | Implementation using JNI wrapper, handles threading |
-| 2.2.4 | Create ModelManager for download/verification | Android Developer | 4h | Downloads model with progress, verifies SHA256, resumes partial downloads |
-| 2.2.5 | Implement streaming inference | Backend Engineer | 3h | Token-by-token streaming with Flow |
-| 2.2.6 | Create RuleBasedFallback engine | Android Developer | 3h | Regex-based task parsing, keyword importance detection |
-| 2.2.7 | Write Eisenhower classification prompts | Backend Engineer | 2h | Prompt template with 90%+ accuracy on 20 test cases |
-| 2.2.8 | Write task parsing prompts | Backend Engineer | 2h | Prompt extracts: title, date, time, priority from natural language |
-| 2.2.9 | Write briefing generation prompts | Backend Engineer | 2h | Prompt generates concise morning/evening summaries |
-| 2.2.10 | Performance test: inference under 2 seconds | Android Developer | 2h | Benchmark suite, 95%+ queries complete in <2s on target devices |
-| 2.2.11 | Write AI engine tests | Backend Engineer | 2h | Unit tests for prompt processing, mock-based inference tests |
+| 2.2.1 | Integrate llama.cpp via JNI/NDK | Android Developer | 4h | JNI wrapper compiles, basic inference works in test app |
+| 2.2.2 | Create LlmEngine interface | Android Developer | 1h | Interface with classifyTask(), parseTask() methods |
+| 2.2.3 | Implement LlamaCppEngine (sync inference) | Android Developer | 3h | Implementation using JNI wrapper, background thread |
+| 2.2.4 | Create ModelManager for download/verification | Android Developer | 3h | Downloads model with progress, verifies checksum, resumes partial downloads |
+| 2.2.5 | Create RuleBasedFallback engine | Android Developer | 2h | Regex-based task parsing for low-end devices |
+| 2.2.6 | Write Eisenhower classification prompts | Android Developer | 2h | Prompt template with 80%+ accuracy on 20 test cases |
+| 2.2.7 | Write task parsing prompts | Android Developer | 2h | Prompt extracts: title, date, time, priority from natural language |
+| 2.2.8 | Performance test: inference under 3 seconds | Android Developer | 1h | 90%+ queries complete in <3s on mid-range devices |
+| 2.2.9 | Write AI engine tests | Android Developer | 2h | Unit tests for prompt processing, mock-based inference tests |
 
 **Milestone Exit Criteria**:
-- [ ] LLM inference working on device
+- [ ] LLM sync inference working on device (<3s)
 - [ ] Model download with resume support
-- [ ] Fallback engine available for low-end devices
-- [ ] All prompts achieve target accuracy
+- [ ] Rule-based fallback for low-end devices
+- [ ] Eisenhower classification accuracy >80%
 
 ### Milestone 2.3: UI Design System Implementation
 **Goal**: Implement reusable Compose components matching specifications  
@@ -282,13 +284,12 @@ Each task follows this format:
 |----|------|-------|----------|-------------------|
 | 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | Engine calculates quadrant from urgency/importance, handles deadlines |
 | 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | List view with quadrant filters, sort options, search |
-| 3.1.3 | Implement optional Matrix View toggle | Android Developer | 3h | 2x2 grid view as optional visualization, tap to filter |
 | 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | All fields editable, goal linking, delete confirmation |
-| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | Voice/text input → AI parsing → preview → create |
+| 3.1.5 | Implement Quick Capture with AI | Android Developer | 3h | Text input → AI parsing → preview → create (voice deferred to v1.1) |
 | 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | Reorder within list, haptic feedback |
 | 3.1.7 | Implement swipe actions | Android Developer | 2h | Swipe right = complete, swipe left = delete |
 | 3.1.8 | Implement task filters and search | Android Developer | 2h | Filter by quadrant, status, date range; full-text search |
-| 3.1.9 | Implement recurring tasks | Android Developer | 3h | RRULE support, next occurrence calculation |
+| 3.1.9 | Implement recurring tasks | Android Developer | 2h | Daily/weekly/monthly presets (full RRULE deferred to v1.1) |
 | 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | Scheduled notifications, snooze support |
 | 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | 10+ UI test cases covering main flows |
 
@@ -327,8 +328,8 @@ Each task follows this format:
 | 3.3.1 | Implement calendar provider integration | Android Developer | 4h | Read device calendar events, permission handling |
 | 3.3.2 | Implement Calendar Day view | Android Developer | 3h | Timeline with events and task blocks |
 | 3.3.3 | Implement Meeting Detail sheet | Android Developer | 3h | View/edit notes, agenda checklist, action items |
-| 3.3.4 | Implement meeting notes editor | Android Developer | 3h | Rich text notes with auto-save |
-| 3.3.5 | Implement AI action item extraction | Backend Engineer | 3h | Extract action items from notes → create tasks |
+| 3.3.4 | Implement meeting notes editor | Android Developer | 2h | Plain text notes with auto-save (rich text deferred to v1.1) |
+| 3.3.5 | Implement AI action item extraction | Android Developer | 2h | Extract action items from notes → create tasks |
 | 3.3.6 | Implement meeting checklist/agenda | Android Developer | 2h | Checklist items, completion tracking |
 | 3.3.7 | Write UI tests for Calendar plugin | Android Developer | 2h | 6+ UI test cases |
 
@@ -339,40 +340,37 @@ Each task follows this format:
 
 ### Milestone 3.4: Daily Briefings
 **Goal**: AI-generated morning and evening summaries  
-**Owner**: Backend Engineer + Android Developer
+**Owner**: Android Developer
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 3.4.1 | Implement BriefingGenerator | Backend Engineer | 4h | Generates briefing from tasks, calendar, goals |
+| 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | Generates briefing from tasks, calendar, goals using LLM |
 | 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | Today's priorities, schedule, goal check-ins |
-| 3.4.3 | Implement Evening Summary screen | Android Developer | 3h | Completed vs planned, moved items, insights |
+| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | Completed vs planned, insights |
 | 3.4.4 | Implement briefing notifications | Android Developer | 2h | Configurable morning/evening notification times |
 | 3.4.5 | Implement Today/Dashboard screen | Android Developer | 4h | Combined view: briefing + top tasks + calendar + goals |
-| 3.4.6 | Write tests for briefing generation | Backend Engineer | 2h | Unit tests with various data scenarios |
 
 **Milestone Exit Criteria**:
 - [ ] Briefings generate in <3 seconds
 - [ ] Briefings are contextual and actionable
 - [ ] Notifications trigger at configured times
 
-### Milestone 3.5: Analytics & Insights
-**Goal**: Productivity analytics with 80/20 insights  
+### Milestone 3.5: Basic Analytics (Simplified)
+**Goal**: Simple productivity metrics (detailed insights deferred to v1.1)  
 **Owner**: Android Developer
+
+*Note: 80/20 insights, complex charts, and missed deadline analysis deferred to v1.1 to accelerate MVP.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 3.5.1 | Implement analytics data collection | Android Developer | 3h | Track task creation, completion, timing |
-| 3.5.2 | Implement Insights Dashboard | Android Developer | 4h | Weekly/monthly views, key metrics |
-| 3.5.3 | Implement task completion chart | Android Developer | 3h | Bar/line chart of completions over time |
-| 3.5.4 | Implement goal progress chart | Android Developer | 2h | Progress visualization per goal |
-| 3.5.5 | Implement missed deadline analysis | Android Developer | 3h | Identify patterns in missed deadlines |
-| 3.5.6 | Implement 80/20 insights | Backend Engineer | 3h | Identify which 20% of activities drive 80% of goal progress |
-| 3.5.7 | Write tests for analytics | Android Developer | 2h | Calculation accuracy tests |
+| 3.5.1 | Implement analytics data collection | Android Developer | 2h | Track task creation, completion, timing |
+| 3.5.2 | Implement Simple Stats screen | Android Developer | 3h | Weekly view: tasks completed, goals progress, streaks |
+| 3.5.3 | Implement task completion chart | Android Developer | 2h | Simple bar chart of completions over 7 days |
 
 **Milestone Exit Criteria**:
-- [ ] Key metrics displayed accurately
-- [ ] Charts render correctly
-- [ ] 80/20 insights identify high-impact activities
+- [ ] Basic metrics displayed (tasks completed, streaks)
+- [ ] Simple chart renders correctly
+- [ ] Data collection working in background
 
 ---
 
@@ -397,42 +395,43 @@ Each task follows this format:
 - [ ] Model download works reliably
 - [ ] All settings persist correctly
 
-### Milestone 4.2: Notifications & Widgets
-**Goal**: Proactive engagement through notifications and widgets  
+### Milestone 4.2: Notifications
+**Goal**: Proactive engagement through notifications  
 **Owner**: Android Developer
+
+*Note: Home screen widget and Quick Settings tile deferred to v1.1 to reduce complexity.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
 | 4.2.1 | Implement notification channels | Android Developer | 2h | Channels for reminders, briefings, nudges |
-| 4.2.2 | Implement smart nudge system | Android Developer | 3h | Contextual nudges for overdue/important tasks |
-| 4.2.3 | Implement home screen widget (Glance) | Android Developer | 4h | Shows top 3 tasks, quick capture button |
-| 4.2.4 | Implement quick settings tile | Android Developer | 2h | Tile for quick task capture |
-| 4.2.5 | Write notification/widget tests | Android Developer | 2h | Verify notification content and timing |
+| 4.2.2 | Implement smart nudge system | Android Developer | 2h | Nudges for overdue/important tasks |
+| 4.2.3 | Write notification tests | Android Developer | 1h | Verify notification content and timing |
 
 **Milestone Exit Criteria**:
-- [ ] Notifications appear correctly on all Android versions
-- [ ] Widget displays and updates properly
-- [ ] Quick settings tile works
+- [ ] Notifications appear correctly on Android 10+
+- [ ] Nudges trigger for overdue tasks
+- [ ] Briefing notifications at configured times
 
 ### Milestone 4.3: Performance & Testing
-**Goal**: Meet all performance targets, comprehensive test coverage  
-**Owner**: Android Developer + Backend Engineer
+**Goal**: Meet performance targets, essential test coverage  
+**Owner**: Android Developer
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 4.3.1 | Profile and optimize app performance | Android Developer | 4h | Identify and fix top 5 performance issues |
-| 4.3.2 | Optimize LLM memory usage | Backend Engineer | 4h | Peak memory <800MB during inference |
-| 4.3.3 | Optimize battery usage | Android Developer | 3h | Background battery <1% per hour |
-| 4.3.4 | Optimize cold start time | Android Developer | 3h | Cold start <3s on mid-range device |
-| 4.3.5 | Create E2E test suite | Android Developer | 4h | 20+ E2E tests covering main user journeys |
-| 4.3.6 | Test on 5+ device configurations | Android Developer | 4h | Test matrix: Pixel, Samsung, Xiaomi, different RAM |
-| 4.3.7 | Accessibility audit and fixes | Android Developer | 3h | TalkBack works, contrast passes, touch targets ≥48dp |
+| 4.3.1 | Profile and optimize app performance | Android Developer | 3h | Identify and fix top 3 performance issues |
+| 4.3.2 | Optimize LLM memory usage | Android Developer | 3h | Peak memory <1GB during inference |
+| 4.3.3 | Optimize cold start time | Android Developer | 2h | Cold start <4s on mid-range device |
+| 4.3.4 | Create critical path E2E tests | Android Developer | 3h | 8 E2E tests: onboarding, task CRUD, goals, calendar |
+| 4.3.5 | Test on 3 device configurations | Android Developer | 3h | Test on Pixel, Samsung, and one budget device |
+| 4.3.6 | Accessibility smoke test | Android Developer | 2h | TalkBack navigation works, touch targets ≥48dp |
+| 4.3.7 | Configure ProGuard/R8 for release | Android Developer | 1h | Obfuscation and minification enabled |
 
 **Milestone Exit Criteria**:
-- [ ] Cold start <3s
-- [ ] LLM inference <2s
-- [ ] E2E tests pass
-- [ ] 5+ devices tested
+- [ ] Cold start <4s
+- [ ] LLM inference <3s on mid-range devices
+- [ ] Critical path E2E tests pass
+- [ ] 3 devices tested
+- [ ] Release build configured with R8
 
 ---
 
@@ -508,8 +507,8 @@ Each task follows this format:
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 6.1.1 | Set up crash monitoring dashboard | Backend Engineer | 2h | Sentry/Crashlytics dashboard configured |
-| 6.1.2 | Establish weekly release cadence | Android Developer | 2h | Release process documented |
+| 6.1.1 | Set up crash monitoring dashboard | Android Developer | 1h | Firebase Crashlytics dashboard reviewed |
+| 6.1.2 | Establish weekly release cadence | Android Developer | 1h | Release process documented |
 | 6.1.3 | Create user feedback triage process | Product Manager | 2h | Process for categorizing and prioritizing feedback |
 | 6.1.4 | Fix top 3 issues from week 1 | Android Developer | 4h | Issues resolved in v1.0.1 |
 
@@ -532,93 +531,9 @@ Each task follows this format:
 
 ---
 
-## Post-MVP Roadmap: Cloud AI & Custom Agents
-
-After MVP launch, these features are prioritized for the Pro tier.
-
-### Phase 7: Cloud AI Integration (Post-MVP, Weeks 16-20)
-
-#### Milestone 7.1: AI Gateway Backend
-**Goal**: Build secure AI gateway to route requests to cloud providers  
-**Owner**: Backend Engineer
-
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 7.1.1 | Design AI Gateway API specification | Backend Engineer | 3h | OpenAPI spec with endpoints for all providers |
-| 7.1.2 | Implement authentication middleware | Backend Engineer | 3h | JWT validation, rate limiting working |
-| 7.1.3 | Create OpenAI adapter (GPT-4o, GPT-4o-mini) | Backend Engineer | 4h | Working adapter with streaming support |
-| 7.1.4 | Create Anthropic adapter (Claude family) | Backend Engineer | 4h | Sonnet, Haiku support with streaming |
-| 7.1.5 | Create Google adapter (Gemini 1.5) | Backend Engineer | 4h | Pro and Flash variants working |
-| 7.1.6 | Create xAI adapter (Grok) | Backend Engineer | 3h | Grok-2 support |
-| 7.1.7 | Implement model router with failover | Backend Engineer | 3h | Automatic failover when provider down |
-| 7.1.8 | Implement usage tracking and cost calculation | Backend Engineer | 4h | Per-request cost tracking, usage reports |
-| 7.1.9 | Implement quota management | Backend Engineer | 3h | Monthly limits, overage handling |
-| 7.1.10 | Load testing and optimization | Backend Engineer | 3h | Gateway handles 100 req/s |
-
-#### Milestone 7.2: Android Cloud AI Integration
-**Goal**: Integrate cloud AI selection into Android app  
-**Owner**: Android Developer
-
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 7.2.1 | Create HybridAiRouter implementation | Android Developer | 4h | Routes to on-device or cloud based on settings |
-| 7.2.2 | Implement model selection UI | Android Developer | 3h | Settings screen with model picker |
-| 7.2.3 | Implement feature-specific model defaults | Android Developer | 2h | Different models per feature type |
-| 7.2.4 | Implement usage dashboard | Android Developer | 4h | Show credits used, remaining, costs |
-| 7.2.5 | Implement offline fallback | Android Developer | 2h | Graceful degradation when offline |
-| 7.2.6 | Write tests for hybrid routing | Android Developer | 2h | Unit and integration tests |
-
-### Phase 8: Custom AI Agents (Post-MVP, Weeks 20-24)
-
-#### Milestone 8.1: Agent System Backend
-**Goal**: Build agent storage, execution, and marketplace infrastructure  
-**Owner**: Backend Engineer
-
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 8.1.1 | Design agent data model schema | Backend Engineer | 2h | PostgreSQL schema for agents |
-| 8.1.2 | Implement agent CRUD API | Backend Engineer | 3h | REST endpoints for agent management |
-| 8.1.3 | Implement agent sync service | Backend Engineer | 3h | Sync agents across devices |
-| 8.1.4 | Create built-in agent templates (7 templates) | Backend Engineer | 4h | PM, Career, Fitness, Learning, Finance, Writing, Home |
-| 8.1.5 | Implement agent execution service | Backend Engineer | 4h | Build prompts, execute via AI gateway |
-| 8.1.6 | Implement agent context injection | Backend Engineer | 3h | Inject user data respecting permissions |
-| 8.1.7 | Design marketplace API | Backend Engineer | 2h | API for browsing/downloading community agents |
-
-#### Milestone 8.2: Android Agent Builder
-**Goal**: Create intuitive agent builder wizard in Android app  
-**Owner**: Android Developer + UX Designer
-
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 8.2.1 | Write UX spec for Agent Builder wizard | UX Designer | 3h | 5-step wizard spec with all states |
-| 8.2.2 | Implement Step 1: Purpose selection | Android Developer | 3h | Category/custom purpose picker |
-| 8.2.3 | Implement Step 2: Personality sliders | Android Developer | 3h | 3 sliders with preview text |
-| 8.2.4 | Implement Step 3: Expertise & instructions | Android Developer | 3h | Domain tags, custom text input |
-| 8.2.5 | Implement Step 4: Permissions | Android Developer | 2h | Checkbox permissions UI |
-| 8.2.6 | Implement Step 5: Test & refine | Android Developer | 4h | Interactive chat test |
-| 8.2.7 | Implement agent list and management | Android Developer | 3h | CRUD operations for agents |
-| 8.2.8 | Implement goal-to-agent linking | Android Developer | 2h | Link agent when creating/editing goal |
-| 8.2.9 | Implement agent chat UI | Android Developer | 4h | Dedicated chat screen per agent |
-| 8.2.10 | Write tests for agent builder | Android Developer | 3h | UI and integration tests |
-
-#### Milestone 8.3: Built-in Templates & UX
-**Goal**: Polish built-in agents and template system  
-**Owner**: Android Developer + UX Designer
-
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 8.3.1 | Design agent card and list UI | UX Designer | 2h | Agent card spec, list layout |
-| 8.3.2 | Design agent chat UI | UX Designer | 3h | Chat bubble styles, action buttons |
-| 8.3.3 | Implement template browsing | Android Developer | 3h | Browse/preview/create from template |
-| 8.3.4 | Refine system prompts for all 7 templates | Backend Engineer | 4h | Quality prompts with testing |
-| 8.3.5 | Implement proactive agent suggestions | Android Developer | 3h | Agents suggest tasks/reminders |
-| 8.3.6 | End-to-end agent testing | Android Developer | 4h | Full workflow tests |
-
----
-
 ## Summary
 
-### Timeline Overview
+### Timeline Overview (MVP Only)
 
 | Phase | Weeks | Key Deliverables |
 |-------|-------|------------------|
@@ -626,35 +541,39 @@ After MVP launch, these features are prioritized for the Pro tier.
 | 1: Design & Setup | 2-3 | UX specs, project architecture |
 | 2: Core | 3-5 | Data layer, AI engine, design system |
 | 3: Features | 5-10 | Tasks, Goals, Calendar, Briefings, Analytics |
-| 4: Polish | 10-12 | Onboarding, notifications, widgets, testing |
+| 4: Polish | 10-12 | Onboarding, notifications, testing |
 | 5: Launch | 12-14 | Beta testing, Play Store launch |
-| 6: Post-Launch | 14+ | Stabilization, iteration |
-| **7: Cloud AI** | **16-20** | **AI Gateway, model selection, hybrid routing** |
-| **8: Custom Agents** | **20-24** | **Agent builder, templates, marketplace** |
+| 6: Post-Launch | 14-16 | Stabilization, iteration |
 
-### Resource Allocation
+*See [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md) for v1.1 features, Cloud AI (Phase 7), and Custom Agents (Phase 8).*
 
-| Role | Phase 0-1 | Phase 2-3 | Phase 4-5 | Phase 6 | Phase 7-8 |
-|------|-----------|-----------|-----------|---------|-----------|
-| Product Manager | 100% | 50% | 80% | 60% | 50% |
-| UX Designer | 80% | 30% | 20% | 10% | 40% |
-| Android Developer | 60% | 100% | 100% | 80% | 80% |
-| Backend Engineer | 80% | 80% | 40% | 20% | 100% |
-| Marketing | 40% | 20% | 60% | 60% | 30% |
-| Security Expert | 10% | 10% | 30% | 10% | 20% |
+### Resource Allocation (MVP)
 
-### Total Task Count
+| Role | Phase 0-1 | Phase 2-3 | Phase 4-5 | Phase 6 |
+|------|-----------|-----------|-----------|---------|
+| Product Manager | 100% | 50% | 80% | 60% |
+| UX Designer | 80% | 30% | 20% | 10% |
+| Android Developer | 80% | 100% | 100% | 80% |
+| Backend Engineer | 20% | 10% | 10% | 10% |
+| Marketing | 40% | 20% | 60% | 60% |
+| Security Expert | 10% | 10% | 30% | 10% |
 
-- Phase 0: 21 tasks (+2 for quick validation & metrics)
-- Phase 1: 24 tasks (+3 for quick design validation)
-- Phase 2: 32 tasks
-- Phase 3: 42 tasks
-- Phase 4: 19 tasks
-- Phase 5: 16 tasks (+1 for in-app feedback)
-- Phase 6: 9 tasks
-- **Phase 7: 16 tasks (Post-MVP)**
-- **Phase 8: 17 tasks (Post-MVP)**
-- **Total: 163 MVP tasks + 33 Post-MVP tasks = 196 tasks**
+*Note: Backend Engineer is minimally involved in MVP (offline-first). Full allocation begins post-MVP for Cloud AI.*
+
+### Total MVP Task Count
+
+| Phase | Tasks | Estimated Hours |
+|-------|-------|-----------------|
+| Phase 0: Research | 18 | ~36h |
+| Phase 1: Design & Setup | 27 | ~54h |
+| Phase 2: Core | 28 | ~56h |
+| Phase 3: Features | 33 | ~100h |
+| Phase 4: Polish | 15 | ~35h |
+| Phase 5: Launch | 16 | ~35h |
+| Phase 6: Post-Launch | 9 | ~20h |
+| **Total MVP** | **~146** | **~336h** |
+
+*MVP scope optimized for faster delivery. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
 
 ---
 
