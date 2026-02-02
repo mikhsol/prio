@@ -67,9 +67,9 @@ Each task follows this format:
 - [ ] Task categorization accuracy >80%
 - [ ] Clear model recommendation documented
 
-### Milestone 0.3: MVP Definition
-**Goal**: Define minimal feature set that delivers 80% of value  
-**Owner**: Product Manager
+### Milestone 0.3: MVP Definition & Validation
+**Goal**: Define minimal feature set that delivers 80% of value, validated with target users  
+**Owner**: Product Manager + UX Designer
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
@@ -79,11 +79,14 @@ Each task follows this format:
 | 0.3.4 | Write user stories for Calendar/Briefings (5-6 stories) | Product Manager | 2h | User stories with acceptance criteria |
 | 0.3.5 | Define MVP scope boundary (what's in/out) | Product Manager | 2h | Explicit in-scope and out-of-scope feature lists |
 | 0.3.6 | Create MVP PRD document | Product Manager | 3h | Complete PRD with vision, personas, features, success metrics, risks |
+| 0.3.7 | Conduct 3 guerrilla user interviews (coffee shop/online) | UX Designer | 2h | Quick validation of top 3 pain points, notes on key insights |
+| 0.3.8 | Define 5 core success metrics | Product Manager | 1h | DAU, retention, task completion rate, AI accuracy, crash-free rate with targets |
 
 **Milestone Exit Criteria**:
 - [ ] 20-25 user stories documented with acceptance criteria
 - [ ] Clear MVP boundary defined
 - [ ] PRD reviewed and approved
+- [ ] Key pain points validated with 3+ users
 
 ---
 
@@ -106,8 +109,10 @@ Each task follows this format:
 | 1.1.7 | Write detailed spec for Analytics/Insights screen | UX Designer | 2h | Screen spec for charts, metrics, patterns display |
 | 1.1.8 | Write detailed spec for Onboarding flow (5 screens) | UX Designer | 3h | Screen specs for welcome, value props, model download, permissions, first task |
 | 1.1.9 | Write detailed spec for Settings screens | UX Designer | 2h | Screen spec for all settings categories and options |
-| 1.1.10 | Create wireframes using Penpot/Excalidraw (optional) | UX Designer | 4h | Low-fidelity wireframes for key screens (if time permits) |
-| 1.1.11 | Define component specifications (buttons, cards, inputs) | UX Designer | 3h | Component spec document with sizes, colors, states, spacing |
+| 1.1.10 | Define error states, empty states, and offline indicators | UX Designer | 2h | Standard patterns for errors, empty screens, offline banner |
+| 1.1.11 | Define basic accessibility requirements | UX Designer | 1h | Touch targets ≥48dp, contrast ratios, TalkBack basics |
+| 1.1.12 | Create wireframes using Penpot/Excalidraw (optional) | UX Designer | 4h | Low-fidelity wireframes for key screens (if time permits) |
+| 1.1.13 | Define component specifications (buttons, cards, inputs) | UX Designer | 3h | Component spec document with sizes, colors, states, spacing |
 
 **Screen Specification Template**:
 ```
@@ -147,7 +152,9 @@ Each task follows this format:
 ```
 
 **Milestone Exit Criteria**:
-- [ ] All 9 key screens have detailed text specifications
+- [ ] All 9 key screens + onboarding flow have text specifications
+- [ ] Error/empty/offline patterns defined
+- [ ] Basic accessibility requirements documented
 - [ ] Component specifications defined
 - [ ] Specifications reviewed by Android Developer for feasibility
 
@@ -173,6 +180,21 @@ Each task follows this format:
 - [ ] All modules created and connected
 - [ ] CI pipeline passing
 - [ ] Encrypted database working
+
+### Milestone 1.3: Quick Design Validation
+**Goal**: Lightweight validation of core flows before development  
+**Owner**: UX Designer
+
+| ID | Task | Owner | Duration | Measurable Outcome |
+|----|------|-------|----------|-------------------|
+| 1.3.1 | Create paper/Excalidraw prototype of 3 core flows | UX Designer | 2h | Task creation, goal tracking, daily briefing flows sketched |
+| 1.3.2 | Run 3 hallway usability tests (informal) | UX Designer | 2h | 3 people walk through flows, major confusion points noted |
+| 1.3.3 | Fix critical UX issues in specs | UX Designer | 1h | Top 3 issues addressed, specs updated |
+
+**Milestone Exit Criteria**:
+- [ ] Core flows tested with 3 people
+- [ ] No major confusion points remain
+- [ ] Specs updated and ready for development
 
 ---
 
@@ -442,18 +464,19 @@ Each task follows this format:
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 5.2.1 | Recruit 50 beta testers | Marketing | 3h | 50 confirmed testers with diverse devices |
+| 5.2.1 | Recruit 50 beta testers from waitlist | Marketing | 3h | 50 confirmed testers with diverse devices |
 | 5.2.2 | Deploy to closed beta track | Android Developer | 1h | Beta track live with opt-in link |
-| 5.2.3 | Create feedback collection form | Product Manager | 1h | Google Form with structured questions |
+| 5.2.3 | Create feedback form + add in-app feedback button | Product Manager | 2h | Google Form + simple in-app "Send Feedback" option |
 | 5.2.4 | Run 1-week beta test | Product Manager | - | (Time passes) |
-| 5.2.5 | Analyze beta feedback | Product Manager | 3h | Prioritized issue list, top 5 critical bugs |
+| 5.2.5 | Analyze beta feedback and crash reports | Product Manager | 3h | Prioritized issue list, top 5 critical bugs |
 | 5.2.6 | Fix critical issues from beta | Android Developer | 4h | All P0 bugs fixed |
 | 5.2.7 | Release beta update | Android Developer | 1h | v0.9.1 with fixes |
-| 5.2.8 | Final beta validation | Product Manager | 2h | Confirm critical issues resolved |
+| 5.2.8 | Final beta validation | Product Manager | 2h | Confirm critical issues resolved, check crash-free rate |
 
 **Milestone Exit Criteria**:
 - [ ] 30+ beta testers provided feedback
 - [ ] 0 P0 bugs remaining
+- [ ] Crash-free rate >99%
 - [ ] NPS ≥30 from beta testers
 
 ### Milestone 5.3: Launch
@@ -622,16 +645,16 @@ After MVP launch, these features are prioritized for the Pro tier.
 
 ### Total Task Count
 
-- Phase 0: 19 tasks
-- Phase 1: 21 tasks
+- Phase 0: 21 tasks (+2 for quick validation & metrics)
+- Phase 1: 24 tasks (+3 for quick design validation)
 - Phase 2: 32 tasks
 - Phase 3: 42 tasks
 - Phase 4: 19 tasks
-- Phase 5: 16 tasks
+- Phase 5: 16 tasks (+1 for in-app feedback)
 - Phase 6: 9 tasks
 - **Phase 7: 16 tasks (Post-MVP)**
 - **Phase 8: 17 tasks (Post-MVP)**
-- **Total: 158 MVP tasks + 33 Post-MVP tasks = 191 tasks**
+- **Total: 163 MVP tasks + 33 Post-MVP tasks = 196 tasks**
 
 ---
 
