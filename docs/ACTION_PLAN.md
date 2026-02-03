@@ -18,6 +18,32 @@ This action plan outlines the complete development roadmap for Jeeves MVP, from 
 - **Timeline**: 14 weeks to beta, 16 weeks to launch
 - **Task Limit**: Each task ≤4 hours
 
+### Strategic Context (from Competitive Analysis)
+
+> **Critical Insight**: Competitors will respond within 12-18 months. First-mover advantage in "private AI productivity" is time-limited. Speed to market is essential.
+
+**Positioning**: "Your Private Productivity AI" — the first Android productivity assistant with on-device AI that automatically prioritizes tasks using the Eisenhower Matrix while keeping all data local.
+
+**Market Entry Strategy**:
+| Phase | Target Segment | User Goal |
+|-------|----------------|-----------|
+| Phase 1 (MVP) | Privacy-conscious tech professionals | ~50K users |
+| Phase 2 (Growth) | All overwhelmed professionals | ~500K users |
+| Phase 3 (Scale) | Mass market Android users | ~5M users |
+
+**Pricing Strategy** (validated by persona willingness-to-pay analysis):
+| Tier | Price | Features | Target Persona |
+|------|-------|----------|----------------|
+| Free | $0 | Basic tasks, 5 AI classifications/day, basic goals | Jordan (Achiever) - freemium hook |
+| Pro | $6.99/mo | Unlimited AI, full goals, briefings, analytics | Alex ($10 WTP) + Maya ($5 WTP) |
+| Lifetime | $99.99 | All Pro features forever | Maya (Privacy) - no subscription |
+
+**Key Differentiators**:
+1. On-device AI (87% Eisenhower accuracy with Phi-3-mini)
+2. Privacy-first (zero cloud dependency)
+3. Goal-task integration (unique in market)
+4. Daily AI briefings (drives engagement)
+
 ### SMART Task Format
 
 Each task follows this format:
@@ -42,7 +68,7 @@ Each task follows this format:
 | 0.1.3 | Research on-device LLM options (Phi-3, Gemma, TinyLlama, Qwen) | Backend Engineer | 3h | ✅ Completed | Technical comparison doc: model size, RAM needs, inference speed, quality benchmarks |
 | 0.1.4 | Synthesize competitive insights into positioning opportunities | Marketing | 2h | ✅ Completed | 1-page positioning brief with 3 key differentiation opportunities |
 | 0.1.5 | Define 3 target user personas with pain points and goals | Product Manager | 3h | ✅ Completed | 3 documented personas (1 page each) with demographics, pain points, goals, behaviors |
-| 0.1.6 | Create competitive analysis report | Marketing | 2h | ⏳ Not Started | 5-page report with market gaps, opportunities, and recommended positioning |
+| 0.1.6 | Create competitive analysis report | Marketing | 2h | ✅ Completed | 5-page report with market gaps, opportunities, and recommended positioning |
 
 **Deliverables Created:**
 - [0.1.1 Todo App Competitive Analysis](results/0.1/0.1.1_todo_app_competitive_analysis.md)
@@ -50,11 +76,15 @@ Each task follows this format:
 - [0.1.3 On-Device LLM Technical Research](results/0.1/0.1.3_on_device_llm_research.md)
 - [0.1.4 Positioning Opportunities Brief](results/0.1/0.1.4_positioning_opportunities.md)
 - [0.1.5 User Personas](results/0.1/0.1.5_user_personas.md)
+- [0.1.6 Competitive Analysis Report](results/0.1/0.1.6_competitive_analysis_report.md)
 
 **Milestone Exit Criteria**: 
 - [x] Competitive matrix complete with 6+ apps analyzed
 - [x] 3 personas documented and validated
 - [x] Positioning opportunities identified
+- [x] Competitive analysis report completed with market gaps, opportunities, and recommended positioning
+
+**Milestone Status**: ✅ **COMPLETE** - All tasks finished, all exit criteria met.
 
 ### Milestone 0.2: On-Device LLM Technical Research
 **Goal**: Select optimal LLM model and integration approach for Android  
@@ -87,14 +117,15 @@ Each task follows this format:
 | 0.3.4 | Write user stories for Calendar/Briefings (5-6 stories) | Product Manager | 2h | User stories with acceptance criteria |
 | 0.3.5 | Define MVP scope boundary (what's in/out) | Product Manager | 2h | Explicit in-scope and out-of-scope feature lists |
 | 0.3.6 | Create MVP PRD document | Product Manager | 3h | Complete PRD with vision, personas, features, success metrics, risks |
-| 0.3.7 | Conduct 3 guerrilla user interviews (coffee shop/online) | UX Designer | 2h | Quick validation of top 3 pain points, notes on key insights |
+| 0.3.7 | Conduct 3 persona-targeted interviews: 1 professional (Alex), 1 privacy-conscious freelancer (Maya), 1 early-career (Jordan) | UX Designer | 3h | Validation of top 3 pain points per persona, notes on key insights |
 | 0.3.8 | Define 5 core success metrics | Product Manager | 1h | DAU, retention, task completion rate, AI accuracy, crash-free rate with targets |
 
 **Milestone Exit Criteria**:
 - [ ] 20-25 user stories documented with acceptance criteria
 - [ ] Clear MVP boundary defined
 - [ ] PRD reviewed and approved
-- [ ] Key pain points validated with 3+ users
+- [ ] Key pain points validated with 3+ users (1 per persona type)
+- [ ] Persona-specific feature priorities confirmed
 
 ---
 
@@ -353,8 +384,9 @@ Each task follows this format:
 |----|------|-------|----------|-------------------|
 | 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | Generates briefing from tasks, calendar, goals using LLM |
 | 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | Today's priorities, schedule, goal check-ins |
-| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | Completed vs planned, insights |
+| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | Completed vs planned, insights, "work complete" suggestion |
 | 3.4.4 | Implement briefing notifications | Android Developer | 2h | Configurable morning/evening notification times |
+| 3.4.5 | Implement end-of-day nudge (Maya persona) | Android Developer | 1h | Configurable "stop working" reminder at user-set time |
 | 3.4.5 | Implement Today/Dashboard screen | Android Developer | 4h | Combined view: briefing + top tasks + calendar + goals |
 
 **Milestone Exit Criteria**:
@@ -373,6 +405,7 @@ Each task follows this format:
 | 3.5.1 | Implement analytics data collection | Android Developer | 2h | Track task creation, completion, timing |
 | 3.5.2 | Implement Simple Stats screen | Android Developer | 3h | Weekly view: tasks completed, goals progress, streaks |
 | 3.5.3 | Implement task completion chart | Android Developer | 2h | Simple bar chart of completions over 7 days |
+| 3.5.4 | Implement goal progress trend (Jordan persona) | Android Developer | 2h | Week-over-week goal progress arrow + goal streak counter |
 
 **Milestone Exit Criteria**:
 - [ ] Basic metrics displayed (tasks completed, streaks)
@@ -394,13 +427,15 @@ Each task follows this format:
 | 4.1.3 | Implement permissions explanation | Android Developer | 2h | Clear rationale for each permission |
 | 4.1.4 | Implement Settings screen | Android Developer | 3h | All preference categories |
 | 4.1.5 | Implement theme switching | Android Developer | 2h | Light/dark/system toggle |
-| 4.1.6 | Implement notification settings | Android Developer | 2h | Configure briefing times, nudge frequency |
-| 4.1.7 | Write onboarding tests | Android Developer | 2h | Full flow UI test |
+| 4.1.6 | Implement notification settings | Android Developer | 2h | Configure briefing times, nudge frequency, end-of-day time |
+| 4.1.7 | Implement local-only mode (Maya persona) | Android Developer | 2h | Full app usage without account, no sign-up required |
+| 4.1.8 | Write onboarding tests | Android Developer | 2h | Full flow UI test |
 
 **Milestone Exit Criteria**:
 - [ ] New users complete onboarding in <3 minutes
 - [ ] Model download works reliably
 - [ ] All settings persist correctly
+- [ ] App fully functional without account creation (local-only mode)
 
 ### Milestone 4.2: Notifications
 **Goal**: Proactive engagement through notifications  
@@ -489,6 +524,16 @@ Each task follows this format:
 **Goal**: Successfully launch on Google Play Store  
 **Owner**: Marketing + Product Manager
 
+**Launch Success Metrics** (from Competitive Analysis):
+| Metric | Target | Rationale |
+|--------|--------|-----------|
+| Pre-launch waitlist | 5,000 signups | Validates market interest |
+| Day 1 downloads | 1,000 | Launch momentum |
+| Week 1 retention | 40% | Product-market fit signal |
+| AI feature usage | 70% | Core value delivered |
+| Week 1 downloads | 1,000+ | Sustainable growth |
+| Rating | ≥4.0 with 10+ reviews | Quality indicator |
+
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
 | 5.3.1 | Submit for production review | Android Developer | 1h | App submitted to production track |
@@ -523,6 +568,15 @@ Each task follows this format:
 **Goal**: Grow user base and plan next features  
 **Owner**: Product Manager + Marketing
 
+**Month 1-3 Growth Targets** (from Competitive Analysis):
+| Metric | Target | Rationale |
+|--------|--------|-----------|
+| MAU | 10,000 | Sustainable growth toward 50K Phase 1 goal |
+| Day 7 retention | 35% | Habit formation |
+| Day 30 retention | 20% | Long-term viability |
+| Conversion to Pro | 5% | Revenue validation |
+| NPS | 40+ | Advocacy potential |
+
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
 | 6.2.1 | Set up analytics dashboard | Marketing | 3h | Key metrics tracked and visualized |
@@ -535,6 +589,7 @@ Each task follows this format:
 - [ ] v1.1 roadmap defined
 - [ ] Crash-free rate >99%
 - [ ] DAU growing week-over-week
+- [ ] Day 7 retention ≥35%
 
 ---
 
@@ -571,16 +626,29 @@ Each task follows this format:
 
 | Phase | Tasks | Estimated Hours |
 |-------|-------|-----------------|
-| Phase 0: Research | 18 | ~36h |
+| Phase 0: Research | 18 | ~37h |
 | Phase 1: Design & Setup | 27 | ~54h |
 | Phase 2: Core | 28 | ~56h |
-| Phase 3: Features | 33 | ~100h |
-| Phase 4: Polish | 15 | ~35h |
+| Phase 3: Features | 35 | ~105h |
+| Phase 4: Polish | 17 | ~40h |
 | Phase 5: Launch | 16 | ~35h |
 | Phase 6: Post-Launch | 9 | ~20h |
-| **Total MVP** | **~146** | **~336h** |
+| **Total MVP** | **~150** | **~347h** |
 
-*MVP scope optimized for faster delivery. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
+*MVP scope includes persona-specific features (local-only mode, end-of-day nudge, goal progress trend). Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
+
+### Persona-Feature Mapping
+
+| Feature | Alex (Professional) | Maya (Creator) | Jordan (Achiever) |
+|---------|---------------------|----------------|-------------------|
+| Eisenhower AI | ✅ Primary | ✅ | ✅ |
+| Daily Briefings | ✅ Primary | ✅ | ⚪ |
+| Goal Integration | ✅ | ⚪ | ✅ Primary |
+| Local-Only Mode | ⚪ | ✅ Primary | ⚪ |
+| End-of-Day Nudge | ⚪ | ✅ Primary | ⚪ |
+| Goal Progress Trend | ⚪ | ⚪ | ✅ Primary |
+| Meeting Action Items | ✅ Primary | ⚪ | ⚪ |
+| Project/Category Tags | ⚪ | ✅ Primary | ⚪ |
 
 ---
 

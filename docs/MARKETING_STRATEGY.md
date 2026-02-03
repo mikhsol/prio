@@ -2,7 +2,18 @@
 
 ## Executive Summary
 
-This document outlines the marketing strategy for Jeeves, a privacy-first, offline-capable personal assistant powered by on-device AI. Our initial focus is the Android platform, targeting productivity-focused users who value privacy and simplicity. Goal: 100,000 downloads in the first 6 months with organic-first growth.
+This document outlines the marketing strategy for Jeeves, a privacy-first, offline-capable personal assistant powered by on-device AI. Our initial focus is the Android platform, targeting productivity-focused users who value privacy and simplicity.
+
+**Strategic Imperative**: Competitors will respond within 12-18 months. First-mover advantage in "private AI productivity" is time-limited.
+
+**Phased Growth Targets**:
+| Phase | Timeframe | Target Users | Focus |
+|-------|-----------|--------------|-------|
+| Phase 1 (MVP) | Months 1-6 | 50,000 | Privacy-conscious tech professionals |
+| Phase 2 (Growth) | Months 6-18 | 500,000 | All overwhelmed professionals |
+| Phase 3 (Scale) | Year 2+ | 5,000,000 | Mass market Android users |
+
+**Beachhead Market**: Privacy-conscious Android professionals in tech and creative industries—vocal advocates who validate core differentiation before broader expansion.
 
 ---
 
@@ -62,10 +73,10 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 - **Calm**: Reduces overwhelm, doesn't add to it
 
 ### Taglines
-1. **"Your priorities, clarified"** (primary)
-2. **"AI that stays on your phone"**
-3. **"Focus on what matters"**
-4. **"Private by design"**
+1. **"Your Private Productivity AI"** (primary) ← Recommended by competitive analysis
+2. **"Intelligence That Stays With You"**
+3. **"Focus on What Matters. Privately."**
+4. **"AI-Powered Priorities, Zero Data Exposure"**
 
 ### Visual Identity
 - **Primary Color**: Deep teal (#0D9488) - calm, trustworthy, focused
@@ -79,7 +90,15 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 ## Positioning
 
 ### Positioning Statement
-For busy professionals who struggle with priorities and distrust cloud-based AI, Jeeves is the on-device personal assistant that brings clarity to your tasks using the Eisenhower Matrix—all while keeping your data private on your phone. Unlike Todoist or TickTick, Jeeves uses AI that runs locally, works offline, and never sends your personal data to the cloud.
+> **For** privacy-conscious Android users overwhelmed by their tasks and goals,
+>
+> **Jeeves is** an intelligent personal assistant
+>
+> **That** automatically prioritizes your work using on-device AI, keeping your data completely private.
+>
+> **Unlike** Todoist, Google Tasks, or cloud-based AI assistants,
+>
+> **Jeeves** combines smart Eisenhower prioritization, goal tracking, and daily briefings—all powered by AI that never leaves your device.
 
 ### Key Differentiators
 
@@ -110,6 +129,35 @@ For busy professionals who struggle with priorities and distrust cloud-based AI,
                            ↓
                     Low AI Intelligence
 ```
+
+### Competitive Battlecards
+
+**vs. Todoist:**
+- "Todoist uploads your tasks to their cloud. Jeeves keeps everything on your device."
+- "Todoist requires manual prioritization. Jeeves uses AI to decide what matters."
+
+**vs. TickTick:**
+- "TickTick has Eisenhower view, but you still sort manually. Jeeves classifies automatically."
+- "TickTick syncs to Chinese servers. Jeeves never leaves your phone."
+
+**vs. Google Tasks:**
+- "Google already knows too much. Jeeves keeps your productivity private."
+- "Google Tasks is basic. Jeeves is intelligent."
+
+**vs. Things 3:**
+- "Things 3 is iOS-only. Jeeves brings privacy-first productivity to Android."
+- "Things 3 has no AI. Jeeves thinks for you."
+
+### Threat Assessment & Response Timeline
+
+| Competitor | Likely Response | Threat Level | Timeline |
+|------------|-----------------|--------------|----------|
+| **Google Tasks** | Integrate Gemini | High | 6-12 months |
+| **Microsoft To Do** | Copilot integration | Medium | Already started |
+| **Todoist** | Add basic AI features | Medium | 12-18 months |
+| **TickTick** | Enhance Eisenhower view | Low | 6-12 months |
+
+**Implication**: We have a 6-12 month window before major competitors respond with on-device AI.
 
 ---
 
@@ -246,34 +294,36 @@ For busy professionals who struggle with priorities and distrust cloud-based AI,
 
 ## Pricing & Conversion Strategy
 
-### Pricing Model
+### Pricing Model (Validated by Persona Willingness-to-Pay)
+
+Based on persona research:
+- **Alex (Professional)**: Willing to pay $10/mo
+- **Maya (Privacy Creator)**: Willing to pay $5/mo, prefers lifetime
+- **Jordan (Achiever)**: Free tier only, convert later
+
+| Tier | Price | Features | Target Persona |
+|------|-------|----------|----------------|
+| **Free** | $0 | Basic tasks, 5 AI classifications/day, 3 goals, calendar read | Jordan (hook & convert later) |
+| **Pro** | $6.99/mo or $59.99/yr | Unlimited AI, full goals, briefings, analytics, meeting notes | Alex + Maya |
+| **Pro+** | $12.99/mo or $99.99/yr | Pro + Cloud AI (GPT, Claude, Gemini, Grok), 5 custom agents | Power users |
+| **Lifetime** | $99.99 (one-time) | All Pro features forever | Maya (privacy + no subscription) |
+
+*Note: Pro+ cloud AI features are post-MVP (Phase 7+). MVP launches with Free and Pro tiers only.*
+
+### MVP Launch Pricing (Simplified)
 
 | Tier | Price | Features |
 |------|-------|----------|
-| **Free** | $0 | Full Eisenhower tasks, 5 goals, calendar read, daily briefings, on-device AI |
-| **Premium** | $4.99/mo or $39.99/yr | Unlimited goals, advanced analytics, meeting notes, cloud sync (encrypted) |
-| **Pro** | $9.99/mo or $79.99/yr | Premium + Cloud AI (GPT, Claude, Gemini, Grok), 5 custom AI agents, $5 AI credit |
-| **Power User** | $19.99/mo or $149.99/yr | Pro + Unlimited agents, marketplace access, $20 AI credit |
-| **Lifetime** | $99.99 (one-time) | All premium features forever (cloud AI requires active Pro/Power subscription) |
+| **Free** | $0 | Basic tasks, 5 AI classifications/day, 3 goals |
+| **Pro** | $6.99/mo | Unlimited AI, full goals, briefings, analytics |
+| **Lifetime** | $99.99 | All Pro features forever |
 
-### Premium Tier Positioning
+### Pricing Rationale
 
-#### Pro Tier Value Proposition
-- **Cloud AI Choice**: "Use GPT-4o for complex planning, Claude for coaching, Gemini for analysis"
-- **Custom AI Agents**: "Create your personal fitness coach, career mentor, or project manager"
-- **Target User**: Power users who want more AI capability than on-device provides
-
-#### Agent Feature Marketing
-- Highlight pre-built templates: "7 expert agents ready to help"
-- Emphasize personalization: "Design an agent that speaks your language"
-- Goal linking: "Agents that know your objectives and keep you on track"
-
-### Why This Pricing
-- **Generous Free Tier**: Builds trust, enables word-of-mouth
-- **Affordable Premium**: Lower than competitors ($9.99/mo average)
-- **Pro for AI Power Users**: Covers cloud API costs with healthy margin
-- **Lifetime Option**: Appeals to subscription-fatigued users (Premium features only)
-- **Low Operational Cost**: On-device AI means we can be profitable at lower prices
+- **$6.99 Pro**: Split difference between Alex ($10 WTP) and Maya ($5 WTP)
+- **$99.99 Lifetime**: ~14 months of Pro - appeals to Maya's subscription fatigue
+- **Limited Free AI**: Creates clear upgrade path without frustrating users
+- **Low Operational Cost**: On-device AI = profitable at lower prices than competitors
 
 ### Conversion Strategy
 

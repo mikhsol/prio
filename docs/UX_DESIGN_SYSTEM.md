@@ -44,29 +44,50 @@ Each feature is a self-contained module. Navigation adapts to enabled plugins. F
 
 ### Personas
 
-#### Persona 1: Alex (Primary)
-- **Role**: Product Manager, 34
-- **Quote**: "I need to see what's truly important, not just urgent"
+#### Persona 1: Alex Chen (Primary - Overwhelmed Professional)
+- **Role**: Senior Product Manager, 32
+- **Income**: $130K | **Device**: Pixel 8 Pro
+- **Quote**: "I need something that tells me what to work on next, not another app that stores tasks"
 - **Goals**: 
   - Clear priorities each morning
   - Track progress on quarterly OKRs
   - Capture meeting action items instantly
-- **Frustrations**:
-  - Existing todo apps don't prioritize intelligently
-  - Loses track of goals among daily fires
-  - Privacy concerns with AI assistants
+- **Pain Points**:
+  - Prioritization paralysis: "50 tasks, don't know where to start"
+  - Goal disconnect: quarterly objectives never translate to daily work
+  - Tool fatigue: tried everything, nothing sticks
+- **Willingness to Pay**: High ($10/mo)
+- **Key Features**: Eisenhower AI, Meeting Action Items, Daily Briefings
 
-#### Persona 2: Maya (Secondary - Organized Parent)
-- **Role**: Working Parent, 41
-- **Quote**: "I'm the family calendar, and I need backup"
+#### Persona 2: Maya Rodriguez (Secondary - Privacy-Conscious Creator)
+- **Role**: Freelance UX Designer, 28
+- **Income**: $75K | **Device**: Samsung Galaxy S24
+- **Quote**: "I'd love an AI assistant, but I'm not uploading my client list to someone's cloud"
 - **Goals**:
-  - Keep family and work organized
-  - Quick capture when hands are full
-  - Reliable reminders at the right time
-- **Frustrations**:
-  - Reminders come at wrong times
-  - Kids' schedules constantly change
-  - Too many apps to check
+  - Stay organized across client projects
+  - Protect client confidentiality (NDAs)
+  - Maintain work-life boundaries
+- **Pain Points**:
+  - Privacy vs functionality trade-off
+  - Works all hours, forgets to stop
+  - No account = no useful AI tools
+- **Willingness to Pay**: Medium ($5/mo), prefers lifetime
+- **Key Features**: Local-Only Mode, Project Tags, End-of-Day Nudge
+
+#### Persona 3: Jordan Williams (Tertiary - Aspiring Achiever)
+- **Role**: Junior Software Developer, 24
+- **Income**: $72K | **Device**: OnePlus 12
+- **Quote**: "I've read Atomic Habits three times. I just need something to make me do it."
+- **Goals**:
+  - Get promoted to mid-level within 18 months
+  - Build healthy habits (gym, reading)
+  - Feel like making progress on life goals
+- **Pain Points**:
+  - Goal overwhelm: wants everything, achieves nothing
+  - System hopping: new productivity system monthly
+  - No accountability for personal goals
+- **Willingness to Pay**: Low (freemium), convert later
+- **Key Features**: Goal Integration, Progress Visualization, Goal Streaks
 
 ---
 
@@ -283,7 +304,8 @@ Users can switch views via bottom tab or settings. Default: List View (80/20: mo
 │  │ 📋 Call mom about birthday party                           │ │
 │  │ 📅 Tomorrow (Feb 3)                                        │ │
 │  │ 🎯 Suggested: Q1 - Do First (urgent + family)              │ │
-│  │ 🔗 Goal: None detected                                     │ │
+│  │ � Project: Personal (tap to change)                       │ │
+│  │ �🔗 Goal: None detected                                     │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                                                                  │
 │  [Edit Details]              [✓ Create Task]                    │
@@ -410,10 +432,21 @@ Users can switch views via bottom tab or settings. Default: List View (80/20: mo
 │  ───────────────────────────────────────                       │
 │  "Quarterly review prep" - Start early, big task               │
 │                                                                 │
+│  ┌────────────────────────────────────────────────────────────┐│
+│  │ 🏠 Time to disconnect! You've earned your rest.            ││
+│  │    (End-of-day set for 6:00 PM)                [Settings]  ││
+│  └────────────────────────────────────────────────────────────┘│
+│                                                                 │
 │  [Plan Tomorrow →]                                             │
 │                                                                 │
 └────────────────────────────────────────────────────────────────┘
 ```
+
+**End-of-Day Feature (Maya Persona):**
+- Configurable "end of workday" time in Settings
+- Evening summary includes "work complete" encouragement
+- Optional notification at end-of-day to close the app
+- Helps freelancers/creators maintain work-life boundaries
 
 ---
 

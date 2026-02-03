@@ -19,6 +19,7 @@ Jeeves is a privacy-first, AI-powered personal assistant that runs primarily on-
 - **On-Device LLM**: Core AI processing happens locally using optimized small language models
 - **Minimal Backend**: Only sync and optional cloud features require connectivity  
 - **Your Data, Your Device**: All personal data stored locally with optional encrypted backup
+- **Local-Only Mode**: Full app functionality without account creation (Things 3-style privacy)
 - **Cost Efficient**: Minimal server costs through edge-first architecture
 
 ### Pluggable Architecture
