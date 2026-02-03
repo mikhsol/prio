@@ -1,0 +1,13 @@
+==============================================
+Phi-3-mini Eisenhower Classification Benchmark
+==============================================
+Date: Tue 03 Feb 2026 02:52:55 PM GMT
+Model: /home/mikhail/projects/jeeves/models/Phi-3-mini-4k-instruct-q4.gguf
+
+[1/20] Testing: Respond to client email about project deadline tom...
+  Expected: DO, Got:  ✗
+[2/20] Testing: Server is down, customers can't access the app...
+  Expected: DO, Got:  ✗
+[3/20] Testing: Complete tax filing before April 15 deadline (toda...
+  Expected: DO, Got:  ✗
+[4/20] Testing: Prepare presentation for board meeting in 2 hours...

@@ -1,0 +1,24 @@
+# Android/Gradle build outputs
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration
+local.properties
+
+# Native build
+.cxx/
+.externalNativeBuild/
+
+# IDE
+.idea/
+*.iml
+
+# APK files
+*.apk
+*.ap_
+*.aab
+
+# Benchmark results (raw data)
+accuracy_results.txt
+*_results.txt

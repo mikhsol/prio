@@ -1,0 +1,173 @@
+# ========================================
+# Jeeves Project .gitignore
+# ========================================
+
+# ----------------------------------------
+# Models & Large Data Files
+# ----------------------------------------
+# GGUF model files (2-7GB each)
+*.gguf
+models/
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.onnx
+
+# Wget logs
+wget-log*
+
+# ----------------------------------------
+# Android / Gradle Build
+# ----------------------------------------
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+*.hprof
+
+# Native build
+.cxx/
+.externalNativeBuild/
+obj/
+
+# APK files
+*.apk
+*.ap_
+*.aab
+
+# Generated files
+app/generated/
+app/output.json
+
+# ----------------------------------------
+# IDE & Editor
+# ----------------------------------------
+# VS Code (keep settings but ignore some)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains
+.idea/
+*.ipr
+*.iws
+
+# Eclipse
+.project
+.classpath
+.settings/
+
+# ----------------------------------------
+# OS Generated
+# ----------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+*~
+
+# ----------------------------------------
+# Build Outputs & Binaries
+# ----------------------------------------
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.ear
+*.so
+*.dylib
+*.dll
+*.exe
+*.o
+*.a
+
+# ----------------------------------------
+# Logs & Temp Files
+# ----------------------------------------
+*.log
+*.tmp
+*.temp
+*.swp
+*.swo
+*.bak
+logs/
+tmp/
+
+# ----------------------------------------
+# Test & Benchmark Results (keep docs)
+# ----------------------------------------
+# Keep documented results in docs/
+# Ignore raw benchmark outputs
+benchmark_raw_results.txt
+accuracy_results.txt
+*_results.txt
+!docs/**/*.txt
+
+# ----------------------------------------
+# Secrets & Credentials
+# ----------------------------------------
+*.env
+.env.*
+*.pem
+*.key
+*.p12
+*.keystore
+*.jks
+secrets/
+credentials/
+
+# ----------------------------------------
+# Node.js (if used for tooling)
+# ----------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ----------------------------------------
+# Python (if used for scripts)
+# ----------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg
+*.egg-info/
+.eggs/
+venv/
+.venv/
+env/
+.env/
+.Python
+
+# ----------------------------------------
+# Rust (if used)
+# ----------------------------------------
+target/
+Cargo.lock
+
+# ----------------------------------------
+# Coverage & Testing
+# ----------------------------------------
+coverage/
+*.gcov
+*.gcda
+*.gcno
+.nyc_output/
+htmlcov/
+.coverage
+.coverage.*
