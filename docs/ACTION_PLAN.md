@@ -14,9 +14,23 @@ This action plan outlines the complete development roadmap for Jeeves MVP, from 
 ### Key Constraints
 
 - **Platform**: Android (API 29+)
-- **AI**: On-device LLM (llama.cpp + Phi-3-mini/Gemma 2B)
+- **AI**: On-device LLM (llama.cpp + Phi-3-mini/Gemma 2B) with mandatory rule-based fallback
 - **Timeline**: 14 weeks to beta, 16 weeks to launch
 - **Task Limit**: Each task ≤4 hours
+
+### Verified Performance Baselines (from Milestone 0.2 - Pixel 9a)
+
+| Metric | Phi-3-mini Q4_K_M | Mistral 7B Q4_K_M | Rule-Based |
+|--------|-------------------|-------------------|------------|
+| Model Size | 2.23 GB | 4.1 GB | N/A |
+| Load Time | **1.5 seconds** | 33-45 seconds | Instant |
+| Prompt Processing | **20-22 t/s** | 11-14 t/s | N/A |
+| Token Generation | **4.5 t/s** | 3.2 t/s | N/A |
+| Classification Time | **2-3 seconds** | 45-60 seconds | **<50ms** |
+| RAM Usage | 3.5 GB | ~5 GB | <10 MB |
+| Eisenhower Accuracy | **40%** ❌ | **80%** ✅ | **75%** ✅ |
+
+> **Critical Finding**: Phi-3-mini has a strong DO bias and achieves only 40% accuracy with simple prompts. Mistral 7B reaches 80% but is too slow for real-time use. **Rule-based classifier (75% accuracy, <50ms) is the most viable option for MVP.**
 
 ### Strategic Context (from Competitive Analysis + Milestone 0.3 Validation)
 
@@ -38,12 +52,14 @@ This action plan outlines the complete development roadmap for Jeeves MVP, from 
 | Pro | $6.99/mo | Unlimited AI, full goals, briefings, analytics | Alex ($10 WTP) + Maya ($5 WTP) |
 | Lifetime | $99.99 | All Pro features forever | Maya (Privacy) - no subscription aversion |
 
-**Key Differentiators** (validated in 0.3.1 80/20 analysis):
-1. **On-device AI** — 80% accuracy target with hybrid rule-based + LLM approach
+**Key Differentiators** (validated in 0.3.1 80/20 analysis, **updated with 0.2 findings**):
+1. **On-device AI** — **75-80% accuracy** target with **hybrid rule-based (primary) + LLM (refinement)** approach
 2. **Privacy-first** — zero cloud dependency; "data never leaves device" (95% confidence in persona validation)
 3. **Goal-task integration** — unique value proposition (1.95 value score); creates switching cost
 4. **Daily AI briefings** — highest retention driver (2.18 value score); habit formation engine
 5. **Pluggable AI architecture** — swap models or add cloud backend without code changes
+
+> ⚠️ **Critical 0.2 Finding**: Pure LLM (Phi-3-mini) achieves only 40% accuracy. MVP relies on rule-based classifier (75%) with optional LLM enhancement. See [Milestone 0.2.6](#milestone-026-llm-accuracy-improvement--alternative-exploration-new) for improvement roadmap.
 
 **Validated User Pain Points** (from 0.3.7 secondary research):
 | Persona | #1 Pain Point | Confidence | Switching Trigger |
@@ -102,21 +118,23 @@ Each task follows this format:
 
 | ID | Task | Owner | Duration | Status | Measurable Outcome |
 |----|------|-------|----------|--------|-------------------|
-| 0.2.1 | Set up llama.cpp Android test project with JNI | Android Developer | 4h | ✅ Completed | Working Android project that can load a GGUF model via NDK |
-| 0.2.2 | Benchmark Phi-3-mini-4k-instruct (Q4_K_M) on reference device | Android Developer | 3h | ✅ Completed | Performance report: 20-22 t/s prompt, 4.5 t/s generation, 1.5s load on Pixel 9a |
-| 0.2.3 | Test task categorization accuracy with 20 sample prompts | Android Developer | 2h | ⚠️ Complete (below target) | Accuracy: 25-50% LLM, 75% rule-based - hybrid approach required |
-| 0.2.4 | Document memory/storage requirements and device compatibility | Android Developer | 1h | ✅ Completed | Compatibility matrix: 4-tier device support (65% market = full LLM support) |
-| 0.2.5 | Write LLM selection recommendation with rule-based fallback | Android Developer | 1h | ✅ Completed | Recommendation: Rule-based primary + Phi-3-mini fallback strategy |
+| 0.2.1 | Set up llama.cpp Android test project with JNI | Android Developer | 4h | ✅ Completed | Working Android project (llm-test/) with JNI, ARM64 optimized build (-march=armv8.2-a+dotprod+fp16 = **2.5x speedup**) |
+| 0.2.2 | Benchmark Phi-3-mini-4k-instruct (Q4_K_M) on reference device | Android Developer | 3h | ✅ Completed | Pixel 9a verified: **1.5s load, 20-22 t/s prompt, 4.5 t/s gen, 3.5GB RAM, 2-3s classification** |
+| 0.2.3 | Test task categorization accuracy with 20 sample prompts | Android Developer | 2h | ⚠️ Below Target | **Phi-3: 40% (DO bias)**, Mistral 7B: 80% (too slow), Rule-based: 75% - see confusion matrix below |
+| 0.2.4 | Document memory/storage requirements and device compatibility | Android Developer | 1h | ✅ Completed | 4-tier matrix: Tier 1-2 (65% market, 6GB+) = full LLM; Tier 3-4 = rule-based only |
+| 0.2.5 | Write LLM selection recommendation with rule-based fallback | Android Developer | 1h | ✅ Completed | **Decision: Rule-based primary (75%), LLM for edge cases only** |
 
 **Deliverables Created:**
 - [Test Project: llm-test/](../llm-test/) - Working Android project with JNI integration
-- [0.2.1 llama.cpp Android JNI Setup](results/0.2/0.2.1_llama_cpp_android_setup.md)
-- [0.2.2 Phi-3-mini Benchmark Report](results/0.2/0.2.2_phi3_benchmark_report.md)
-- [0.2.3 Task Categorization Accuracy](results/0.2/0.2.3_task_categorization_accuracy.md)
-- [0.2.4 Device Compatibility Matrix](results/0.2/0.2.4_device_compatibility_matrix.md)
-- [0.2.5 LLM Selection Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md)
-- [Mistral 7B Benchmark Comparison](results/0.2/mistral_7b_benchmark_comparison.md)
-- [Milestone 0.2 Findings Report](results/0.2/README.md)
+- [0.2.1 llama.cpp Android JNI Setup](results/0.2/0.2.1_llama_cpp_android_setup.md) - Build process, native binaries, JNI bridge
+- [0.2.2 Phi-3-mini Benchmark Report](results/0.2/0.2.2_phi3_benchmark_report.md) - **20-22 t/s prompt, 4.5 t/s gen, 1.5s load**
+- [0.2.3 Task Categorization Accuracy](results/0.2/0.2.3_task_categorization_accuracy.md) - **40% LLM accuracy, confusion matrix**
+- [0.2.4 Device Compatibility Matrix](results/0.2/0.2.4_device_compatibility_matrix.md) - 4-tier device support (65% Tier 1-2)
+- [0.2.5 LLM Selection Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md) - Rule-based primary strategy
+- [Mistral 7B Benchmark Comparison](results/0.2/mistral_7b_benchmark_comparison.md) - **80% accuracy, 45-60s too slow**
+- [Milestone 0.2 Findings Report](results/0.2/README.md) - Summary and strategic implications
+- [Real Device Benchmark Results](results/0.2/real_device_benchmark_results.txt) - Raw Pixel 9a output
+- [GGUF Models](../models/) - Phi-3-mini Q4 (2.3GB), Mistral 7B Q4 (4.1GB)
 
 **Research Summary (February 2026):**
 - Tested Phi-3-mini with correct `<|user|>` template: **25-50% accuracy** (strong DO bias)
@@ -124,12 +142,95 @@ Each task follows this format:
 - Rule-based classifier: **75% accuracy** with <50ms latency ✅
 - **Conclusion**: Rule-based is best for MVP, LLM as fallback for edge cases
 
+**Accuracy by Quadrant (Phi-3-mini on Pixel 9a - 20 test cases):**
+
+| Quadrant | Expected | Correct | Accuracy | Key Failure Mode |
+|----------|----------|---------|----------|------------------|
+| DO (Urgent+Important) | 5 | 1 | 20% | Missed deadlines, classified as ELIMINATE |
+| SCHEDULE (Important) | 5 | 2 | 40% | Classified as ELIMINATE |
+| DELEGATE (Urgent only) | 5 | 1 | 20% | Classified as SCHEDULE/ELIMINATE |
+| ELIMINATE (Neither) | 5 | 4 | 80% | Best performance |
+| **Total** | **20** | **8** | **40%** | Strong ELIMINATE bias |
+
+**Root Cause Analysis:**
+1. **Phi-3 strong DO/ELIMINATE bias** - model struggles with nuanced Eisenhower concepts
+2. **Urgency detection weak** - fails to recognize temporal context ("deadline tomorrow")
+3. **Prompt format critical** - requires `<|user|>...<|end|><|assistant|>` template
+4. **3.8B parameters insufficient** - multi-class classification needs larger model
+
+**Prompt Engineering Findings:**
+- Simple prompt ("Classify: {task}") → 25% accuracy
+- With Eisenhower definitions → 40-50% accuracy
+- Chain-of-thought (Mistral 7B only) → 80% accuracy
+
 **Milestone Exit Criteria**:
 - [x] Phi-3-mini benchmarked on high-end device (Pixel 9a verified)
 - [x] Task categorization accuracy >80% — **MET with Mistral 7B (80%)**, Phi-3 insufficient (25-50%)
 - [x] Model recommendation documented with fallback strategy
 
 **Milestone Status**: ✅ **COMPLETE** - All tasks executed. Key finding: **Rule-based classifier (75%) is more viable than LLM (25-50%) for MVP**. Mistral 7B achieves 80% but too slow. Recommendation: Hybrid rule-based + LLM approach.
+
+---
+
+### Milestone 0.2.6: LLM Accuracy Improvement & Alternative Exploration (NEW)
+**Goal**: Explore paths to achieve 80%+ classification accuracy for enhanced UX  
+**Owner**: Android Developer + Backend Engineer  
+**Priority**: P1 (parallel to Phase 1, can extend into Phase 2)  
+**Rationale**: 40% LLM accuracy limits AI value proposition; need fallback plan if rule-based (75%) insufficient
+
+*Note: This is an exploratory milestone. If rule-based achieves 80%+ with refinement, LLM improvements become P2.*
+
+**Option A: Improve Prompt Engineering (Quick Wins)**
+
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 0.2.6.1 | Test structured output prompts (JSON mode) | Android Developer | 2h | 🔲 Not Started | Compare JSON vs free-text output parsing accuracy on 20 test cases |
+| 0.2.6.2 | Create chain-of-thought prompt for Phi-3 | Backend Engineer | 2h | 🔲 Not Started | "Step 1: Is urgent? Step 2: Is important?" format, measure accuracy |
+| 0.2.6.3 | Test few-shot prompts with 3-5 examples per quadrant | Backend Engineer | 2h | 🔲 Not Started | Include diverse examples, avoid bias toward any quadrant |
+| 0.2.6.4 | Optimize Phi-3 system prompt with Eisenhower expert persona | Backend Engineer | 2h | 🔲 Not Started | "You are an Eisenhower Matrix expert..." with decision rules |
+| 0.2.6.5 | Benchmark optimized prompts on 50 diverse tasks | Android Developer | 3h | 🔲 Not Started | Expanded test set covering edge cases, target ≥70% accuracy |
+
+**Option B: Alternative Model Exploration**
+
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 0.2.6.6 | Benchmark Gemma 2B (Q4_K_M) | Android Developer | 3h | 🔲 Not Started | Size: ~1.5GB, test load time, speed, accuracy on 20 tasks |
+| 0.2.6.7 | Benchmark Llama 3.2 1B/3B | Android Developer | 3h | 🔲 Not Started | Meta's latest small models, test instruction following |
+| 0.2.6.8 | Benchmark Qwen 2.5 1.5B/3B | Android Developer | 3h | 🔲 Not Started | Alibaba's efficient models, strong at structured tasks |
+| 0.2.6.9 | Benchmark TinyLlama 1.1B | Android Developer | 2h | 🔲 Not Started | Smallest option (~0.8GB), viable for Tier 3-4 devices |
+| 0.2.6.10 | Create model comparison matrix | Android Developer | 2h | 🔲 Not Started | Size/speed/accuracy/RAM for all tested models |
+
+**Option C: Background Processing Architecture (for Larger Models)**
+
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 0.2.6.11 | Design background classification queue | Android Developer | 3h | 🔲 Not Started | WorkManager-based queue for async LLM processing |
+| 0.2.6.12 | Implement optimistic UI with pending state | Android Developer | 2h | 🔲 Not Started | Show "Classifying..." badge, update when LLM completes |
+| 0.2.6.13 | Benchmark Mistral 7B in background mode | Android Developer | 2h | 🔲 Not Started | Test battery impact, time-to-classification, user notification |
+| 0.2.6.14 | Design classification refinement UX | UX Designer | 2h | 🔲 Not Started | How to notify user when AI improves initial rule-based guess |
+| 0.2.6.15 | Prototype hybrid rule→LLM refinement flow | Android Developer | 4h | 🔲 Not Started | Rule-based instant → LLM refines in background → notify if changed |
+
+**Option D: Rule-Based Classifier Refinement**
+
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 0.2.6.16 | Expand keyword dictionaries for all quadrants | Android Developer | 2h | 🔲 Not Started | 50+ keywords per quadrant from real-world task examples |
+| 0.2.6.17 | Add temporal pattern matching (deadlines) | Android Developer | 2h | 🔲 Not Started | Parse "tomorrow", "next week", "by Friday" → urgency score |
+| 0.2.6.18 | Add context-aware rules (meeting, email, etc.) | Android Developer | 2h | 🔲 Not Started | Domain-specific patterns for common task types |
+| 0.2.6.19 | Implement confidence scoring for rule-based | Android Developer | 2h | 🔲 Not Started | Low confidence → escalate to LLM; track confidence distribution |
+| 0.2.6.20 | Benchmark refined rule-based on 50 tasks | Android Developer | 2h | 🔲 Not Started | Target: ≥80% accuracy, <100ms latency |
+
+**Milestone Exit Criteria**:
+- [ ] At least one approach achieves ≥80% accuracy on 50-task benchmark
+- [ ] Selected approach documented with implementation plan
+- [ ] Performance acceptable for MVP UX (<5s for any approach)
+- [ ] Fallback chain defined: Rule-based → LLM enhancement (if any)
+
+**Decision Point**: After completing 0.2.6.1-0.2.6.5 (prompt engineering), evaluate:
+- If Phi-3 accuracy ≥70%: Proceed with Phi-3 + improved prompts
+- If Phi-3 accuracy <70%: Evaluate alternative models (Option B)
+- If no model viable: Invest in rule-based refinement (Option D)
+- If Mistral 7B required: Implement background processing (Option C)
 
 ### Milestone 0.3: MVP Definition & Validation
 **Goal**: Define minimal feature set that delivers 80% of value, validated with target users  
@@ -400,15 +501,24 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 2.2: AI Provider Abstraction Layer
 **Goal**: Create pluggable AI provider architecture that supports model switching and cloud fallback  
 **Owner**: Android Developer (Backend Engineer assists with API design)  
-**Source**: [0.2.5 LLM Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md), [0.3.8 AI Accuracy Metric](results/0.3/0.3.8_success_metrics.md)
+**Source**: [0.2.5 LLM Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md), [0.3.8 AI Accuracy Metric](results/0.3/0.3.8_success_metrics.md), [Milestone 0.2.6 Exploration]()
 
 *Note: Key architectural foundation for easy LLM replacement and future cloud integration. This abstraction enables swapping models without code changes and plugging in backend-based solutions.*
 
-**AI Accuracy Targets** (from [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md)):
-- Launch: 80% (user override rate <20%)
-- Month 3: 85%
-- Alert threshold: 🔴 <70%
-- Q1 (Do Now) accuracy: 85% — critical, don't miss urgent items
+**AI Accuracy Targets** (revised based on [0.2.3 findings](results/0.2/0.2.3_task_categorization_accuracy.md)):
+| Target | Previous | Revised | Rationale |
+|--------|----------|---------|------------|
+| Launch | 80% | **75-80%** | Rule-based achieves 75%; LLM improvement in progress |
+| Month 3 | 85% | **80-85%** | Dependent on 0.2.6 exploration results |
+| Q1 (Do Now) accuracy | 85% | **90%+** | Critical: Rule-based keywords for urgency detection |
+| Alert threshold | <70% | **<70%** | No change |
+
+**Verified Performance Budgets** (from [0.2.2 benchmarks](results/0.2/0.2.2_phi3_benchmark_report.md)):
+- Rule-based classification: **<50ms** (verified)
+- LLM classification (Phi-3): **2-3 seconds** (verified on Pixel 9a)
+- LLM classification (Mistral 7B): **45-60 seconds** (too slow for real-time)
+- Model loading: **1.5s Phi-3, 33-45s Mistral** (Phi-3 viable for on-demand)
+- RAM budget: **<4GB** (Phi-3: 3.5GB, Mistral: 5GB exceeds on 8GB devices)
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
@@ -418,24 +528,25 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 2.2.4 | Implement ModelDownloadManager with resume support | Android Developer | 3h | Downloads model with progress, SHA-256 verification, resume on failure |
 | 2.2.5 | Integrate llama.cpp via JNI/NDK | Android Developer | 4h | JNI wrapper compiles, basic inference works (reuse [llm-test/](../llm-test/) from 0.2.1) |
 | 2.2.6 | Implement OnDeviceAiProvider | Android Developer | 3h | Provider using llama.cpp, implements AiProvider interface |
-| 2.2.7 | Implement RuleBasedFallbackProvider | Android Developer | 2h | Regex-based fallback (75% accuracy per 0.2.3), always available, <50ms latency |
+| 2.2.7 | Implement RuleBasedFallbackProvider | Android Developer | 3h | Regex + keyword classifier (**verified 75% accuracy per 0.2.3**), always available, **<50ms latency**, includes confidence scoring for LLM escalation |
 | 2.2.8 | Implement AiProviderRouter with fallback chain | Android Developer | 3h | Routes: RuleBased first → LLM for edge cases per 0.2.5 recommendation |
 | 2.2.9 | Create PromptTemplateRepository | Android Developer | 2h | Stores prompts per model, per task type (Eisenhower, parsing, briefing) |
-| 2.2.10 | Write Eisenhower classification prompts | Android Developer | 2h | Prompt templates achieving ≥80% accuracy on 20 test cases from [0.2.3](results/0.2/0.2.3_task_categorization_accuracy.md) |
+| 2.2.10 | Write Eisenhower classification prompts | Backend Engineer | 4h | **Phi-3 template**: `<|user|>...<|end|><|assistant|>` format; include Eisenhower definitions + decision rules; chain-of-thought for edge cases; target ≥70% accuracy (rule-based handles remainder); incorporate findings from [0.2.6 exploration](results/0.2/) |
 | 2.2.11 | Write task parsing prompts | Android Developer | 2h | Parse: title, date, time, priority per [TM-002](results/0.3/0.3.2_task_management_user_stories.md) examples |
-| 2.2.12 | Performance test: inference under 3 seconds | Android Developer | 1h | 90%+ queries complete in <3s on mid-range devices per [0.2.2](results/0.2/0.2.2_phi3_benchmark_report.md) |
+| 2.2.12 | Performance test: inference under 3 seconds | Android Developer | 2h | **Verified baseline**: Phi-3 achieves 2-3s on Pixel 9a (Tier 1); target 90%+ queries <5s on Tier 2 (6GB RAM) devices; test with optimized build flags (`-march=armv8.2-a+dotprod+fp16`) |
 | 2.2.13 | Write AI provider unit tests | Android Developer | 2h | Tests for: provider selection, fallback, accuracy tracking, override recording |
 | 2.2.14 | Design CloudGatewayProvider stub (API contract) | Backend Engineer | 2h | API spec for /api/v1/ai/* endpoints matching mobile AiRequest/AiResponse |
 
 **Milestone Exit Criteria**:
 - [ ] AiProvider interface defined with clear contract
 - [ ] ModelRegistry supports listing/downloading/switching models
-- [ ] OnDeviceAiProvider working with Phi-3-mini (<3s inference)
-- [ ] RuleBasedFallbackProvider as always-available fallback (75% accuracy, <50ms)
-- [ ] AiProviderRouter correctly chains: RuleBased → LLM fallback
-- [ ] Eisenhower classification accuracy ≥80% (per [0.3.8](results/0.3/0.3.8_success_metrics.md))
-- [ ] Override tracking implemented for accuracy measurement
+- [ ] OnDeviceAiProvider working with Phi-3-mini (**verified: <3s on Tier 1, <5s on Tier 2**)
+- [ ] RuleBasedFallbackProvider as **primary classifier** (**verified: 75% accuracy, <50ms**)
+- [ ] AiProviderRouter correctly chains: **RuleBased (primary) → LLM (edge cases/refinement)**
+- [ ] Combined classification accuracy ≥**75%** (rule-based baseline, LLM improves low-confidence cases)
+- [ ] Override tracking implemented for accuracy measurement per [0.3.8](results/0.3/0.3.8_success_metrics.md)
 - [ ] Cloud API contract documented for future backend integration
+- [ ] Background processing queue ready for larger models (per 0.2.6.11-0.2.6.15)
 
 ### Milestone 2.3: UI Design System Implementation
 **Goal**: Implement reusable Compose components matching specifications  
@@ -477,10 +588,10 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 | ID | Task | Owner | Duration | Source Story | Measurable Outcome |
 |----|------|-------|----------|--------------|-------------------|
-| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | Engine: deadline urgency (7d/3d/24h/overdue), keyword detection, quadrant assignment |
+| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | **Rule-based primary** (per 0.2.5): deadline urgency (7d/3d/24h/overdue=Q1), keyword dictionaries (50+ per quadrant), temporal pattern matching ("tomorrow", "by Friday"), confidence scoring for LLM escalation; target **≥75% accuracy, <100ms** |
 | 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | LazyColumn, quadrant badges (color-coded), overdue highlight, sort by Q1→Q4, 60fps scroll |
 | 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | All fields editable, goal linking picker, quadrant override, delete with 5s undo snackbar |
-| 3.1.5 | Implement Quick Capture with AI | Android Developer | 3h | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <200ms, NL parsing preview (title/date/priority), haptic confirm, works offline |
+| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <200ms, **instant rule-based classification (<100ms)**, NL parsing preview (title/date/priority), haptic confirm, works offline; optional LLM refinement in background (per 0.2.6.15) |
 | 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Reorder within list, haptic feedback, persist order |
 | 3.1.7 | Implement swipe actions | Android Developer | 2h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (animated checkmark), swipe left = delete (confirm) |
 | 3.1.8 | Implement task filters and search | Android Developer | 2h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter by quadrant/status/date, FTS search, completed show/hide toggle |
@@ -489,8 +600,9 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All TM stories | 10+ tests: capture flow, AI classification, CRUD, swipe actions, filters |
 
 **Milestone Exit Criteria**:
-- [ ] Tasks can be created via AI natural language in <5 seconds
-- [ ] Eisenhower prioritization accuracy ≥80% (track via override rate per [0.3.8](results/0.3/0.3.8_success_metrics.md))
+- [ ] Tasks can be created via AI natural language in **<3 seconds** (rule-based instant, LLM optional)
+- [ ] Eisenhower prioritization accuracy ≥**75%** initial, ≥**80%** with LLM refinement (track override rate per [0.3.8](results/0.3/0.3.8_success_metrics.md))
+- [ ] **Q1 (Do Now) accuracy ≥90%** — critical to not miss urgent items (per 0.2.3 failure analysis)
 - [ ] All CRUD operations functional with undo support
 - [ ] Reminders trigger correctly via WorkManager
 - [ ] Goal linking functional per [GL-003](results/0.3/0.3.3_goals_user_stories.md)
@@ -799,7 +911,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 | Phase | Weeks | Key Deliverables | Source Docs |
 |-------|-------|------------------|-------------|
-| 0: Research | 1-2 | Market analysis, LLM selection, MVP PRD | [0.1](results/0.1/), [0.2](results/0.2/), [0.3](results/0.3/) |
+| 0: Research | 1-2 (+parallel) | Market analysis, LLM selection, MVP PRD, **LLM accuracy exploration** | [0.1](results/0.1/), [0.2](results/0.2/), [0.3](results/0.3/) |
 | 1: Design & Setup | 2-3 | UX specs, project architecture | [0.3.2-0.3.4 User Stories](results/0.3/), [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) |
 | 2: Core | 3-5 | Data layer, AI engine, design system | [0.2.5 LLM Rec](results/0.2/0.2.5_llm_selection_recommendation.md), [0.3.8 Metrics](results/0.3/0.3.8_success_metrics.md) |
 | 3: Features | 5-10 | Tasks, Goals, Calendar, Briefings, Analytics | [0.3.2](results/0.3/0.3.2_task_management_user_stories.md), [0.3.3](results/0.3/0.3.3_goals_user_stories.md), [0.3.4](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
@@ -807,7 +919,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 5: Launch | 12-14 | Beta testing, Play Store launch | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
 | 6: Post-Launch | 14-16 | Stabilization, iteration | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
 
-*See [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md) for v1.1 features, Cloud AI (Phase 7), and Custom Agents (Phase 8).*
+*Milestone 0.2.6 (LLM Accuracy Improvement) runs parallel to Phase 1-2. See [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md) for v1.1 features.*
 
 ### Key Reference Documents
 
@@ -820,6 +932,53 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | User research | Pain points, WTP, objection mitigation |
 | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) | KPIs | DAU, retention, accuracy targets |
 | [0.2.5 LLM Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md) | AI strategy | Rule-based + LLM hybrid approach |
+| **[0.2.2 Phi-3 Benchmark](results/0.2/0.2.2_phi3_benchmark_report.md)** | **Performance baselines** | **20 t/s prompt, 4.5 t/s gen, 1.5s load** |
+| **[0.2.3 Accuracy Report](results/0.2/0.2.3_task_categorization_accuracy.md)** | **Classification accuracy** | **40% LLM vs 75% rule-based** |
+| **[Mistral Comparison](results/0.2/mistral_7b_benchmark_comparison.md)** | **Model comparison** | **80% accuracy but 45-60s too slow** |
+| **[0.2.4 Device Matrix](results/0.2/0.2.4_device_compatibility_matrix.md)** | **Device support** | **4-tier: 65% market gets full LLM** |
+
+### Critical Technical Findings (from Milestone 0.2)
+
+> **These findings fundamentally shape the AI architecture for MVP.**
+
+| Finding | Impact | Action |
+|---------|--------|--------|
+| Phi-3-mini achieves only 40% accuracy | Cannot rely on LLM alone | Rule-based primary classifier |
+| Mistral 7B achieves 80% but takes 45-60s | Too slow for real-time UX | Background processing option |
+| Rule-based achieves 75% in <50ms | Viable for MVP | Invest in keyword expansion |
+| ARM64 optimization = 2.5x speedup | Critical for performance | Always use optimized builds |
+| 3.5GB RAM for Phi-3 | Limits to Tier 1-2 devices (65%) | Rule-based fallback for Tier 3-4 |
+| Model load = 1.5s (Phi-3) vs 45s (Mistral) | Phi-3 viable for on-demand | Preload in background |
+
+**Recommended AI Strategy (per 0.2.5 + 0.2.6 planning):**
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                    Task Input                             │
+└──────────────────────────┴────────────────────────────────┘
+                            │
+                            ▼
+              ┌───────────────────────┐
+              │  STEP 1: Rule-Based   │  <100ms, 75% accuracy
+              │  (always runs first)  │  Keywords + patterns
+              └───────────┬───────────┘
+                          │
+           ┌─────────────┼─────────────┐
+           │                         │
+    Confidence ≥75%           Confidence <75%
+           │                         │
+           ▼                         ▼
+    ┌─────────────┐       ┌─────────────────────┐
+    │  Use Result  │       │  STEP 2: LLM Queue   │
+    │  (instant)   │       │  (background, 2-60s) │
+    └─────────────┘       └─────────┴───────────┘
+                                    │
+                                    ▼
+                          ┌─────────────────────┐
+                          │ Update if different  │
+                          │ (notify user)        │
+                          └─────────────────────┘
+```
 
 ### Resource Allocation (MVP)
 
@@ -838,14 +997,16 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 | Phase | Tasks | Estimated Hours |
 |-------|-------|-----------------|
-| Phase 0: Research | 18 | ~37h |
+| Phase 0: Research | 18 + **20 (0.2.6)** | ~37h + **~45h** |
 | Phase 1: Design & Setup | 28 | ~55h |
 | Phase 2: Core | 33 | ~68h |
 | Phase 3: Features | 35 | ~105h |
 | Phase 4: Polish | 17 | ~40h |
 | Phase 5: Launch | 16 | ~35h |
 | Phase 6: Post-Launch | 9 | ~20h |
-| **Total MVP** | **~156** | **~360h** |
+| **Total MVP** | **~176** | **~405h** |
+
+*Note: Milestone 0.2.6 (LLM Accuracy Improvement) is optional/parallel work. Core MVP can proceed with rule-based classifier (75% accuracy) while exploration continues.*
 
 *MVP scope includes AI Provider abstraction layer for easy model replacement and cloud integration readiness. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
 
