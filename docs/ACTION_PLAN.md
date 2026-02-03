@@ -40,9 +40,10 @@ This action plan outlines the complete development roadmap for Jeeves MVP, from 
 
 **Key Differentiators**:
 1. On-device AI (87% Eisenhower accuracy with Phi-3-mini)
-2. Privacy-first (zero cloud dependency)
+2. Privacy-first (zero cloud dependency for MVP)
 3. Goal-task integration (unique in market)
 4. Daily AI briefings (drives engagement)
+5. **Pluggable AI architecture** (swap models or add cloud backend without code changes)
 
 ### SMART Task Format
 
@@ -205,7 +206,7 @@ Each task follows this format:
 |----|------|-------|----------|-------------------|
 | 1.2.1 | Create Android project with Gradle version catalog | Android Developer | 2h | Project builds successfully, all dependencies in libs.versions.toml |
 | 1.2.2 | Configure build variants (debug, release, benchmark) | Android Developer | 1h | 3 build variants configured with appropriate flags |
-| 1.2.3 | Set up multi-module structure | Android Developer | 2h | Modules created: :app, :core:common, :core:ui, :core:data, :core:domain, :core:ai |
+| 1.2.3 | Set up multi-module structure | Android Developer | 2h | Modules created: :app, :core:common, :core:ui, :core:data, :core:domain, :core:ai, :core:ai-provider |
 | 1.2.4 | Configure Hilt dependency injection | Android Developer | 2h | Hilt set up in all modules, sample injection working |
 | 1.2.5 | Set up Room database | Android Developer | 2h | Database initializes, sample entity CRUD works (encryption deferred to v1.1) |
 | 1.2.6 | Configure DataStore for preferences | Android Developer | 1h | UserPreferences DataStore created with sample preferences |
@@ -214,12 +215,14 @@ Each task follows this format:
 | 1.2.9 | Set up testing infrastructure | Android Developer | 2h | JUnit 5, MockK, Turbine configured, sample test passing |
 | 1.2.10 | Configure GitHub Actions CI | Android Developer | 2h | CI runs on PR: build, lint, test |
 | 1.2.11 | Set up Firebase Crashlytics | Android Developer | 1h | Crash reporting configured for debug and release builds |
+| 1.2.12 | Configure Kotlin Serialization for AI types | Android Developer | 1h | kotlinx.serialization configured, AiRequest/AiResponse serializable |
 
 **Milestone Exit Criteria**:
 - [ ] Project builds and runs on emulator
-- [ ] All modules created and connected
+- [ ] All modules created and connected (including :core:ai-provider)
 - [ ] CI pipeline passing
-- [ ] Encrypted database working
+- [ ] Kotlin Serialization configured for AI types
+- [ ] Database initialized (encryption deferred to v1.1)
 
 ### Milestone 1.3: Quick Design Validation
 **Goal**: Lightweight validation of core flows before development  
@@ -263,29 +266,37 @@ Each task follows this format:
 - [ ] All repositories tested with 80%+ coverage
 - [ ] Migrations strategy documented
 
-### Milestone 2.2: AI Engine
-**Goal**: Integrate on-device LLM and create inference interface  
-**Owner**: Android Developer (Backend Engineer assists with prompts only)
+### Milestone 2.2: AI Provider Abstraction Layer
+**Goal**: Create pluggable AI provider architecture that supports model switching and cloud fallback  
+**Owner**: Android Developer (Backend Engineer assists with API design)
 
-*Note: JNI/NDK integration is Android work. Streaming deferred to post-MVP; sync inference is sufficient.*
+*Note: Key architectural foundation for easy LLM replacement and future cloud integration. This abstraction enables swapping models without code changes and plugging in backend-based solutions.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 2.2.1 | Integrate llama.cpp via JNI/NDK | Android Developer | 4h | JNI wrapper compiles, basic inference works in test app |
-| 2.2.2 | Create LlmEngine interface | Android Developer | 1h | Interface with classifyTask(), parseTask() methods |
-| 2.2.3 | Implement LlamaCppEngine (sync inference) | Android Developer | 3h | Implementation using JNI wrapper, background thread |
-| 2.2.4 | Create ModelManager for download/verification | Android Developer | 3h | Downloads model with progress, verifies checksum, resumes partial downloads |
-| 2.2.5 | Create RuleBasedFallback engine | Android Developer | 2h | Regex-based task parsing for low-end devices |
-| 2.2.6 | Write Eisenhower classification prompts | Android Developer | 2h | Prompt template with 80%+ accuracy on 20 test cases |
-| 2.2.7 | Write task parsing prompts | Android Developer | 2h | Prompt extracts: title, date, time, priority from natural language |
-| 2.2.8 | Performance test: inference under 3 seconds | Android Developer | 1h | 90%+ queries complete in <3s on mid-range devices |
-| 2.2.9 | Write AI engine tests | Android Developer | 2h | Unit tests for prompt processing, mock-based inference tests |
+| 2.2.1 | Design AiProvider interface and core types | Android Developer | 2h | Interface with AiRequest, AiResponse, AiCapability defined in :core:ai module |
+| 2.2.2 | Implement AiRequest/AiResponse serializable types | Android Developer | 1h | @Serializable data classes matching backend API contract |
+| 2.2.3 | Create ModelRegistry for runtime model management | Android Developer | 3h | Registry that tracks available models, downloads, and active model |
+| 2.2.4 | Implement ModelDownloadManager with resume support | Android Developer | 3h | Downloads model with progress, SHA-256 verification, resume on failure |
+| 2.2.5 | Integrate llama.cpp via JNI/NDK | Android Developer | 4h | JNI wrapper compiles, basic inference works in test app |
+| 2.2.6 | Implement OnDeviceAiProvider | Android Developer | 3h | Provider using llama.cpp, implements AiProvider interface |
+| 2.2.7 | Implement RuleBasedFallbackProvider | Android Developer | 2h | Regex-based fallback implementing AiProvider, always available |
+| 2.2.8 | Implement AiProviderRouter with fallback chain | Android Developer | 3h | Routes requests to available providers, respects user preferences |
+| 2.2.9 | Create PromptTemplateRepository | Android Developer | 2h | Stores prompts per model, per task type (Eisenhower, parsing, briefing) |
+| 2.2.10 | Write Eisenhower classification prompts | Android Developer | 2h | Prompt templates achieving 80%+ accuracy on 20 test cases |
+| 2.2.11 | Write task parsing prompts | Android Developer | 2h | Prompts that extract: title, date, time, priority from natural language |
+| 2.2.12 | Performance test: inference under 3 seconds | Android Developer | 1h | 90%+ queries complete in <3s on mid-range devices |
+| 2.2.13 | Write AI provider unit tests | Android Developer | 2h | Tests for provider selection, fallback, model switching |
+| 2.2.14 | Design CloudGatewayProvider stub (API contract) | Backend Engineer | 2h | API spec for /api/v1/ai/* endpoints matching mobile AiRequest/AiResponse |
 
 **Milestone Exit Criteria**:
-- [ ] LLM sync inference working on device (<3s)
-- [ ] Model download with resume support
-- [ ] Rule-based fallback for low-end devices
+- [ ] AiProvider interface defined with clear contract
+- [ ] ModelRegistry supports listing/downloading/switching models
+- [ ] OnDeviceAiProvider working with Phi-3-mini (<3s inference)
+- [ ] RuleBasedFallbackProvider as always-available fallback
+- [ ] AiProviderRouter correctly chains providers
 - [ ] Eisenhower classification accuracy >80%
+- [ ] Cloud API contract documented for future backend integration
 
 ### Milestone 2.3: UI Design System Implementation
 **Goal**: Implement reusable Compose components matching specifications  
@@ -627,15 +638,15 @@ Each task follows this format:
 | Phase | Tasks | Estimated Hours |
 |-------|-------|-----------------|
 | Phase 0: Research | 18 | ~37h |
-| Phase 1: Design & Setup | 27 | ~54h |
-| Phase 2: Core | 28 | ~56h |
+| Phase 1: Design & Setup | 28 | ~55h |
+| Phase 2: Core | 33 | ~68h |
 | Phase 3: Features | 35 | ~105h |
 | Phase 4: Polish | 17 | ~40h |
 | Phase 5: Launch | 16 | ~35h |
 | Phase 6: Post-Launch | 9 | ~20h |
-| **Total MVP** | **~150** | **~347h** |
+| **Total MVP** | **~156** | **~360h** |
 
-*MVP scope includes persona-specific features (local-only mode, end-of-day nudge, goal progress trend). Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
+*MVP scope includes AI Provider abstraction layer for easy model replacement and cloud integration readiness. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
 
 ### Persona-Feature Mapping
 

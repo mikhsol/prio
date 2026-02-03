@@ -146,11 +146,174 @@ Jeeves is designed as an **offline-first, privacy-first** personal assistant wit
 
 ---
 
-## On-Device LLM Architecture
+## AI Provider Architecture
 
-### LLM Engine Design
+### Design Goals
 
-The on-device LLM is the core intelligence layer, enabling natural language understanding without cloud dependencies.
+The AI layer is designed with **provider abstraction** as a core principle, enabling:
+1. **Easy Model Replacement**: Swap LLM models without code changes
+2. **Hybrid AI Routing**: Seamlessly switch between on-device and cloud providers
+3. **Backend Proxy Ready**: Connect to cloud LLMs via backend gateway when needed
+4. **Graceful Fallback**: Rule-based fallback when AI unavailable
+5. **Provider Agnostic**: Same interface works for all AI backends
+
+### AI Provider Abstraction Layer
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         AI PROVIDER ABSTRACTION LAYER                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────┐ │
+│  │                         AiProvider INTERFACE                            │ │
+│  │                                                                          │ │
+│  │  interface AiProvider {                                                  │ │
+│  │    val providerId: String                                               │ │
+│  │    val capabilities: Set<AiCapability>                                  │ │
+│  │    val isAvailable: Flow<Boolean>                                       │ │
+│  │                                                                          │ │
+│  │    suspend fun complete(request: AiRequest): AiResponse                 │ │
+│  │    suspend fun stream(request: AiRequest): Flow<AiStreamChunk>          │ │
+│  │    suspend fun getModelInfo(): ModelInfo                                │ │
+│  │  }                                                                       │ │
+│  │                                                                          │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+│                                    │                                         │
+│  ┌─────────────┬──────────────────┼───────────────────┬──────────────────┐  │
+│  │             │                  │                   │                  │  │
+│  ▼             ▼                  ▼                   ▼                  ▼  │
+│  ┌───────────┐ ┌────────────────┐ ┌─────────────────┐ ┌────────────────┐   │
+│  │  OnDevice │ │ CloudGateway   │ │   DirectCloud   │ │  RuleBased     │   │
+│  │  Provider │ │ Provider       │ │   Provider      │ │  Fallback      │   │
+│  │           │ │ (via Backend)  │ │ (direct API)    │ │  Provider      │   │
+│  │ • llama.cpp│ │               │ │                 │ │                │   │
+│  │ • GGUF    │ │ • Auth proxy   │ │ • OpenAI        │ │ • Regex        │   │
+│  │ • Local   │ │ • Cost control │ │ • Anthropic     │ │ • Keywords     │   │
+│  │           │ │ • Rate limit   │ │ • Google        │ │ • No network   │   │
+│  └───────────┘ └────────────────┘ └─────────────────┘ └────────────────┘   │
+│       │               │                   │                  │              │
+│       └───────────────┴───────────────────┴──────────────────┘              │
+│                                    │                                         │
+│  ┌────────────────────────────────┴───────────────────────────────────────┐ │
+│  │                         AiProviderRouter                                │ │
+│  │                                                                          │ │
+│  │  • Selects optimal provider based on context                            │ │
+│  │  • Implements fallback chain: OnDevice → Cloud → RuleBased              │ │
+│  │  • Respects user preferences (privacy mode, cost limits)                │ │
+│  │  • Monitors provider availability                                       │ │
+│  │                                                                          │ │
+│  └────────────────────────────────────────────────────────────────────────┘ │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Core Interfaces (Kotlin)
+
+```kotlin
+/**
+ * Unified AI request format used across all providers.
+ * Designed to be serializable for both local and network use.
+ */
+@Serializable
+data class AiRequest(
+    val id: String = UUID.randomUUID().toString(),
+    val prompt: String,
+    val systemPrompt: String? = null,
+    val taskType: AiTaskType,
+    val parameters: AiParameters = AiParameters(),
+    val context: Map<String, String> = emptyMap(),
+    val metadata: RequestMetadata = RequestMetadata()
+)
+
+@Serializable
+data class AiParameters(
+    val maxTokens: Int = 256,
+    val temperature: Float = 0.3f,
+    val topP: Float = 0.9f,
+    val stopSequences: List<String> = emptyList()
+)
+
+@Serializable
+data class RequestMetadata(
+    val clientVersion: String = BuildConfig.VERSION_NAME,
+    val requestedAt: Long = System.currentTimeMillis(),
+    val preferredProvider: String? = null,  // User preference
+    val allowCloudFallback: Boolean = true
+)
+
+@Serializable
+data class AiResponse(
+    val requestId: String,
+    val text: String,
+    val providerId: String,           // Which provider handled this
+    val modelId: String,              // Which specific model
+    val tokenUsage: TokenUsage? = null,
+    val latencyMs: Long,
+    val metadata: ResponseMetadata = ResponseMetadata()
+)
+
+@Serializable
+data class TokenUsage(
+    val promptTokens: Int,
+    val completionTokens: Int,
+    val totalTokens: Int,
+    val estimatedCostUsd: Float? = null  // For cloud providers
+)
+
+enum class AiTaskType {
+    CLASSIFY_EISENHOWER,    // Classify task into quadrant
+    PARSE_TASK,             // Extract task details from natural language
+    GENERATE_BRIEFING,      // Generate daily briefing
+    EXTRACT_ACTIONS,        // Extract action items from text
+    SUGGEST_TASKS,          // Suggest tasks for goals
+    SUMMARIZE,              // Summarize meeting notes
+    CHAT                    // Free-form agent chat
+}
+
+enum class AiCapability {
+    CLASSIFICATION,         // Can classify text
+    EXTRACTION,             // Can extract structured data
+    GENERATION,             // Can generate text
+    STREAMING,              // Supports streaming responses
+    LONG_CONTEXT,           // Supports >4K tokens
+    FUNCTION_CALLING        // Supports tool/function calls
+}
+
+/**
+ * Core AI Provider interface - all providers implement this.
+ * Designed for easy swapping and testing.
+ */
+interface AiProvider {
+    val providerId: String
+    val displayName: String
+    val capabilities: Set<AiCapability>
+    val isAvailable: StateFlow<Boolean>
+    
+    /** Synchronous completion (blocks until done) */
+    suspend fun complete(request: AiRequest): Result<AiResponse>
+    
+    /** Streaming completion (yields chunks) */
+    suspend fun stream(request: AiRequest): Flow<AiStreamChunk>
+    
+    /** Get current model info */
+    suspend fun getModelInfo(): ModelInfo
+    
+    /** Estimate cost before making request (cloud only) */
+    suspend fun estimateCost(request: AiRequest): Float? = null
+}
+
+data class ModelInfo(
+    val modelId: String,
+    val displayName: String,
+    val provider: String,
+    val contextLength: Int,
+    val capabilities: Set<AiCapability>,
+    val sizeBytes: Long? = null,  // For downloaded models
+    val version: String? = null
+)
+```
+
+### On-Device LLM Provider
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -173,55 +336,601 @@ The on-device LLM is the core intelligence layer, enabling natural language unde
 │  └──────────────────────────────────────────────────────────┘   │
 │                              │                                   │
 │  ┌──────────────────────────┴───────────────────────────────┐   │
-│  │                    TASK-SPECIFIC MODELS                    │   │
+│  │                    MODEL REGISTRY                          │   │
 │  │                                                            │   │
+│  │  • Lists available models (downloaded + downloadable)     │   │
+│  │  • Tracks model versions and checksums                    │   │
+│  │  • Handles model lifecycle (download, verify, delete)     │   │
+│  │  • Supports runtime model switching                       │   │
+│  │                                                            │   │
+│  │  Supported Models:                                         │   │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐ │   │
-│  │  │   Main LLM   │  │ Intent Model │  │  Entity Extract  │ │   │
-│  │  │  (Phi-3-mini │  │   (DistilBERT│  │  (NER model,     │ │   │
-│  │  │   or Gemma)  │  │    fine-tuned│  │   ~10MB)         │ │   │
-│  │  │   ~1.5-2GB   │  │    ~100MB)   │  │                  │ │   │
+│  │  │   Phi-3-mini │  │   Gemma-2B   │  │    Qwen2.5-3B    │ │   │
+│  │  │   Q4_K_M     │  │   Q4_K_M     │  │    Q4_K_M        │ │   │
+│  │  │   2.4 GB     │  │   1.7 GB     │  │    2.0 GB        │ │   │
+│  │  │   87% acc    │  │   82% acc    │  │    85% acc       │ │   │
 │  │  └──────────────┘  └──────────────┘  └──────────────────┘ │   │
 │  │                                                            │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                              │                                   │
 │  ┌──────────────────────────┴───────────────────────────────┐   │
-│  │                    PROMPT ENGINEERING                      │   │
+│  │                    PROMPT TEMPLATES                        │   │
 │  │                                                            │   │
-│  │  • System prompts for task categorization                 │   │
-│  │  • Eisenhower matrix classification prompts               │   │
-│  │  • Goal decomposition templates                           │   │
-│  │  • Meeting summary extraction                             │   │
-│  │  • Action item identification                             │   │
+│  │  • Eisenhower classification prompts (model-optimized)    │   │
+│  │  • Task parsing prompts with JSON output                  │   │
+│  │  • Briefing generation templates                          │   │
+│  │  • Per-model prompt variants for best results             │   │
 │  │                                                            │   │
 │  └──────────────────────────────────────────────────────────┘   │
 │                                                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
+### On-Device Provider Implementation
+
+```kotlin
+class OnDeviceAiProvider(
+    private val context: Context,
+    private val modelRegistry: ModelRegistry,
+    private val promptTemplates: PromptTemplateRepository
+) : AiProvider {
+    
+    override val providerId = "on-device"
+    override val displayName = "On-Device AI"
+    override val capabilities = setOf(
+        AiCapability.CLASSIFICATION,
+        AiCapability.EXTRACTION,
+        AiCapability.GENERATION
+    )
+    
+    private val _isAvailable = MutableStateFlow(false)
+    override val isAvailable: StateFlow<Boolean> = _isAvailable
+    
+    private var currentEngine: LlamaCppEngine? = null
+    private val engineLock = Mutex()
+    
+    override suspend fun complete(request: AiRequest): Result<AiResponse> = 
+        withContext(Dispatchers.Default) {
+            runCatching {
+                val startTime = System.currentTimeMillis()
+                
+                val engine = ensureEngineLoaded()
+                val prompt = promptTemplates.buildPrompt(request, getCurrentModelId())
+                
+                val result = engine.generate(
+                    prompt = prompt,
+                    maxTokens = request.parameters.maxTokens,
+                    temperature = request.parameters.temperature,
+                    topP = request.parameters.topP
+                )
+                
+                AiResponse(
+                    requestId = request.id,
+                    text = result.text,
+                    providerId = providerId,
+                    modelId = getCurrentModelId(),
+                    tokenUsage = TokenUsage(
+                        promptTokens = result.promptTokens,
+                        completionTokens = result.completionTokens,
+                        totalTokens = result.totalTokens
+                    ),
+                    latencyMs = System.currentTimeMillis() - startTime
+                )
+            }
+        }
+    
+    override suspend fun stream(request: AiRequest): Flow<AiStreamChunk> = flow {
+        // Streaming implementation for real-time UI updates
+        val engine = ensureEngineLoaded()
+        val prompt = promptTemplates.buildPrompt(request, getCurrentModelId())
+        
+        engine.generateStreaming(prompt, request.parameters).collect { chunk ->
+            emit(AiStreamChunk(text = chunk.text, isComplete = chunk.isComplete))
+        }
+    }
+    
+    /** Switch to a different model at runtime */
+    suspend fun switchModel(modelId: String) {
+        engineLock.withLock {
+            currentEngine?.unload()
+            currentEngine = null
+            modelRegistry.setActiveModel(modelId)
+            ensureEngineLoaded()
+        }
+    }
+    
+    private suspend fun ensureEngineLoaded(): LlamaCppEngine {
+        return engineLock.withLock {
+            currentEngine ?: run {
+                val modelPath = modelRegistry.getActiveModelPath()
+                LlamaCppEngine(context, modelPath).also {
+                    it.load()
+                    currentEngine = it
+                    _isAvailable.value = true
+                }
+            }
+        }
+    }
+}
+```
+
+### Model Registry (Runtime Model Switching)
+
+```kotlin
+/**
+ * Manages available models and supports runtime switching.
+ * Key for easy model replacement without code changes.
+ */
+class ModelRegistry(
+    private val context: Context,
+    private val preferences: DataStore<Preferences>,
+    private val downloadManager: ModelDownloadManager
+) {
+    private val _availableModels = MutableStateFlow<List<ModelInfo>>(emptyList())
+    val availableModels: StateFlow<List<ModelInfo>> = _availableModels
+    
+    private val _activeModelId = MutableStateFlow<String?>(null)
+    val activeModelId: StateFlow<String?> = _activeModelId
+    
+    /** All known models (downloaded + available for download) */
+    private val modelCatalog = listOf(
+        ModelDefinition(
+            id = "phi-3-mini-4k-q4km",
+            displayName = "Phi-3 Mini (Recommended)",
+            fileName = "phi-3-mini-4k-instruct-q4_k_m.gguf",
+            sizeBytes = 2_400_000_000L,
+            downloadUrl = "https://cdn.jeeves.app/models/phi-3-mini-4k-q4km.gguf",
+            sha256 = "abc123...",
+            capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
+            contextLength = 4096,
+            recommendedForTasks = setOf(AiTaskType.CLASSIFY_EISENHOWER, AiTaskType.PARSE_TASK)
+        ),
+        ModelDefinition(
+            id = "gemma-2-2b-q4km",
+            displayName = "Gemma 2 2B (Smaller)",
+            fileName = "gemma-2-2b-it-q4_k_m.gguf",
+            sizeBytes = 1_700_000_000L,
+            downloadUrl = "https://cdn.jeeves.app/models/gemma-2-2b-q4km.gguf",
+            sha256 = "def456...",
+            capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
+            contextLength = 8192,
+            recommendedForTasks = setOf(AiTaskType.CLASSIFY_EISENHOWER)
+        ),
+        ModelDefinition(
+            id = "qwen2.5-3b-q4km",
+            displayName = "Qwen 2.5 3B (Multilingual)",
+            fileName = "qwen2.5-3b-instruct-q4_k_m.gguf",
+            sizeBytes = 2_000_000_000L,
+            downloadUrl = "https://cdn.jeeves.app/models/qwen2.5-3b-q4km.gguf",
+            sha256 = "ghi789...",
+            capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION, AiCapability.GENERATION),
+            contextLength = 32768,
+            recommendedForTasks = setOf(AiTaskType.GENERATE_BRIEFING, AiTaskType.CHAT)
+        )
+    )
+    
+    suspend fun downloadModel(modelId: String, onProgress: (Float) -> Unit): Result<Unit>
+    suspend fun deleteModel(modelId: String): Result<Unit>
+    suspend fun setActiveModel(modelId: String)
+    suspend fun getActiveModelPath(): String
+    fun isModelDownloaded(modelId: String): Boolean
+}
+```
+
+### Cloud Gateway Provider (Backend Proxy)
+
+For users who want cloud AI while maintaining privacy, requests go through our backend proxy:
+
+```kotlin
+/**
+ * Cloud AI access via Jeeves backend.
+ * Benefits:
+ * - API keys stay on server (user never sees them)
+ * - Usage tracking and cost control
+ * - Rate limiting per user
+ * - Unified billing
+ */
+class CloudGatewayProvider(
+    private val apiClient: JeevesApiClient,
+    private val authManager: AuthManager,
+    private val preferences: UserPreferences
+) : AiProvider {
+    
+    override val providerId = "cloud-gateway"
+    override val displayName = "Cloud AI (via Jeeves)"
+    override val capabilities = setOf(
+        AiCapability.CLASSIFICATION,
+        AiCapability.EXTRACTION,
+        AiCapability.GENERATION,
+        AiCapability.STREAMING,
+        AiCapability.LONG_CONTEXT,
+        AiCapability.FUNCTION_CALLING
+    )
+    
+    private val _isAvailable = MutableStateFlow(false)
+    override val isAvailable: StateFlow<Boolean> = _isAvailable
+    
+    init {
+        // Check availability based on auth + network + quota
+        viewModelScope.launch {
+            combine(
+                authManager.isAuthenticated,
+                networkMonitor.isConnected,
+                quotaManager.hasQuotaRemaining
+            ) { auth, network, quota ->
+                auth && network && quota
+            }.collect { available ->
+                _isAvailable.value = available
+            }
+        }
+    }
+    
+    override suspend fun complete(request: AiRequest): Result<AiResponse> = 
+        runCatching {
+            val cloudRequest = CloudAiRequest(
+                request = request,
+                preferredModel = preferences.cloudModel,
+                userId = authManager.currentUserId
+            )
+            
+            apiClient.post("/api/v1/ai/complete", cloudRequest)
+        }
+    
+    override suspend fun stream(request: AiRequest): Flow<AiStreamChunk> = flow {
+        val cloudRequest = CloudAiRequest(
+            request = request,
+            preferredModel = preferences.cloudModel,
+            userId = authManager.currentUserId
+        )
+        
+        apiClient.streamPost("/api/v1/ai/stream", cloudRequest).collect { chunk ->
+            emit(chunk)
+        }
+    }
+    
+    override suspend fun estimateCost(request: AiRequest): Float {
+        // Estimate tokens and calculate cost
+        val estimatedTokens = request.prompt.length / 4 + request.parameters.maxTokens
+        return pricingTable.getPrice(preferences.cloudModel, estimatedTokens)
+    }
+}
+```
+
+### Rule-Based Fallback Provider
+
+```kotlin
+/**
+ * Zero-dependency fallback when AI is unavailable.
+ * Uses regex patterns and keyword matching.
+ */
+class RuleBasedFallbackProvider : AiProvider {
+    
+    override val providerId = "rule-based"
+    override val displayName = "Basic (Offline)"
+    override val capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION)
+    override val isAvailable = MutableStateFlow(true)  // Always available
+    
+    override suspend fun complete(request: AiRequest): Result<AiResponse> = 
+        runCatching {
+            val startTime = System.currentTimeMillis()
+            
+            val result = when (request.taskType) {
+                AiTaskType.CLASSIFY_EISENHOWER -> classifyEisenhower(request.prompt)
+                AiTaskType.PARSE_TASK -> parseTask(request.prompt)
+                else -> throw UnsupportedOperationException("Task type not supported in fallback mode")
+            }
+            
+            AiResponse(
+                requestId = request.id,
+                text = result,
+                providerId = providerId,
+                modelId = "rule-based-v1",
+                latencyMs = System.currentTimeMillis() - startTime
+            )
+        }
+    
+    private fun classifyEisenhower(text: String): String {
+        // Urgency detection patterns
+        val urgentPatterns = listOf(
+            Regex("(?i)\\b(urgent|asap|immediately|deadline today|due today)\\b"),
+            Regex("(?i)\\b(overdue|critical|crisis|emergency)\\b")
+        )
+        
+        // Importance detection patterns
+        val importantPatterns = listOf(
+            Regex("(?i)\\b(important|crucial|vital|essential|strategic)\\b"),
+            Regex("(?i)\\b(goal|career|health|project|client|boss)\\b")
+        )
+        
+        val isUrgent = urgentPatterns.any { it.containsMatchIn(text) }
+        val isImportant = importantPatterns.any { it.containsMatchIn(text) }
+        
+        val quadrant = when {
+            isUrgent && isImportant -> "DO"
+            !isUrgent && isImportant -> "SCHEDULE"
+            isUrgent && !isImportant -> "DELEGATE"
+            else -> "ELIMINATE"
+        }
+        
+        return """{"quadrant": "$quadrant", "confidence": 0.72}"""
+    }
+}
+```
+
+### AI Provider Router (Smart Routing)
+
+```kotlin
+/**
+ * Routes AI requests to the optimal provider based on:
+ * - User preferences (privacy mode, cost limits)
+ * - Provider availability
+ * - Task complexity
+ * - Network status
+ */
+class AiProviderRouter(
+    private val onDeviceProvider: OnDeviceAiProvider,
+    private val cloudGatewayProvider: CloudGatewayProvider,
+    private val ruleBasedProvider: RuleBasedFallbackProvider,
+    private val preferences: DataStore<UserPreferences>,
+    private val networkMonitor: NetworkMonitor
+) {
+    /**
+     * Routing priority (configurable):
+     * 1. On-Device (if available and preferred)
+     * 2. Cloud Gateway (if allowed and available)
+     * 3. Rule-Based Fallback (always available)
+     */
+    suspend fun route(request: AiRequest): Result<AiResponse> {
+        val prefs = preferences.data.first()
+        val providers = getProviderChain(request, prefs)
+        
+        for (provider in providers) {
+            if (provider.isAvailable.value) {
+                val result = provider.complete(request)
+                if (result.isSuccess) return result
+                
+                // Log failure and try next provider
+                Timber.w("Provider ${provider.providerId} failed, trying next")
+            }
+        }
+        
+        return Result.failure(AiUnavailableException("All AI providers unavailable"))
+    }
+    
+    private fun getProviderChain(
+        request: AiRequest,
+        prefs: UserPreferences
+    ): List<AiProvider> {
+        return buildList {
+            // Privacy mode: never use cloud
+            if (prefs.privacyMode) {
+                add(onDeviceProvider)
+                add(ruleBasedProvider)
+                return@buildList
+            }
+            
+            // User preference for provider order
+            when (prefs.preferredAiSource) {
+                AiSource.ON_DEVICE_FIRST -> {
+                    add(onDeviceProvider)
+                    if (request.metadata.allowCloudFallback) add(cloudGatewayProvider)
+                    add(ruleBasedProvider)
+                }
+                AiSource.CLOUD_FIRST -> {
+                    add(cloudGatewayProvider)
+                    add(onDeviceProvider)
+                    add(ruleBasedProvider)
+                }
+                AiSource.AUTO -> {
+                    // Smart routing based on task type
+                    if (request.taskType.isComplexTask()) {
+                        add(cloudGatewayProvider)
+                        add(onDeviceProvider)
+                    } else {
+                        add(onDeviceProvider)
+                        add(cloudGatewayProvider)
+                    }
+                    add(ruleBasedProvider)
+                }
+            }
+        }
+    }
+}
+
+enum class AiSource { ON_DEVICE_FIRST, CLOUD_FIRST, AUTO }
+```
+
+---
+
+## Model Replacement Guide
+
+### Adding a New On-Device Model
+
+The architecture supports adding new LLM models without code changes:
+
+1. **Add Model to Registry Catalog**:
+```kotlin
+// In ModelRegistry, add to modelCatalog list:
+ModelDefinition(
+    id = "new-model-q4km",
+    displayName = "New Model Name",
+    fileName = "new-model-q4_k_m.gguf",
+    sizeBytes = 2_000_000_000L,
+    downloadUrl = "https://cdn.jeeves.app/models/new-model.gguf",
+    sha256 = "...",
+    capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
+    contextLength = 4096,
+    recommendedForTasks = setOf(AiTaskType.CLASSIFY_EISENHOWER)
+)
+```
+
+2. **Add Model-Specific Prompts** (if needed):
+```kotlin
+// In PromptTemplateRepository, add prompt variant:
+"new-model-q4km" to EisenhowerPrompt(
+    systemPrompt = "You are a task classifier...",
+    outputFormat = OutputFormat.JSON
+)
+```
+
+3. **Test and Validate**:
+   - Run benchmark suite with new model
+   - Verify Eisenhower accuracy >80%
+   - Check inference time <3s on mid-range devices
+
+4. **Deploy**:
+   - Upload model to CDN
+   - Update app config (no code deployment needed for model catalog)
+
+### Switching to Cloud Backend
+
+To enable cloud AI (post-MVP), the architecture is designed for minimal changes:
+
+1. **Backend Implements API Contract**:
+   - `POST /api/v1/ai/complete` - matches `AiRequest`/`AiResponse`
+   - `POST /api/v1/ai/stream` - SSE streaming
+   - See [Phase 7 in POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md)
+
+2. **Enable CloudGatewayProvider**:
+```kotlin
+// CloudGatewayProvider is already stubbed, implement HTTP calls:
+class CloudGatewayProvider(...) : AiProvider {
+    override suspend fun complete(request: AiRequest): Result<AiResponse> {
+        return apiClient.post("/api/v1/ai/complete", request)
+    }
+}
+```
+
+3. **Configure User Preferences**:
+```kotlin
+// User can choose in Settings:
+data class UserPreferences(
+    val preferredAiSource: AiSource = AiSource.ON_DEVICE_FIRST,
+    val cloudModel: String = "gpt-4o-mini",
+    val allowCloudFallback: Boolean = true,
+    val monthlyCloudBudgetUsd: Float = 5.00f
+)
+```
+
+4. **AiProviderRouter Handles Automatically**:
+   - No changes needed to feature code (Tasks, Goals, Briefings)
+   - Router selects provider based on preferences and availability
+
+### Hybrid Mode Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           HYBRID AI FLOW                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│   User creates task: "Call mom about birthday next Sunday"                   │
+│                              │                                               │
+│                              ▼                                               │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │                     AiProviderRouter                                │    │
+│   │                                                                      │    │
+│   │  1. Check user preference (AiSource.AUTO)                           │    │
+│   │  2. Task type = PARSE_TASK (simple, on-device preferred)            │    │
+│   │  3. Check OnDeviceProvider.isAvailable → true                       │    │
+│   │                                                                      │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │                    OnDeviceAiProvider                               │    │
+│   │                                                                      │    │
+│   │  • Load Phi-3-mini Q4_K_M (if not loaded)                           │    │
+│   │  • Build prompt from PromptTemplateRepository                       │    │
+│   │  • Run inference via llama.cpp                                      │    │
+│   │  • Parse JSON response                                               │    │
+│   │                                                                      │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│   AiResponse {                                                               │
+│       text: '{"task": "Call mom", "date": "2026-02-08", ...}',              │
+│       providerId: "on-device",                                               │
+│       modelId: "phi-3-mini-4k-q4km",                                        │
+│       latencyMs: 1200                                                        │
+│   }                                                                          │
+│                                                                              │
+│   ════════════════════════════════════════════════════════════════════════  │
+│                                                                              │
+│   User requests briefing: "Generate my morning briefing"                     │
+│                              │                                               │
+│                              ▼                                               │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │                     AiProviderRouter                                │    │
+│   │                                                                      │    │
+│   │  1. Check user preference (AiSource.AUTO)                           │    │
+│   │  2. Task type = GENERATE_BRIEFING (complex, cloud preferred)        │    │
+│   │  3. User has cloudAiEnabled + quota remaining                       │    │
+│   │  4. Network available                                                │    │
+│   │  → Route to CloudGatewayProvider                                    │    │
+│   │                                                                      │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│   ┌────────────────────────────────────────────────────────────────────┐    │
+│   │                   CloudGatewayProvider                              │    │
+│   │                                                                      │    │
+│   │  • POST /api/v1/ai/complete                                         │    │
+│   │  • Backend routes to GPT-4o-mini                                    │    │
+│   │  • Stream response via SSE                                          │    │
+│   │                                                                      │    │
+│   └────────────────────────────────────────────────────────────────────┘    │
+│                              │                                               │
+│                              ▼                                               │
+│   AiResponse {                                                               │
+│       text: "Good morning! You have 3 meetings today...",                   │
+│       providerId: "cloud-gateway",                                           │
+│       modelId: "gpt-4o-mini",                                               │
+│       tokenUsage: { prompt: 1200, completion: 350, cost: $0.002 }           │
+│   }                                                                          │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ### Model Selection Criteria
 
 | Model | Size | RAM Required | Speed (token/s) | Quality | Recommendation |
 |-------|------|--------------|-----------------|---------|----------------|
-| Phi-3-mini (Q4) | 1.8GB | 3GB | 15-25 | Good | ✅ Primary choice |
-| Gemma 2B (Q4) | 1.5GB | 2.5GB | 20-30 | Good | ✅ Alternative |
-| TinyLlama (Q4) | 0.6GB | 1.5GB | 30-40 | Medium | Fallback for low-end |
-| Qwen2-0.5B | 0.5GB | 1GB | 40+ | Basic | Ultra-low-end |
+| Phi-3-mini (Q4_K_M) | 2.4GB | 3.5GB | 12-28 | 87% acc | ✅ Primary choice |
+| Gemma 2 2B (Q4_K_M) | 1.7GB | 2.5GB | 16-35 | 82% acc | ✅ Low-memory alternative |
+| Qwen2.5-3B (Q4_K_M) | 2.0GB | 3.0GB | 10-25 | 85% acc | ✅ Multilingual/long context |
+| TinyLlama (Q4_K_M) | 0.7GB | 1.2GB | 32-65 | 68% acc | Fallback for ultra-low-end |
 
 ### Model Download Strategy
 
 ```kotlin
 sealed class ModelState {
     object NotDownloaded : ModelState()
-    data class Downloading(val progress: Float) : ModelState()
+    data class Downloading(val progress: Float, val bytesDownloaded: Long) : ModelState()
+    data class Verifying(val progress: Float) : ModelState()
     object Ready : ModelState()
-    data class Error(val message: String) : ModelState()
+    data class Error(val message: String, val retryable: Boolean) : ModelState()
 }
 
-class ModelManager {
-    // Download in background, non-blocking
-    // Resume support for interrupted downloads
-    // Model integrity verification (SHA256)
-    // Fallback to smaller model if space constrained
+class ModelDownloadManager(
+    private val context: Context,
+    private val httpClient: OkHttpClient
+) {
+    /**
+     * Download with:
+     * - Resume support for interrupted downloads
+     * - SHA-256 verification
+     * - Progress reporting
+     * - Background-safe (WorkManager integration)
+     */
+    suspend fun downloadModel(
+        modelDef: ModelDefinition,
+        onProgress: (ModelState) -> Unit
+    ): Result<File>
+    
+    suspend fun verifyModel(modelFile: File, expectedSha256: String): Boolean
+    suspend fun deleteModel(modelId: String): Result<Unit>
 }
 ```
 
@@ -229,17 +938,175 @@ class ModelManager {
 
 For devices that cannot run LLM inference:
 
-1. **Rule-based NLP**: Regex + keyword matching for task parsing
-2. **Local ML Kit**: Google ML Kit for entity extraction
-3. **Simplified UI**: Direct input fields instead of natural language
+1. **Rule-based NLP**: Regex + keyword matching for task parsing (72% accuracy)
+2. **Cloud Fallback**: Optional cloud AI via backend proxy
+3. **Simplified UI**: Direct input fields with dropdown selections
 
 ---
 
-## Cloud AI Architecture (Post-MVP - Premium)
+## Cloud AI Gateway Architecture (Backend Proxy)
 
-For users who want access to more powerful models, Jeeves offers optional cloud AI integration.
+For premium users or when on-device AI is insufficient, the backend serves as an AI proxy:
 
-### AI Gateway Design
+### Backend AI Gateway Design (Rust)
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      JEEVES AI GATEWAY (Rust/Axum)                           │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                        REQUEST HANDLER                                 │   │
+│  │                                                                        │   │
+│  │  POST /api/v1/ai/complete     - Synchronous completion                │   │
+│  │  POST /api/v1/ai/stream       - Streaming completion (SSE)            │   │
+│  │  GET  /api/v1/ai/models       - List available models                 │   │
+│  │  GET  /api/v1/ai/usage        - Get usage stats                       │   │
+│  │  POST /api/v1/ai/estimate     - Estimate request cost                 │   │
+│  │                                                                        │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    MIDDLEWARE CHAIN                                    │   │
+│  │                                                                        │   │
+│  │  1. Authentication (JWT validation)                                   │   │
+│  │  2. Rate Limiting (per user: 60 req/min free, 300 req/min pro)       │   │
+│  │  3. Quota Check (monthly token/cost limits)                          │   │
+│  │  4. Request Validation & Sanitization                                │   │
+│  │  5. Logging & Metrics                                                 │   │
+│  │                                                                        │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    PROVIDER ADAPTER LAYER                              │   │
+│  │                                                                        │   │
+│  │  trait LlmProvider {                                                  │   │
+│  │      async fn complete(&self, req: AiRequest) -> Result<AiResponse>   │   │
+│  │      async fn stream(&self, req: AiRequest) -> impl Stream<Item=...>  │   │
+│  │      fn supports(&self, capability: Capability) -> bool               │   │
+│  │  }                                                                     │   │
+│  │                                                                        │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                         │
+│  ┌───────────┬───────────┬────────┴───┬─────────────┬──────────────────┐   │
+│  │  OpenAI   │ Anthropic │   Google   │    xAI      │   Local LLM      │   │
+│  │  Adapter  │  Adapter  │   Adapter  │   Adapter   │   (vLLM/Ollama)  │   │
+│  │           │           │            │             │                   │   │
+│  │ • GPT-4o  │ • Claude  │ • Gemini   │ • Grok-2    │ • Self-hosted    │   │
+│  │ • GPT-4o  │   3.5     │   1.5 Pro  │ • Grok-2    │   Phi-3/Gemma    │   │
+│  │   mini    │   Sonnet  │ • Gemini   │   mini      │ • Cost-free      │   │
+│  │           │ • Claude  │   1.5 Flash│             │   after infra    │   │
+│  │           │   3 Haiku │            │             │                   │   │
+│  └───────────┴───────────┴────────────┴─────────────┴──────────────────┘   │
+│                                    │                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    MODEL ROUTER                                        │   │
+│  │                                                                        │   │
+│  │  Routing Logic:                                                        │   │
+│  │  • User preference → Use specified model                              │   │
+│  │  • Task-based routing → Simple tasks to cheaper models                │   │
+│  │  • Failover → Auto-switch on provider errors                          │   │
+│  │  • Cost optimization → Route to self-hosted when possible             │   │
+│  │                                                                        │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                    │                                         │
+│  ┌──────────────────────────────────────────────────────────────────────┐   │
+│  │                    USAGE & BILLING                                     │   │
+│  │                                                                        │   │
+│  │  • Track tokens per request (input + output)                          │   │
+│  │  • Calculate cost per provider pricing                                │   │
+│  │  • Enforce monthly limits (soft + hard)                               │   │
+│  │  • Generate usage reports                                             │   │
+│  │                                                                        │   │
+│  └──────────────────────────────────────────────────────────────────────┘   │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Backend Gateway Implementation (Rust)
+
+```rust
+// AI Gateway service structure
+pub struct AiGateway {
+    providers: HashMap<String, Box<dyn LlmProvider>>,
+    router: ModelRouter,
+    usage_tracker: UsageTracker,
+    rate_limiter: RateLimiter,
+}
+
+#[async_trait]
+pub trait LlmProvider: Send + Sync {
+    fn provider_id(&self) -> &str;
+    fn supported_models(&self) -> Vec<ModelInfo>;
+    
+    async fn complete(&self, request: &AiRequest) -> Result<AiResponse, ProviderError>;
+    
+    async fn stream(
+        &self, 
+        request: &AiRequest
+    ) -> Result<impl Stream<Item = Result<StreamChunk, ProviderError>>, ProviderError>;
+}
+
+// Example: OpenAI adapter
+pub struct OpenAiAdapter {
+    client: reqwest::Client,
+    api_key: SecretString,
+    base_url: Url,
+}
+
+#[async_trait]
+impl LlmProvider for OpenAiAdapter {
+    fn provider_id(&self) -> &str { "openai" }
+    
+    async fn complete(&self, request: &AiRequest) -> Result<AiResponse, ProviderError> {
+        let openai_req = OpenAiChatRequest {
+            model: request.model_id.clone(),
+            messages: vec![
+                ChatMessage { role: "system", content: &request.system_prompt },
+                ChatMessage { role: "user", content: &request.prompt },
+            ],
+            max_tokens: request.parameters.max_tokens,
+            temperature: request.parameters.temperature,
+        };
+        
+        let response = self.client
+            .post(self.base_url.join("/v1/chat/completions")?)
+            .bearer_auth(self.api_key.expose_secret())
+            .json(&openai_req)
+            .send()
+            .await?;
+        
+        // Parse and return
+        let openai_resp: OpenAiChatResponse = response.json().await?;
+        Ok(AiResponse::from_openai(openai_resp, request.id.clone()))
+    }
+}
+
+// Request/Response types matching mobile client
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AiRequest {
+    pub id: String,
+    pub prompt: String,
+    #[serde(default)]
+    pub system_prompt: Option<String>,
+    pub task_type: AiTaskType,
+    pub parameters: AiParameters,
+    #[serde(default)]
+    pub preferred_model: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AiResponse {
+    pub request_id: String,
+    pub text: String,
+    pub provider_id: String,
+    pub model_id: String,
+    pub token_usage: TokenUsage,
+    pub latency_ms: u64,
+}
+```
+
+### Supported Cloud Models
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -886,7 +1753,31 @@ apps/android/
 │   ├── ui/                       # Design system, components
 │   ├── data/                     # Room DB, DataStore
 │   ├── domain/                   # Domain models, use cases
-│   ├── ai/                       # LLM engine, NLP
+│   ├── ai/                       # LLM inference (llama.cpp JNI)
+│   │   ├── src/main/
+│   │   │   ├── cpp/              # NDK/JNI code for llama.cpp
+│   │   │   └── kotlin/
+│   │   │       └── com/jeeves/ai/
+│   │   │           ├── LlamaCppEngine.kt
+│   │   │           └── jni/
+│   │   └── build.gradle.kts      # NDK configuration
+│   │
+│   ├── ai-provider/              # AI Provider Abstraction Layer
+│   │   └── src/main/kotlin/
+│   │       └── com/jeeves/ai/provider/
+│   │           ├── AiProvider.kt           # Core interface
+│   │           ├── AiRequest.kt            # Request types
+│   │           ├── AiResponse.kt           # Response types
+│   │           ├── AiProviderRouter.kt     # Provider routing
+│   │           ├── ModelRegistry.kt        # Model management
+│   │           ├── PromptTemplates.kt      # Prompt repository
+│   │           ├── ondevice/
+│   │           │   └── OnDeviceAiProvider.kt
+│   │           ├── cloud/
+│   │           │   └── CloudGatewayProvider.kt
+│   │           └── fallback/
+│   │               └── RuleBasedFallbackProvider.kt
+│   │
 │   └── analytics/                # Local analytics
 │
 ├── plugins/                      # Feature plugins
@@ -897,6 +1788,16 @@ apps/android/
 │
 └── sync/                         # Optional cloud sync
     └── src/main/kotlin/
+```
+
+### AI Provider Module Dependencies
+
+```
+:app
+  └── :plugins:tasks
+        └── :core:ai-provider     # Uses AiProviderRouter
+              ├── :core:ai        # On-device LLM (llama.cpp)
+              └── :core:data      # For ModelRegistry persistence
 ```
 
 ### Dependency Injection (Hilt)

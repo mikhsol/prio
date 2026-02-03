@@ -42,47 +42,62 @@ The following features were removed from MVP scope to accelerate delivery:
 ## Phase 7: Cloud AI Integration (Weeks 18-22)
 
 ### Overview
-Build secure AI gateway to enable Pro tier users to access cloud LLM providers (OpenAI, Anthropic, Google, xAI) while maintaining on-device fallback.
+Build secure AI gateway backend to enable Pro tier users to access cloud LLM providers (OpenAI, Anthropic, Google, xAI) while maintaining on-device fallback. The mobile app already has the `CloudGatewayProvider` stub and API contract from MVP—this phase implements the backend.
 
-### Milestone 7.1: AI Gateway Backend
-**Goal**: Build secure AI gateway to route requests to cloud providers  
+### Milestone 7.1: AI Gateway Backend (Rust)
+**Goal**: Build production-ready AI gateway to route requests to cloud providers  
 **Owner**: Backend Engineer
 
+*Note: API contract already defined in MVP (Milestone 2.2.14). Backend implements the AiRequest/AiResponse types.*
+
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 7.1.1 | Design AI Gateway API specification | Backend Engineer | 3h | OpenAPI spec with endpoints for all providers |
-| 7.1.2 | Implement authentication middleware | Backend Engineer | 3h | JWT validation, rate limiting working |
-| 7.1.3 | Create OpenAI adapter (GPT-4o, GPT-4o-mini) | Backend Engineer | 4h | Working adapter with streaming support |
-| 7.1.4 | Create Anthropic adapter (Claude family) | Backend Engineer | 4h | Sonnet, Haiku support with streaming |
-| 7.1.5 | Create Google adapter (Gemini 1.5) | Backend Engineer | 4h | Pro and Flash variants working |
-| 7.1.6 | Create xAI adapter (Grok) | Backend Engineer | 3h | Grok-2 support |
-| 7.1.7 | Implement model router with failover | Backend Engineer | 3h | Automatic failover when provider down |
-| 7.1.8 | Implement usage tracking and cost calculation | Backend Engineer | 4h | Per-request cost tracking, usage reports |
-| 7.1.9 | Implement quota management | Backend Engineer | 3h | Monthly limits, overage handling |
-| 7.1.10 | Load testing and optimization | Backend Engineer | 3h | Gateway handles 100 req/s |
+| 7.1.1 | Set up Axum-based AI gateway service | Backend Engineer | 3h | Rust project with Axum, proper error handling, health checks |
+| 7.1.2 | Implement authentication middleware (JWT) | Backend Engineer | 3h | JWT validation, user extraction, Pro tier check |
+| 7.1.3 | Implement rate limiting middleware | Backend Engineer | 2h | Per-user limits: 60 req/min free, 300 req/min pro |
+| 7.1.4 | Define LlmProvider trait and adapter pattern | Backend Engineer | 2h | Rust trait matching mobile AiProvider interface |
+| 7.1.5 | Create OpenAI adapter (GPT-4o, GPT-4o-mini) | Backend Engineer | 4h | Working adapter with streaming SSE support |
+| 7.1.6 | Create Anthropic adapter (Claude family) | Backend Engineer | 4h | Sonnet, Haiku support with streaming |
+| 7.1.7 | Create Google adapter (Gemini 1.5) | Backend Engineer | 4h | Pro and Flash variants working |
+| 7.1.8 | Create xAI adapter (Grok-2) | Backend Engineer | 3h | Grok-2 and Grok-2-mini support |
+| 7.1.9 | Implement model router with failover | Backend Engineer | 3h | Automatic failover when provider down, cost-based routing |
+| 7.1.10 | Implement usage tracking (PostgreSQL + Redis) | Backend Engineer | 4h | Per-request token tracking, cost calculation, monthly aggregation |
+| 7.1.11 | Implement quota management | Backend Engineer | 3h | Soft/hard monthly limits, overage alerts, quota reset |
+| 7.1.12 | Add self-hosted LLM option (vLLM/Ollama) | Backend Engineer | 3h | Route to self-hosted for cost reduction |
+| 7.1.13 | Load testing and optimization | Backend Engineer | 3h | Gateway handles 100 req/s, p99 latency <500ms |
+| 7.1.14 | Deploy to staging with Kubernetes | Backend Engineer | 2h | Deployed with HPA, ready for testing |
 
 **Milestone Exit Criteria**:
-- [ ] All 4 cloud providers integrated
-- [ ] Failover works automatically
+- [ ] All 4 cloud providers integrated with streaming support
+- [ ] Failover works automatically (tested with provider unavailability)
 - [ ] Usage tracking accurate to $0.01
+- [ ] Self-hosted option available for cost optimization
+- [ ] API matches mobile CloudGatewayProvider contract
 
 ### Milestone 7.2: Android Cloud AI Integration
-**Goal**: Integrate cloud AI selection into Android app  
+**Goal**: Complete CloudGatewayProvider implementation and add model selection UI  
 **Owner**: Android Developer
+
+*Note: CloudGatewayProvider stub already exists from MVP. This phase adds full implementation and user-facing features.*
 
 | ID | Task | Owner | Duration | Measurable Outcome |
 |----|------|-------|----------|-------------------|
-| 7.2.1 | Create HybridAiRouter implementation | Android Developer | 4h | Routes to on-device or cloud based on settings |
-| 7.2.2 | Implement model selection UI | Android Developer | 3h | Settings screen with model picker |
-| 7.2.3 | Implement feature-specific model defaults | Android Developer | 2h | Different models per feature type |
-| 7.2.4 | Implement usage dashboard | Android Developer | 4h | Show credits used, remaining, costs |
-| 7.2.5 | Implement offline fallback | Android Developer | 2h | Graceful degradation when offline |
-| 7.2.6 | Write tests for hybrid routing | Android Developer | 2h | Unit and integration tests |
+| 7.2.1 | Implement CloudGatewayProvider (full) | Android Developer | 3h | HTTP client calling backend AI gateway, handles streaming |
+| 7.2.2 | Implement SSE streaming parser | Android Developer | 2h | Parses Server-Sent Events for real-time response display |
+| 7.2.3 | Update AiProviderRouter for cloud integration | Android Developer | 2h | Routes to cloud when user enables and has quota |
+| 7.2.4 | Implement model selection UI in Settings | Android Developer | 3h | Settings screen showing available cloud models with pricing |
+| 7.2.5 | Implement per-feature model defaults | Android Developer | 2h | Different models per feature (cheap for classification, powerful for briefings) |
+| 7.2.6 | Implement usage dashboard | Android Developer | 4h | Show tokens used, cost this month, remaining quota |
+| 7.2.7 | Implement cost estimation before request | Android Developer | 2h | Show estimated cost before expensive cloud operations |
+| 7.2.8 | Implement smart offline fallback | Android Developer | 2h | Seamless switch to on-device when offline, queue if preferred |
+| 7.2.9 | Write integration tests for cloud provider | Android Developer | 2h | E2E tests with mocked backend responses |
 
 **Milestone Exit Criteria**:
-- [ ] Users can select preferred cloud model
-- [ ] Usage displayed accurately
-- [ ] Offline fallback seamless
+- [ ] CloudGatewayProvider fully functional with streaming
+- [ ] Users can select preferred cloud model per feature
+- [ ] Usage displayed accurately in real-time
+- [ ] Offline fallback seamless and transparent
+- [ ] Integration tests passing
 
 ---
 
