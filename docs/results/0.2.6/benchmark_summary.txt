@@ -1,0 +1,11 @@
+=== Milestone 0.2.6 Prompt Engineering Benchmark ===
+Date: Wed 04 Feb 2026 10:20:53 AM GMT
+Device: Pixel 9a (Tensor G4, 8GB RAM)
+Model: Phi-3-mini-4k-instruct (Q4_K_M)
+Test Cases: 20 (5 per quadrant)
+
+Strategy        Accuracy  Correct  DO  SCHEDULE  DELEGATE  ELIMINATE
+BASELINE        20.0      4        0   2         1         1
+EXPERT_PERSONA  70.0      14       5   4         2         3
+FEW_SHOT        45.0      9        2   2         4         1
+COMBINED        35.0      7        1   1         5         0
