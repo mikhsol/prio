@@ -33,6 +33,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -42,6 +49,9 @@ dependencies {
     // Hilt DI
     implementation(libs.hilt.android)
     ksp(libs.hilt.android.compiler)
+    
+    // DataStore for preferences
+    implementation(libs.datastore.preferences)
     
     // Kotlin Serialization
     implementation(libs.kotlinx.serialization.json)

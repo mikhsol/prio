@@ -57,6 +57,13 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    
+    @Suppress("UnstableApiUsage")
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
+    }
 }
 
 dependencies {
@@ -80,5 +87,7 @@ dependencies {
     
     // Testing
     testImplementation(libs.bundles.testing)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
     testRuntimeOnly(libs.junit.jupiter.engine)
 }
