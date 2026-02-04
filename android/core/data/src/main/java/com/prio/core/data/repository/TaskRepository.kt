@@ -1,0 +1,344 @@
+package com.prio.core.data.repository
+
+import com.prio.core.common.model.EisenhowerQuadrant
+import com.prio.core.data.local.dao.TaskDao
+import com.prio.core.data.local.entity.TaskEntity
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
+import kotlinx.datetime.toLocalDateTime
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.math.max
+import kotlin.math.min
+
+/**
+ * Repository for Task operations with urgency recalculation.
+ * 
+ * Implements 2.1.6 from ACTION_PLAN.md:
+ * - Flow<List<Task>> for reactive updates
+ * - Urgency recalculation based on TM-005
+ * - All CRUD operations
+ * 
+ * Based on user stories:
+ * - TM-001: Quick task capture
+ * - TM-003: AI Eisenhower classification
+ * - TM-005: Deadline-based urgency scoring
+ * - TM-006: Complete, edit, delete tasks
+ */
+@Singleton
+class TaskRepository @Inject constructor(
+    private val taskDao: TaskDao,
+    private val clock: Clock = Clock.System
+) {
+    
+    // ==================== Query Operations (Flow) ====================
+    
+    /**
+     * Get all active tasks sorted by quadrant and position.
+     * Active = not completed.
+     */
+    fun getAllActiveTasks(): Flow<List<TaskEntity>> = 
+        taskDao.getAllActiveTasks()
+    
+    /**
+     * Get all tasks including completed.
+     */
+    fun getAllTasks(): Flow<List<TaskEntity>> = 
+        taskDao.getAllTasks()
+    
+    /**
+     * Get a single task by ID as Flow for reactive updates.
+     */
+    fun getTaskByIdFlow(taskId: Long): Flow<TaskEntity?> = 
+        taskDao.getByIdFlow(taskId)
+    
+    /**
+     * Get tasks by Eisenhower quadrant.
+     * Per TM-004: View tasks by quadrant.
+     */
+    fun getTasksByQuadrant(quadrant: EisenhowerQuadrant): Flow<List<TaskEntity>> = 
+        taskDao.getByQuadrant(quadrant)
+    
+    /**
+     * Get tasks linked to a specific goal.
+     * Per GL-003: Task-Goal linking.
+     */
+    fun getTasksByGoalId(goalId: Long): Flow<List<TaskEntity>> = 
+        taskDao.getByGoalId(goalId)
+    
+    /**
+     * Get subtasks for a parent task.
+     * Per TM-007: Task subtasks.
+     */
+    fun getSubtasks(parentTaskId: Long): Flow<List<TaskEntity>> = 
+        taskDao.getSubtasks(parentTaskId)
+    
+    /**
+     * Get overdue tasks (due date in the past, not completed).
+     * Per TM-005: Urgency scoring.
+     */
+    fun getOverdueTasks(): Flow<List<TaskEntity>> = 
+        taskDao.getOverdue(clock.now().toEpochMilliseconds())
+    
+    /**
+     * Get tasks due on a specific date.
+     * Per CB-005: Calendar day view.
+     */
+    fun getTasksByDate(dateMillis: Long): Flow<List<TaskEntity>> = 
+        taskDao.getByDate(dateMillis)
+    
+    /**
+     * Get tasks due within a date range.
+     */
+    fun getTasksDueInRange(startMillis: Long, endMillis: Long): Flow<List<TaskEntity>> = 
+        taskDao.getDueInRange(startMillis, endMillis)
+    
+    /**
+     * Search tasks by title or notes.
+     * Per TM-004: Search functionality.
+     */
+    fun searchTasks(query: String): Flow<List<TaskEntity>> = 
+        taskDao.search(query)
+    
+    /**
+     * Get recurring tasks.
+     * Per TM-008: Recurring tasks.
+     */
+    fun getRecurringTasks(): Flow<List<TaskEntity>> = 
+        taskDao.getRecurringTasks()
+    
+    // ==================== Suspend Query Operations ====================
+    
+    /**
+     * Get a single task by ID.
+     */
+    suspend fun getTaskById(taskId: Long): TaskEntity? = 
+        taskDao.getById(taskId)
+    
+    /**
+     * Get active tasks linked to a goal (for progress calculation).
+     * Per GL-002: Goal progress = completed linked tasks / total linked tasks.
+     */
+    suspend fun getActiveTasksByGoalId(goalId: Long): List<TaskEntity> = 
+        taskDao.getActiveByGoalId(goalId)
+    
+    /**
+     * Get completed tasks linked to a goal (for progress calculation).
+     */
+    suspend fun getCompletedTasksByGoalId(goalId: Long): List<TaskEntity> = 
+        taskDao.getCompletedByGoalId(goalId)
+    
+    // ==================== Insert Operations ====================
+    
+    /**
+     * Create a new task with automatic urgency calculation.
+     * Returns the generated task ID.
+     * 
+     * Per TM-001: Quick task capture.
+     * Per TM-003: AI Eisenhower classification.
+     */
+    suspend fun createTask(
+        title: String,
+        notes: String? = null,
+        dueDate: Instant? = null,
+        quadrant: EisenhowerQuadrant = EisenhowerQuadrant.ELIMINATE,
+        goalId: Long? = null,
+        parentTaskId: Long? = null,
+        aiExplanation: String? = null,
+        aiConfidence: Float = 0f
+    ): Long {
+        val now = clock.now()
+        val urgencyScore = calculateUrgencyScore(dueDate, now)
+        
+        val task = TaskEntity(
+            title = title,
+            notes = notes,
+            dueDate = dueDate,
+            quadrant = quadrant,
+            goalId = goalId,
+            parentTaskId = parentTaskId,
+            urgencyScore = urgencyScore,
+            aiExplanation = aiExplanation,
+            aiConfidence = aiConfidence,
+            createdAt = now,
+            updatedAt = now,
+            position = 0 // Will be updated if needed
+        )
+        
+        return taskDao.insert(task)
+    }
+    
+    /**
+     * Insert a complete task entity.
+     */
+    suspend fun insertTask(task: TaskEntity): Long = 
+        taskDao.insert(task)
+    
+    /**
+     * Insert multiple tasks.
+     */
+    suspend fun insertAllTasks(tasks: List<TaskEntity>) = 
+        taskDao.insertAll(tasks)
+    
+    // ==================== Update Operations ====================
+    
+    /**
+     * Update a task.
+     */
+    suspend fun updateTask(task: TaskEntity) {
+        val updatedTask = task.copy(
+            updatedAt = clock.now(),
+            urgencyScore = calculateUrgencyScore(task.dueDate, clock.now())
+        )
+        taskDao.update(updatedTask)
+    }
+    
+    /**
+     * Mark a task as completed.
+     * Per TM-006: Complete tasks.
+     */
+    suspend fun completeTask(taskId: Long) {
+        val now = clock.now()
+        taskDao.updateCompletionStatus(
+            taskId = taskId,
+            isCompleted = true,
+            completedAt = now,
+            updatedAt = now
+        )
+    }
+    
+    /**
+     * Mark a task as not completed (undo).
+     * Per TM-006: 5-second undo.
+     */
+    suspend fun uncompleteTask(taskId: Long) {
+        val now = clock.now()
+        taskDao.updateCompletionStatus(
+            taskId = taskId,
+            isCompleted = false,
+            completedAt = null,
+            updatedAt = now
+        )
+    }
+    
+    /**
+     * Override AI quadrant classification.
+     * Per TM-010: Override AI classification.
+     * 
+     * Note: This should trigger analytics tracking for AI accuracy.
+     */
+    suspend fun updateQuadrant(taskId: Long, quadrant: EisenhowerQuadrant) {
+        taskDao.updateQuadrant(
+            taskId = taskId,
+            quadrant = quadrant,
+            updatedAt = clock.now()
+        )
+    }
+    
+    /**
+     * Update task position for drag-and-drop reordering.
+     * Per TM-004: Drag-and-drop reordering.
+     */
+    suspend fun updatePosition(taskId: Long, position: Int) {
+        taskDao.updatePosition(
+            taskId = taskId,
+            position = position,
+            updatedAt = clock.now()
+        )
+    }
+    
+    // ==================== Delete Operations ====================
+    
+    /**
+     * Delete a task.
+     * Per TM-006: Delete with undo (soft delete handled at UI layer).
+     */
+    suspend fun deleteTask(task: TaskEntity) = 
+        taskDao.delete(task)
+    
+    /**
+     * Delete a task by ID.
+     */
+    suspend fun deleteTaskById(taskId: Long) = 
+        taskDao.deleteById(taskId)
+    
+    // ==================== Urgency Calculation ====================
+    
+    /**
+     * Calculate urgency score based on deadline.
+     * 
+     * Per TM-005 from user stories:
+     * - 7+ days away: Low urgency (0.0-0.25)
+     * - 2-6 days: Medium urgency (0.25-0.5)
+     * - 1 day: High urgency (0.5-0.75)
+     * - Past due: Critical urgency (0.75-1.0)
+     * 
+     * Returns 0.0 if no deadline set.
+     */
+    fun calculateUrgencyScore(dueDate: Instant?, now: Instant = clock.now()): Float {
+        if (dueDate == null) return 0f
+        
+        val timeZone = TimeZone.currentSystemDefault()
+        val nowLocal = now.toLocalDateTime(timeZone).date
+        val dueLocal = dueDate.toLocalDateTime(timeZone).date
+        
+        val daysUntilDue = nowLocal.daysUntil(dueLocal)
+        
+        return when {
+            daysUntilDue < 0 -> {
+                // Overdue: 0.75 to 1.0 based on how overdue
+                val daysOverdue = -daysUntilDue
+                min(1f, 0.75f + (daysOverdue * 0.05f))
+            }
+            daysUntilDue == 0 -> 0.75f // Due today
+            daysUntilDue == 1 -> 0.65f // Due tomorrow
+            daysUntilDue <= 3 -> 0.5f  // Within 3 days
+            daysUntilDue <= 7 -> 0.25f // Within a week
+            else -> max(0f, 0.25f - (daysUntilDue - 7) * 0.01f) // Beyond a week
+        }
+    }
+    
+    /**
+     * Recalculate urgency scores for all active tasks.
+     * Should be called daily via WorkManager.
+     */
+    suspend fun recalculateAllUrgencyScores() {
+        val now = clock.now()
+        val activeTasks = taskDao.getAllActiveTasksSync()
+        
+        // MVP: Update individually. This is functional but not optimal.
+        // TODO: Optimize with batch update in v1.1 (see POST_MVP_ROADMAP.md)
+        activeTasks.forEach { task ->
+            val newScore = calculateUrgencyScore(task.dueDate, now)
+            if (task.urgencyScore != newScore) {
+                taskDao.updateUrgencyScore(task.id, newScore, now)
+            }
+        }
+    }
+    
+    // ==================== Analytics Helpers ====================
+    
+    /**
+     * Get count of tasks created on a specific date.
+     */
+    suspend fun getTasksCreatedOnDate(dateMillis: Long): Int = 
+        taskDao.getTasksCreatedOnDate(dateMillis)
+    
+    /**
+     * Get count of tasks completed on a specific date.
+     */
+    suspend fun getTasksCompletedOnDate(dateMillis: Long): Int = 
+        taskDao.getTasksCompletedOnDate(dateMillis)
+    
+    /**
+     * Get count of tasks completed by quadrant on a specific date.
+     */
+    suspend fun getTasksCompletedByQuadrantOnDate(
+        dateMillis: Long, 
+        quadrant: EisenhowerQuadrant
+    ): Int = taskDao.getTasksCompletedByQuadrantOnDate(dateMillis, quadrant)
+}

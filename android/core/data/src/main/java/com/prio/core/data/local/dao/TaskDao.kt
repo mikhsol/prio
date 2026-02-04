@@ -41,6 +41,9 @@ interface TaskDao {
     @Query("UPDATE tasks SET position = :position, updated_at = :updatedAt WHERE id = :taskId")
     suspend fun updatePosition(taskId: Long, position: Int, updatedAt: Instant)
     
+    @Query("UPDATE tasks SET urgency_score = :urgencyScore, updated_at = :updatedAt WHERE id = :taskId")
+    suspend fun updateUrgencyScore(taskId: Long, urgencyScore: Float, updatedAt: Instant)
+    
     // Delete operations
     @Delete
     suspend fun delete(task: TaskEntity)
@@ -51,6 +54,9 @@ interface TaskDao {
     // Query operations - Flow for reactive updates
     @Query("SELECT * FROM tasks WHERE is_completed = 0 ORDER BY quadrant ASC, position ASC")
     fun getAllActiveTasks(): Flow<List<TaskEntity>>
+    
+    @Query("SELECT * FROM tasks WHERE is_completed = 0 ORDER BY quadrant ASC, position ASC")
+    suspend fun getAllActiveTasksSync(): List<TaskEntity>
     
     @Query("SELECT * FROM tasks ORDER BY created_at DESC")
     fun getAllTasks(): Flow<List<TaskEntity>>

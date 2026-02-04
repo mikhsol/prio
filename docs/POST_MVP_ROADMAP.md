@@ -36,6 +36,7 @@ The following features were removed from MVP scope to accelerate delivery:
 | Medium | Matrix View toggle | 3h | Android Developer |
 | Medium | Streaming LLM inference | 3h | Android Developer |
 | Medium | SQLCipher database encryption | 2h | Android Developer |
+| Low | Batch urgency score recalculation optimization | 1h | Android Developer |
 
 ---
 

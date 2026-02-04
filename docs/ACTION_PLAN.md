@@ -558,23 +558,29 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 - Milestone: goal_id (FK), title, target_date, is_complete
 - Meeting: calendar_event_id, notes, action_items (JSON)
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 2.1.1 | Create TaskEntity with all fields | Android Developer | 2h | Entity with: title, due_date, quadrant (enum Q1-Q4), goal_id (FK), notes, is_recurring, parent_task_id, urgency_score, ai_explanation per [TM-003](results/0.3/0.3.2_task_management_user_stories.md) |
-| 2.1.2 | Create TaskDao with CRUD + queries | Android Developer | 2h | DAO with: insert, update, delete, getByQuadrant, getByDate, getByGoalId, getOverdue, search per [TM-004](results/0.3/0.3.2_task_management_user_stories.md) |
-| 2.1.3 | Create GoalEntity, MilestoneEntity, and GoalDao | Android Developer | 2h | Goal with category enum, Milestone with goal_id FK, DAO with progress queries per [GL-001](results/0.3/0.3.3_goals_user_stories.md), [GL-004](results/0.3/0.3.3_goals_user_stories.md) |
-| 2.1.4 | Create MeetingEntity and MeetingDao | Android Developer | 2h | Entity for meeting notes + action_items (JSON), DAO with date range queries per [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
-| 2.1.5 | Create DailyAnalyticsEntity and DAO | Android Developer | 2h | Entity for: date, tasks_created, tasks_completed, quadrant_breakdown per [0.3.8 metrics](results/0.3/0.3.8_success_metrics.md) |
-| 2.1.6 | Implement TaskRepository with Flow | Android Developer | 3h | Repository exposing Flow<List<Task>>, urgency recalculation, all CRUD operations |
-| 2.1.7 | Implement GoalRepository with progress calculation | Android Developer | 2h | Progress = completed_linked_tasks / total_linked_tasks per [GL-002](results/0.3/0.3.3_goals_user_stories.md) |
-| 2.1.8 | Implement MeetingRepository | Android Developer | 2h | Repository with calendar event linking, action item extraction storage |
-| 2.1.9 | Implement AnalyticsRepository | Android Developer | 2h | Task completion rate calculation per [0.3.8](results/0.3/0.3.8_success_metrics.md): (completed/created) over 7-day window |
-| 2.1.10 | Write unit tests for all repositories | Android Developer | 3h | 80%+ coverage, test: Task-Goal linking updates progress, urgency recalc, quadrant queries |
-| 2.1.11 | Create UserPreferences with DataStore | Android Developer | 2h | Fields: morning_briefing_time, evening_summary_time, theme, notification_enabled per [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 2.1.1 | Create TaskEntity with all fields | Android Developer | 2h | ✅ Completed | Entity with: title, due_date, quadrant (enum Q1-Q4), goal_id (FK), notes, is_recurring, parent_task_id, urgency_score, ai_explanation per [TM-003](results/0.3/0.3.2_task_management_user_stories.md) |
+| 2.1.2 | Create TaskDao with CRUD + queries | Android Developer | 2h | ✅ Completed | DAO with: insert, update, delete, getByQuadrant, getByDate, getByGoalId, getOverdue, search per [TM-004](results/0.3/0.3.2_task_management_user_stories.md) |
+| 2.1.3 | Create GoalEntity, MilestoneEntity, and GoalDao | Android Developer | 2h | ✅ Completed | Goal with category enum, Milestone with goal_id FK, DAO with progress queries per [GL-001](results/0.3/0.3.3_goals_user_stories.md), [GL-004](results/0.3/0.3.3_goals_user_stories.md) |
+| 2.1.4 | Create MeetingEntity and MeetingDao | Android Developer | 2h | ✅ Completed | Entity for meeting notes + action_items (JSON), DAO with date range queries per [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
+| 2.1.5 | Create DailyAnalyticsEntity and DAO | Android Developer | 2h | ✅ Completed | Entity for: date, tasks_created, tasks_completed, quadrant_breakdown per [0.3.8 metrics](results/0.3/0.3.8_success_metrics.md) |
+| 2.1.6 | Implement TaskRepository with Flow | Android Developer | 3h | ✅ Completed | Repository exposing Flow<List<Task>>, urgency recalculation, all CRUD operations |
+| 2.1.7 | Implement GoalRepository with progress calculation | Android Developer | 2h | ✅ Completed | Progress = completed_linked_tasks / total_linked_tasks per [GL-002](results/0.3/0.3.3_goals_user_stories.md) |
+| 2.1.8 | Implement MeetingRepository | Android Developer | 2h | ✅ Completed | Repository with calendar event linking, action item extraction storage |
+| 2.1.9 | Implement AnalyticsRepository | Android Developer | 2h | ✅ Completed | Task completion rate calculation per [0.3.8](results/0.3/0.3.8_success_metrics.md): (completed/created) over 7-day window |
+| 2.1.10 | Write unit tests for all repositories | Android Developer | 3h | ✅ Completed | 80%+ coverage, test: Task-Goal linking updates progress, urgency recalc, quadrant queries |
+| 2.1.11 | Create UserPreferences with DataStore | Android Developer | 2h | 🔲 Not Started | Fields: morning_briefing_time, evening_summary_time, theme, notification_enabled per [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
+
+**Deliverables Created:**
+- [2.1 Data Layer Overview](results/2.1/README.md)
+- [2.1.6 TaskRepository Implementation](results/2.1/2.1.6_task_repository.md)
+- [2.1.7 GoalRepository Implementation](results/2.1/2.1.7_goal_repository.md)
+- [2.1.9 AnalyticsRepository Implementation](results/2.1/2.1.9_analytics_repository.md)
 
 **Milestone Exit Criteria**:
-- [ ] All 4 entities created with proper relationships
-- [ ] All repositories tested with 80%+ coverage
+- [x] All 4 entities created with proper relationships
+- [x] All repositories tested with 80%+ coverage (53 tests, 100% pass rate)
 - [ ] Migrations strategy documented
 
 ### Milestone 2.2: AI Provider Abstraction Layer
