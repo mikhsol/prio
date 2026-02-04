@@ -200,7 +200,7 @@ core/data/src/test/java/com/prio/core/data/repository/
 | Metric | Target | Actual |
 |--------|--------|--------|
 | Test Coverage | 80%+ | ~85% (estimated) |
-| Tests Passing | 100% | 100% (53/53) |
+| Tests Passing | 100% | 100% (89/89) |
 | Build Status | ✅ | ✅ |
 
 ---
@@ -221,3 +221,39 @@ core/data/src/test/java/com/prio/core/data/repository/
 
 *Document Owner: Android Developer*  
 *Last Updated: February 4, 2026*
+
+---
+
+## Task 2.1.11: UserPreferences with DataStore
+
+### Implementation Complete
+
+Added UserPreferences storage using Android DataStore for all app-wide settings.
+
+**New Files**:
+- `core/common/src/main/java/com/prio/core/common/model/ThemeMode.kt`
+- `core/common/src/main/java/com/prio/core/common/model/UserPreferences.kt`
+- `core/data/src/main/java/com/prio/core/data/preferences/UserPreferencesRepository.kt`
+- `core/data/src/main/java/com/prio/core/data/di/PreferencesModule.kt`
+- `core/data/src/test/java/com/prio/core/data/preferences/UserPreferencesTest.kt`
+
+**Features**:
+- Type-safe `UserPreferences` data class with LocalTime for time fields
+- Combined `Flow<UserPreferences>` for reactive UI updates
+- Batch update via `updatePreferences()` method
+- AI rate limiting: `isAiLimitReached`, `remainingAiClassifications`
+- 28 unit tests (100% passing)
+
+See [2.1.11_user_preferences.md](2.1.11_user_preferences.md) for full details.
+
+---
+
+## Migrations Strategy
+
+Database migrations strategy documented in [2.1_migrations_strategy.md](2.1_migrations_strategy.md).
+
+**Key Points**:
+- MVP uses destructive migration (no production users)
+- Beta release will implement proper migration framework
+- Production will have automated migration testing
+- DataStore uses version-aware defaults pattern

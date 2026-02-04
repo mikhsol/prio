@@ -8,8 +8,11 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.prio.core.common.model.ThemeMode
+import com.prio.core.common.model.UserPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -171,5 +174,94 @@ class UserPreferencesRepository @Inject constructor(
     
     suspend fun setCalendarConnected(connected: Boolean) {
         context.dataStore.edit { it[PreferencesKeys.CALENDAR_CONNECTED] = connected }
+    }
+    
+    /**
+     * Combined Flow of all user preferences as a single data class.
+     * 
+     * This provides type-safe access to all preferences and automatically
+     * emits updates when any preference changes.
+     */
+    val userPreferences: Flow<UserPreferences> = context.dataStore.data
+        .map { prefs ->
+            UserPreferences(
+                morningBriefingTime = UserPreferences.parseTime(
+                    prefs[PreferencesKeys.MORNING_BRIEFING_TIME] ?: "07:00"
+                ),
+                eveningSummaryTime = UserPreferences.parseTime(
+                    prefs[PreferencesKeys.EVENING_SUMMARY_TIME] ?: "18:00"
+                ),
+                briefingEnabled = prefs[PreferencesKeys.BRIEFING_ENABLED] ?: true,
+                themeMode = ThemeMode.fromString(
+                    prefs[PreferencesKeys.THEME_MODE] ?: "system"
+                ),
+                notificationsEnabled = prefs[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
+                reminderAdvanceMinutes = prefs[PreferencesKeys.REMINDER_ADVANCE_MINUTES] ?: 15,
+                aiModelId = prefs[PreferencesKeys.AI_MODEL_ID] ?: "phi-3-mini-4k-instruct-q4",
+                aiModelDownloaded = prefs[PreferencesKeys.AI_MODEL_DOWNLOADED] ?: false,
+                aiClassificationEnabled = prefs[PreferencesKeys.AI_CLASSIFICATION_ENABLED] ?: true,
+                dailyAiLimit = prefs[PreferencesKeys.DAILY_AI_LIMIT] ?: 5,
+                dailyAiUsed = prefs[PreferencesKeys.DAILY_AI_USED] ?: 0,
+                onboardingCompleted = prefs[PreferencesKeys.ONBOARDING_COMPLETED] ?: false,
+                userName = prefs[PreferencesKeys.USER_NAME],
+                calendarConnected = prefs[PreferencesKeys.CALENDAR_CONNECTED] ?: false
+            )
+        }
+    
+    /**
+     * Update multiple preferences at once.
+     * 
+     * This is more efficient than calling multiple set methods
+     * as it only triggers one DataStore write.
+     */
+    suspend fun updatePreferences(update: (UserPreferences) -> UserPreferences) {
+        context.dataStore.edit { prefs ->
+            val current = UserPreferences(
+                morningBriefingTime = UserPreferences.parseTime(
+                    prefs[PreferencesKeys.MORNING_BRIEFING_TIME] ?: "07:00"
+                ),
+                eveningSummaryTime = UserPreferences.parseTime(
+                    prefs[PreferencesKeys.EVENING_SUMMARY_TIME] ?: "18:00"
+                ),
+                briefingEnabled = prefs[PreferencesKeys.BRIEFING_ENABLED] ?: true,
+                themeMode = ThemeMode.fromString(
+                    prefs[PreferencesKeys.THEME_MODE] ?: "system"
+                ),
+                notificationsEnabled = prefs[PreferencesKeys.NOTIFICATIONS_ENABLED] ?: true,
+                reminderAdvanceMinutes = prefs[PreferencesKeys.REMINDER_ADVANCE_MINUTES] ?: 15,
+                aiModelId = prefs[PreferencesKeys.AI_MODEL_ID] ?: "phi-3-mini-4k-instruct-q4",
+                aiModelDownloaded = prefs[PreferencesKeys.AI_MODEL_DOWNLOADED] ?: false,
+                aiClassificationEnabled = prefs[PreferencesKeys.AI_CLASSIFICATION_ENABLED] ?: true,
+                dailyAiLimit = prefs[PreferencesKeys.DAILY_AI_LIMIT] ?: 5,
+                dailyAiUsed = prefs[PreferencesKeys.DAILY_AI_USED] ?: 0,
+                onboardingCompleted = prefs[PreferencesKeys.ONBOARDING_COMPLETED] ?: false,
+                userName = prefs[PreferencesKeys.USER_NAME],
+                calendarConnected = prefs[PreferencesKeys.CALENDAR_CONNECTED] ?: false
+            )
+            
+            val updated = update(current)
+            
+            prefs[PreferencesKeys.MORNING_BRIEFING_TIME] = UserPreferences.formatTime(updated.morningBriefingTime)
+            prefs[PreferencesKeys.EVENING_SUMMARY_TIME] = UserPreferences.formatTime(updated.eveningSummaryTime)
+            prefs[PreferencesKeys.BRIEFING_ENABLED] = updated.briefingEnabled
+            prefs[PreferencesKeys.THEME_MODE] = updated.themeMode.toString()
+            prefs[PreferencesKeys.NOTIFICATIONS_ENABLED] = updated.notificationsEnabled
+            prefs[PreferencesKeys.REMINDER_ADVANCE_MINUTES] = updated.reminderAdvanceMinutes
+            prefs[PreferencesKeys.AI_MODEL_ID] = updated.aiModelId
+            prefs[PreferencesKeys.AI_MODEL_DOWNLOADED] = updated.aiModelDownloaded
+            prefs[PreferencesKeys.AI_CLASSIFICATION_ENABLED] = updated.aiClassificationEnabled
+            prefs[PreferencesKeys.DAILY_AI_LIMIT] = updated.dailyAiLimit
+            prefs[PreferencesKeys.DAILY_AI_USED] = updated.dailyAiUsed
+            prefs[PreferencesKeys.ONBOARDING_COMPLETED] = updated.onboardingCompleted
+            updated.userName?.let { prefs[PreferencesKeys.USER_NAME] = it }
+            prefs[PreferencesKeys.CALENDAR_CONNECTED] = updated.calendarConnected
+        }
+    }
+    
+    /**
+     * Clear all preferences (for logout/reset).
+     */
+    suspend fun clearAll() {
+        context.dataStore.edit { it.clear() }
     }
 }
