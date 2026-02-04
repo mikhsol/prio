@@ -384,21 +384,21 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 2. Quick Capture + AI Classification (core differentiator)
 3. Goal-Task Integration (unique value proposition)
 
-| ID | Task | Owner | Duration | Source Stories | Measurable Outcome |
-|----|------|-------|----------|----------------|-------------------|
-| 1.1.1 | Write detailed spec for Task List screen | UX Designer | 3h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Screen spec with: quadrant color badges (Q1=Red, Q2=Blue, Q3=Amber, Q4=Gray), overdue indicators, sort by priority, 60fps scroll |
-| 1.1.2 | Write detailed spec for Task Detail sheet | UX Designer | 2h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Bottom sheet with: all editable fields, goal linking picker, quadrant override (1-tap), AI explanation display |
-| 1.1.3 | Write detailed spec for Quick Capture flow | UX Designer | 2h | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | Flow: FAB→input (focus <200ms)→AI parsing preview→save (<5s total), haptic confirm, voice icon |
-| 1.1.4 | Write detailed spec for Goals List and Detail screens | UX Designer | 3h | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-005](results/0.3/0.3.3_goals_user_stories.md) | Progress bars (green/yellow/red), category icons, at-risk sort first, confetti on 100%, milestones timeline |
-| 1.1.5 | Write detailed spec for Today/Dashboard + Briefing | UX Designer | 3h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Morning briefing layout: greeting, top 3 tasks, schedule preview, goal spotlight, AI insight, "Start Day" CTA |
-| 1.1.6 | Write detailed spec for Calendar Day view | UX Designer | 2h | [CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Timeline hours, event blocks with title/time/attendees, task blocks, swipe to navigate days |
-| 1.1.7 | Write detailed spec for Evening Summary screen | UX Designer | 2h | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Completed list, not-done with "move to tomorrow", goal progress delta, AI reflection, "Close Day" animation |
-| 1.1.8 | Write detailed spec for Onboarding flow (5 screens) | UX Designer | 3h | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | Welcome, privacy promise (Maya), value props, model download (progress+WiFi warning), permissions, first task |
-| 1.1.9 | Write detailed spec for Settings screens | UX Designer | 2h | PRD FND-003 | Briefing times, notification prefs, theme toggle, AI model management, about/privacy |
-| 1.1.10 | Define error states, empty states, and offline indicators | UX Designer | 2h | All stories | Encouraging empty states, offline banner, error retry patterns |
-| 1.1.11 | Define basic accessibility requirements | UX Designer | 1h | [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) | Touch targets ≥48dp, 4.5:1 contrast, TalkBack labels, Dynamic Type support |
-| 1.1.12 | Create wireframes using Penpot/Excalidraw (optional) | UX Designer | 4h | — | Low-fidelity wireframes for: briefing, task list, goal detail, quick capture |
-| 1.1.13 | Define component specifications (buttons, cards, inputs) | UX Designer | 3h | [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) | TaskCard, GoalCard, BriefingCard, QuadrantBadge specs with all states |
+| ID | Task | Owner | Duration | Source Stories | Status | Measurable Outcome |
+|----|------|-------|----------|----------------|--------|-------------------|
+| 1.1.1 | Write detailed spec for Task List screen | UX Designer | 3h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | ✅ Completed | Screen spec with: quadrant color badges (Q1=Red, Q2=Blue, Q3=Amber, Q4=Gray), overdue indicators, sort by priority, 60fps scroll |
+| 1.1.2 | Write detailed spec for Task Detail sheet | UX Designer | 2h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | ✅ Completed | Bottom sheet with: all editable fields, goal linking picker, quadrant override (1-tap), AI explanation display |
+| 1.1.3 | Write detailed spec for Quick Capture flow | UX Designer | 2h | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | ✅ Completed | Flow: FAB→input (focus <200ms)→AI parsing preview→save (<5s total), haptic confirm, voice icon |
+| 1.1.4 | Write detailed spec for Goals List and Detail screens | UX Designer | 3h | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-005](results/0.3/0.3.3_goals_user_stories.md) | ✅ Completed | Progress bars (green/yellow/red), category icons, at-risk sort first, confetti on 100%, milestones timeline |
+| 1.1.5 | Write detailed spec for Today/Dashboard + Briefing | UX Designer | 3h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | ✅ Completed | Morning briefing layout: greeting, top 3 tasks, schedule preview, goal spotlight, AI insight, "Start Day" CTA |
+| 1.1.6 | Write detailed spec for Calendar Day view | UX Designer | 2h | [CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | ✅ Completed | Timeline hours, event blocks with title/time/attendees, task blocks, swipe to navigate days |
+| 1.1.7 | Write detailed spec for Evening Summary screen | UX Designer | 2h | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | ✅ Completed | Completed list, not-done with "move to tomorrow", goal progress delta, AI reflection, "Close Day" animation |
+| 1.1.8 | Write detailed spec for Onboarding flow (5 screens) | UX Designer | 3h | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | ✅ Completed | Welcome, privacy promise (Maya), value props, model download (progress+WiFi warning), permissions, first task |
+| 1.1.9 | Write detailed spec for Settings screens | UX Designer | 2h | PRD FND-003 | ✅ Completed | Briefing times, notification prefs, theme toggle, AI model management, about/privacy |
+| 1.1.10 | Define error states, empty states, and offline indicators | UX Designer | 2h | All stories | ✅ Completed | Encouraging empty states, offline banner, error retry patterns |
+| 1.1.11 | Define basic accessibility requirements | UX Designer | 1h | [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) | ✅ Completed | Touch targets ≥48dp, 4.5:1 contrast, TalkBack labels, Dynamic Type support |
+| 1.1.12 | Create wireframes using Penpot/Excalidraw (optional) | UX Designer | 4h | — | ✅ Completed | Low-fidelity wireframes for: briefing, task list, goal detail, quick capture |
+| 1.1.13 | Define component specifications (buttons, cards, inputs) | UX Designer | 3h | [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) | ✅ Completed | TaskCard, GoalCard, BriefingCard, QuadrantBadge specs with all states |
 
 **Screen Specification Template**:
 ```
@@ -437,39 +437,58 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 [TalkBack descriptions, touch targets]
 ```
 
+**Deliverables Created:**
+- [Milestone 1.1 README](results/1.1/README.md) - Overview of all UX specifications
+- [1.1.1 Task List Screen Spec](results/1.1/1.1.1_task_list_screen_spec.md) - Primary task list with Eisenhower Matrix
+- [1.1.2 Task Detail Sheet Spec](results/1.1/1.1.2_task_detail_sheet_spec.md) - Bottom sheet for task viewing/editing
+- [1.1.3 Quick Capture Flow Spec](results/1.1/1.1.3_quick_capture_flow_spec.md) - FAB-to-input (<5s total)
+- [1.1.4 Goals Screens Spec](results/1.1/1.1.4_goals_screens_spec.md) - Goals list, detail, and creation wizard
+- [1.1.5 Today Dashboard + Briefing Spec](results/1.1/1.1.5_today_dashboard_briefing_spec.md) - Morning briefing (highest retention driver)
+- [1.1.6 Calendar Day View Spec](results/1.1/1.1.6_calendar_day_view_spec.md) - Timeline view with events and tasks
+- [1.1.7 Evening Summary Spec](results/1.1/1.1.7_evening_summary_spec.md) - Day closure flow and reflection
+- [1.1.8 Onboarding Flow Spec](results/1.1/1.1.8_onboarding_flow_spec.md) - 5-screen onboarding with privacy focus
+- [1.1.9 Settings Screens Spec](results/1.1/1.1.9_settings_screens_spec.md) - All settings and configuration screens
+- [1.1.10 Error/Empty/Offline States Spec](results/1.1/1.1.10_error_empty_offline_states_spec.md) - System states and error handling
+- [1.1.11 Accessibility Requirements Spec](results/1.1/1.1.11_accessibility_requirements_spec.md) - WCAG 2.1 AA compliance
+- [1.1.12 Low-Fidelity Wireframes](results/1.1/1.1.12_wireframes_spec.md) - ASCII wireframes for 4 core flows
+- [1.1.13 Component Specifications](results/1.1/1.1.13_component_specifications.md) - TaskCard, GoalCard, BriefingCard, QuadrantBadge
+
 **Milestone Exit Criteria**:
-- [ ] All 9 key screens + onboarding flow have text specifications
-- [ ] Error/empty/offline patterns defined
-- [ ] Basic accessibility requirements documented (WCAG 2.1 AA)
-- [ ] Component specifications defined
+- [x] All 9 key screens + onboarding flow have text specifications
+- [x] Error/empty/offline patterns defined
+- [x] Basic accessibility requirements documented (WCAG 2.1 AA)
+- [x] Component specifications defined
 - [ ] Specifications reviewed by Android Developer for feasibility
-- [ ] Privacy messaging prominent per Maya persona validation ("data never leaves device")
-- [ ] AI explanation UI designed per [0.3.7](results/0.3/0.3.7_persona_validation.md) objection mitigation
+- [x] Privacy messaging prominent per Maya persona validation ("data never leaves device")
+- [x] AI explanation UI designed per [0.3.7](results/0.3/0.3.7_persona_validation.md) objection mitigation
+
+**Milestone Status**: ✅ **COMPLETE** - All 13 tasks completed. All text-based UX specifications and wireframes are ready for development review.
 
 ### Milestone 1.2: Project Setup
 **Goal**: Create Android project with proper architecture and dependencies  
 **Owner**: Android Developer  
-**Source**: [0.3.5 MVP Scope](results/0.3/0.3.5_mvp_scope_boundary.md), [0.2.5 LLM Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md)
+**Source**: [0.3.5 MVP Scope](results/0.3/0.3.5_mvp_scope_boundary.md), [0.2.5 LLM Recommendation](results/0.2/0.2.5_llm_selection_recommendation.md)  
+**UX Reference**: [1.1 Screen Specifications](results/1.1/README.md)
 
 **Architecture Decisions** (from 0.2/0.3 findings):
 - Rule-based + LLM hybrid classifier (0.2.5 recommendation)
 - Task-Goal linking as core entity relationship (0.3.3 GL-003)
 - Offline-first Room DB, no cloud sync in MVP (0.3.5)
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 1.2.1 | Create Android project with Gradle version catalog | Android Developer | 2h | Project builds successfully, all dependencies in libs.versions.toml |
-| 1.2.2 | Configure build variants (debug, release, benchmark) | Android Developer | 1h | 3 build variants configured with appropriate flags |
-| 1.2.3 | Set up multi-module structure | Android Developer | 2h | Modules created: :app, :core:common, :core:ui, :core:data, :core:domain, :core:ai, :core:ai-provider |
-| 1.2.4 | Configure Hilt dependency injection | Android Developer | 2h | Hilt set up in all modules, sample injection working |
-| 1.2.5 | Set up Room database with Task-Goal schema | Android Developer | 2h | TaskEntity with goal_id FK, GoalEntity, relationship defined per [GL-003](results/0.3/0.3.3_goals_user_stories.md) |
-| 1.2.6 | Configure DataStore for preferences | Android Developer | 1h | UserPreferences: briefing times, theme, notification settings per [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
-| 1.2.7 | Set up Compose navigation with type-safe routes | Android Developer | 2h | Navigation graph with routes: TaskList, TaskDetail, Goals, GoalDetail, Today, Calendar, Settings |
-| 1.2.8 | Create Material 3 theme (colors, typography) | Android Developer | 2h | Quadrant colors (Q1=Red, Q2=Blue, Q3=Amber, Q4=Gray), light/dark mode |
-| 1.2.9 | Set up testing infrastructure | Android Developer | 2h | JUnit 5, MockK, Turbine configured, sample test passing |
-| 1.2.10 | Configure GitHub Actions CI | Android Developer | 2h | CI runs on PR: build, lint, test |
-| 1.2.11 | Set up Firebase Crashlytics + Analytics | Android Developer | 1h | Crash reporting + basic analytics for [0.3.8 metrics](results/0.3/0.3.8_success_metrics.md) (DAU, retention) |
-| 1.2.12 | Configure Kotlin Serialization for AI types | Android Developer | 1h | kotlinx.serialization configured, AiRequest/AiResponse serializable |
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 1.2.1 | Create Android project with Gradle version catalog | Android Developer | 2h | 🔲 Not Started | Project builds successfully, all dependencies in libs.versions.toml |
+| 1.2.2 | Configure build variants (debug, release, benchmark) | Android Developer | 1h | 🔲 Not Started | 3 build variants configured with appropriate flags |
+| 1.2.3 | Set up multi-module structure | Android Developer | 2h | 🔲 Not Started | Modules created: :app, :core:common, :core:ui, :core:data, :core:domain, :core:ai, :core:ai-provider |
+| 1.2.4 | Configure Hilt dependency injection | Android Developer | 2h | 🔲 Not Started | Hilt set up in all modules, sample injection working |
+| 1.2.5 | Set up Room database with Task-Goal schema | Android Developer | 2h | 🔲 Not Started | TaskEntity with goal_id FK, GoalEntity, relationship defined per [GL-003](results/0.3/0.3.3_goals_user_stories.md) |
+| 1.2.6 | Configure DataStore for preferences | Android Developer | 1h | 🔲 Not Started | UserPreferences: briefing times, theme, notification settings per [1.1.9 Settings Spec](results/1.1/1.1.9_settings_screens_spec.md) |
+| 1.2.7 | Set up Compose navigation with type-safe routes | Android Developer | 2h | 🔲 Not Started | Navigation graph with routes per [1.1.12 Wireframes](results/1.1/1.1.12_wireframes_spec.md) navigation map |
+| 1.2.8 | Create Material 3 theme (colors, typography) | Android Developer | 2h | 🔲 Not Started | Quadrant colors per [1.1.13 Component Spec](results/1.1/1.1.13_component_specifications.md): Q1=Red #DC2626, Q2=Amber #F59E0B, Q3=Orange #F97316, Q4=Gray #6B7280; light/dark mode |
+| 1.2.9 | Set up testing infrastructure | Android Developer | 2h | 🔲 Not Started | JUnit 5, MockK, Turbine configured, sample test passing |
+| 1.2.10 | Configure GitHub Actions CI | Android Developer | 2h | 🔲 Not Started | CI runs on PR: build, lint, test |
+| 1.2.11 | Set up Firebase Crashlytics + Analytics | Android Developer | 1h | 🔲 Not Started | Crash reporting + basic analytics for [0.3.8 metrics](results/0.3/0.3.8_success_metrics.md) (DAU, retention) |
+| 1.2.12 | Configure Kotlin Serialization for AI types | Android Developer | 1h | 🔲 Not Started | kotlinx.serialization configured, AiRequest/AiResponse serializable |
 
 **Milestone Exit Criteria**:
 - [ ] Project builds and runs on emulator
@@ -480,13 +499,14 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 ### Milestone 1.3: Quick Design Validation
 **Goal**: Lightweight validation of core flows before development  
-**Owner**: UX Designer
+**Owner**: UX Designer  
+**Source**: [1.1.12 Wireframes](results/1.1/1.1.12_wireframes_spec.md), [1.1 Screen Specifications](results/1.1/README.md)
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 1.3.1 | Create paper/Excalidraw prototype of 3 core flows | UX Designer | 2h | Task creation, goal tracking, daily briefing flows sketched |
-| 1.3.2 | Run 3 hallway usability tests (informal) | UX Designer | 2h | 3 people walk through flows, major confusion points noted |
-| 1.3.3 | Fix critical UX issues in specs | UX Designer | 1h | Top 3 issues addressed, specs updated |
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 1.3.1 | Prepare interactive prototype from wireframes | UX Designer | 2h | 🔲 Not Started | Task creation, goal tracking, daily briefing flows from [1.1.12](results/1.1/1.1.12_wireframes_spec.md) made clickable |
+| 1.3.2 | Run 3 hallway usability tests (informal) | UX Designer | 2h | 🔲 Not Started | 3 people walk through flows, major confusion points noted |
+| 1.3.3 | Fix critical UX issues in specs | UX Designer | 1h | 🔲 Not Started | Top 3 issues addressed, update relevant 1.1.x specs |
 
 **Milestone Exit Criteria**:
 - [ ] Core flows tested with 3 people
@@ -579,26 +599,35 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 ### Milestone 2.3: UI Design System Implementation
 **Goal**: Implement reusable Compose components matching specifications  
-**Owner**: Android Developer
+**Owner**: Android Developer  
+**Source**: [1.1.13 Component Specifications](results/1.1/1.1.13_component_specifications.md), [1.1.11 Accessibility Requirements](results/1.1/1.1.11_accessibility_requirements_spec.md)
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 2.3.1 | Implement color tokens and theme provider | Android Developer | 2h | All colors from spec, dynamic theming support |
-| 2.3.2 | Implement typography scale | Android Developer | 1h | All text styles matching Material 3 scale |
-| 2.3.3 | Create TaskCard component | Android Developer | 2h | Card with all states: default, overdue, completed, swiping |
-| 2.3.4 | Create GoalCard component | Android Developer | 2h | Card with progress bar, milestone count, category icon |
-| 2.3.5 | Create MeetingCard component | Android Developer | 2h | Card with time, title, attendees, action items count |
-| 2.3.6 | Create BriefingCard component | Android Developer | 2h | Card with summary text, expandable sections |
-| 2.3.7 | Create TextField and VoiceInput | Android Developer | 3h | Text input with AI indicator, voice button with waveform |
-| 2.3.8 | Create BottomSheet and Dialog | Android Developer | 2h | Reusable bottom sheet with drag handle, confirmation dialogs |
-| 2.3.9 | Create BottomNavigation | Android Developer | 2h | Bottom nav with 4 items, badges, FAB integration |
-| 2.3.10 | Create component preview showcase | Android Developer | 2h | Preview composables for all components in all states |
+**Implementation Reference**:
+- Color tokens and typography: [1.1.13 Component Spec](results/1.1/1.1.13_component_specifications.md#color-tokens)
+- Touch targets ≥48dp, contrast 4.5:1: [1.1.11 Accessibility](results/1.1/1.1.11_accessibility_requirements_spec.md)
+- Component states: [1.1.13 Component Spec](results/1.1/1.1.13_component_specifications.md)
+
+| ID | Task | Owner | Duration | Status | UX Spec | Measurable Outcome |
+|----|------|-------|----------|--------|---------|-------------------|
+| 2.3.1 | Implement color tokens and theme provider | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#color-tokens) | QuadrantColors, SemanticColors per spec, dynamic theming support |
+| 2.3.2 | Implement typography scale | Android Developer | 1h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#typography-scale) | JeevesTypography matching Material 3 scale from spec |
+| 2.3.3 | Create TaskCard component | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#taskcard-component) | Card with all states: default, overdue, completed, swiping; 72dp min height |
+| 2.3.4 | Create GoalCard component | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#goalcard-component) | Card with progress bar (Linear/Circular), milestone count, category icon |
+| 2.3.5 | Create MeetingCard component | Android Developer | 2h | 🔲 Not Started | [1.1.6](results/1.1/1.1.6_calendar_day_view_spec.md) | Card with time, title, attendees, action items count |
+| 2.3.6 | Create BriefingCard component | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#briefingcard-component) | Card with summary text, expandable sections, gradient background |
+| 2.3.7 | Create TextField and VoiceInput | Android Developer | 3h | 🔲 Not Started | [1.1.3](results/1.1/1.1.3_quick_capture_flow_spec.md) | Text input with AI indicator, voice button per Quick Capture spec |
+| 2.3.8 | Create BottomSheet and Dialog | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#bottom-sheet) | Bottom sheet with drag handle, 28dp corner radius; confirmation dialogs |
+| 2.3.9 | Create BottomNavigation | Android Developer | 2h | 🔲 Not Started | [1.1.12](results/1.1/1.1.12_wireframes_spec.md#navigation-map) | Bottom nav with 5 items per nav map, badges, FAB integration |
+| 2.3.10 | Create QuadrantBadge component | Android Developer | 1h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#quadrantbadge-component) | Compact (24dp), Standard (28dp), Large (48dp) variants with emoji+label |
+| 2.3.11 | Create EmptyState and ErrorState components | Android Developer | 2h | 🔲 Not Started | [1.1.10](results/1.1/1.1.10_error_empty_offline_states_spec.md) | EmptyState with icon/headline/body/CTA; error patterns per spec |
+| 2.3.12 | Create component preview showcase | Android Developer | 2h | 🔲 Not Started | All 1.1 specs | Preview composables for all components in all states |
 
 **Milestone Exit Criteria**:
-- [ ] All 7+ components implemented
-- [ ] Light and dark theme working
-- [ ] Components match text specifications
-- [ ] Preview showcase complete
+- [ ] All 10+ components implemented per [1.1.13 specs](results/1.1/1.1.13_component_specifications.md)
+- [ ] Light and dark theme working with correct quadrant colors
+- [ ] All touch targets ≥48dp per [1.1.11 accessibility](results/1.1/1.1.11_accessibility_requirements_spec.md)
+- [ ] Components match text specifications exactly
+- [ ] Preview showcase complete for design review
 
 ---
 
@@ -607,26 +636,27 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.1: Tasks Plugin
 **Goal**: Complete Eisenhower-based task management with AI prioritization  
 **Owner**: Android Developer  
-**Source**: [0.3.2 Task Management User Stories](results/0.3/0.3.2_task_management_user_stories.md) (TM-001 through TM-010)
+**Source**: [0.3.2 Task Management User Stories](results/0.3/0.3.2_task_management_user_stories.md) (TM-001 through TM-010)  
+**UX Reference**: [1.1.1 Task List](results/1.1/1.1.1_task_list_screen_spec.md), [1.1.2 Task Detail](results/1.1/1.1.2_task_detail_sheet_spec.md), [1.1.3 Quick Capture](results/1.1/1.1.3_quick_capture_flow_spec.md)
 
 **Acceptance Criteria Summary** (from user stories):
 - Quick capture: <5 seconds total, FAB visible on all screens ([TM-001](results/0.3/0.3.2_task_management_user_stories.md))
 - AI classification: <2 seconds, with 1-sentence explanation ([TM-003](results/0.3/0.3.2_task_management_user_stories.md))
-- Quadrant badges: Q1=Red, Q2=Blue, Q3=Amber, Q4=Gray ([TM-004](results/0.3/0.3.2_task_management_user_stories.md))
+- Quadrant badges: Q1=Red #DC2626, Q2=Amber #F59E0B, Q3=Orange #F97316, Q4=Gray #6B7280 per [1.1.13](results/1.1/1.1.13_component_specifications.md)
 - Override: 1-tap to change quadrant ([TM-010](results/0.3/0.3.2_task_management_user_stories.md))
 
-| ID | Task | Owner | Duration | Source Story | Measurable Outcome |
-|----|------|-------|----------|--------------|-------------------|
-| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | **Rule-based primary** (per 0.2.5): deadline urgency (7d/3d/24h/overdue=Q1), keyword dictionaries (50+ per quadrant), temporal pattern matching ("tomorrow", "by Friday"), confidence scoring for LLM escalation; target **≥75% accuracy, <100ms** |
-| 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | LazyColumn, quadrant badges (color-coded), overdue highlight, sort by Q1→Q4, 60fps scroll |
-| 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | All fields editable, goal linking picker, quadrant override, delete with 5s undo snackbar |
-| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <200ms, **instant rule-based classification (<100ms)**, NL parsing preview (title/date/priority), haptic confirm, works offline; optional LLM refinement in background (per 0.2.6.15) |
-| 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Reorder within list, haptic feedback, persist order |
-| 3.1.7 | Implement swipe actions | Android Developer | 2h | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (animated checkmark), swipe left = delete (confirm) |
-| 3.1.8 | Implement task filters and search | Android Developer | 2h | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter by quadrant/status/date, FTS search, completed show/hide toggle |
-| 3.1.9 | Implement recurring tasks | Android Developer | 2h | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete |
-| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support |
-| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All TM stories | 10+ tests: capture flow, AI classification, CRUD, swipe actions, filters |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
+|----|------|-------|----------|---------|--------------|-------------------|
+| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | — | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | **Rule-based primary** (per 0.2.5): deadline urgency (7d/3d/24h/overdue=Q1), keyword dictionaries (50+ per quadrant), temporal pattern matching ("tomorrow", "by Friday"), confidence scoring for LLM escalation; target **≥75% accuracy, <100ms** |
+| 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | LazyColumn per spec layout, section headers (DO FIRST/SCHEDULE/etc.), quadrant badges, overdue left border, sort by Q1→Q4, 60fps scroll, empty states per [1.1.10](results/1.1/1.1.10_error_empty_offline_states_spec.md) |
+| 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Half/full expand states, AI explanation display, goal linking picker, quadrant override pills, delete with 5s undo |
+| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | [1.1.3](results/1.1/1.1.3_quick_capture_flow_spec.md) | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <100ms per spec, voice input, AI parsing preview, haptic confirm, <5s total flow, works offline |
+| 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Long press to reorder per spec, haptic feedback, persist order |
+| 3.1.7 | Implement swipe actions | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (green bg), swipe left = delete (red bg) per spec gestures |
+| 3.1.8 | Implement task filters and search | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#elements) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter chips per spec, FTS search, completed show/hide toggle |
+| 3.1.9 | Implement recurring tasks | Android Developer | 2h | — | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete |
+| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | — | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support |
+| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All 1.1 task specs | All TM stories | 10+ tests: capture flow timing, AI classification display, CRUD, swipe actions, filters |
 
 **Milestone Exit Criteria**:
 - [ ] Tasks can be created via AI natural language in **<3 seconds** (rule-based instant, LLM optional)
@@ -639,24 +669,25 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.2: Goals Plugin
 **Goal**: Goal setting and progress tracking linked to tasks  
 **Owner**: Android Developer  
-**Source**: [0.3.3 Goals User Stories](results/0.3/0.3.3_goals_user_stories.md) (GL-001 through GL-006)
+**Source**: [0.3.3 Goals User Stories](results/0.3/0.3.3_goals_user_stories.md) (GL-001 through GL-006)  
+**UX Reference**: [1.1.4 Goals Screens](results/1.1/1.1.4_goals_screens_spec.md)
 
-**Acceptance Criteria Summary** (from user stories):
+**Acceptance Criteria Summary** (from user stories + UX spec):
 - Goal creation with AI SMART suggestions ([GL-001](results/0.3/0.3.3_goals_user_stories.md))
 - Progress = completed_linked_tasks / total_linked_tasks ([GL-002](results/0.3/0.3.3_goals_user_stories.md))
-- Status colors: Green (on-track), Yellow (behind <15%), Red (at-risk ≥15%) ([GL-002](results/0.3/0.3.3_goals_user_stories.md))
+- Status colors per [1.1.4](results/1.1/1.1.4_goals_screens_spec.md): Green #10B981 (on-track), Yellow #F59E0B (behind <15%), Red #EF4444 (at-risk ≥15%)
 - Max 10 active goals to prevent overwhelm ([GL-001](results/0.3/0.3.3_goals_user_stories.md))
 
-| ID | Task | Owner | Duration | Source Story | Measurable Outcome |
-|----|------|-------|----------|--------------|-------------------|
-| 3.2.1 | Implement Goals List screen | Android Developer | 3h | [GL-005](results/0.3/0.3.3_goals_user_stories.md) | List with category grouping, progress bars (color-coded), at-risk sort first, filter chips |
-| 3.2.2 | Implement Goal Detail screen | Android Developer | 3h | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-006](results/0.3/0.3.3_goals_user_stories.md) | Progress chart, linked tasks list, milestones timeline, analytics tab |
-| 3.2.3 | Implement Goal Creation wizard | Android Developer | 4h | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | 3-step: describe→AI SMART suggestion→target date+milestones, category picker, skip AI option |
-| 3.2.4 | Implement milestone tracking | Android Developer | 2h | [GL-004](results/0.3/0.3.3_goals_user_stories.md) | Add 0-5 milestones, check off complete, missed deadline highlight, timeline viz |
-| 3.2.5 | Implement task-to-goal linking | Android Developer | 2h | [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Link picker in task detail, AI suggests goal based on task content, unlink without delete |
-| 3.2.6 | Implement progress calculation | Android Developer | 2h | [GL-002](results/0.3/0.3.3_goals_user_stories.md) | Auto-update on task complete, on-track calculation: progress% vs time_elapsed% |
-| 3.2.7 | Implement goal-based AI suggestions | Android Developer | 3h | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | AI suggests tasks to advance goals, shown in briefing goal spotlight |
-| 3.2.8 | Write UI tests for Goals plugin | Android Developer | 2h | All GL stories | 8+ tests: create wizard, progress update, task linking, milestone completion |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
+|----|------|-------|----------|---------|--------------|-------------------|
+| 3.2.1 | Implement Goals List screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goals-list-screen) | [GL-005](results/0.3/0.3.3_goals_user_stories.md) | Layout per spec: overview card, category filter chips, at-risk sort first, empty state |
+| 3.2.2 | Implement Goal Detail screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goal-detail-screen) | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-006](results/0.3/0.3.3_goals_user_stories.md) | Progress hero (circular), tabs (Tasks/Milestones/Analytics) per spec, linked tasks list |
+| 3.2.3 | Implement Goal Creation wizard | Android Developer | 4h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#create-goal-wizard) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | 3-step wizard per spec: Step 1 describe, Step 2 AI SMART, Step 3 timeline+milestones |
+| 3.2.4 | Implement milestone tracking | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#milestones-tab) | [GL-004](results/0.3/0.3.3_goals_user_stories.md) | Timeline visualization per spec, 0-8 milestones, completion checkoff |
+| 3.2.5 | Implement task-to-goal linking | Android Developer | 2h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md#goal-linking) | [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Goal picker in task detail per spec, AI auto-suggest, bidirectional link |
+| 3.2.6 | Implement progress calculation | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#progress-hero) | [GL-002](results/0.3/0.3.3_goals_user_stories.md) | Milestones vs Tasks mode per spec, on-track calculation, status color |
+| 3.2.7 | Implement goal-based AI suggestions | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#goal-spotlight) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | AI suggests next action, shown in Goal Spotlight section |
+| 3.2.8 | Write UI tests for Goals plugin | Android Developer | 2h | All 1.1.4 specs | All GL stories | 8+ tests: wizard flow, progress update, task linking, milestone completion |
 
 **Milestone Exit Criteria**:
 - [ ] Goals can be created with AI SMART suggestions
@@ -668,7 +699,8 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.3: Calendar Plugin
 **Goal**: Calendar integration with meeting notes and action items  
 **Owner**: Android Developer  
-**Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-002, CB-004, CB-005)
+**Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-002, CB-004, CB-005)  
+**UX Reference**: [1.1.6 Calendar Day View](results/1.1/1.1.6_calendar_day_view_spec.md)
 
 **Acceptance Criteria Summary** (from user stories):
 - Read-only calendar access, no write in MVP ([CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md))
@@ -694,29 +726,30 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.4: Daily Briefings
 **Goal**: AI-generated morning and evening summaries  
 **Owner**: Android Developer  
-**Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-001, CB-003), [0.3.1 80/20 Analysis](results/0.3/0.3.1_80_20_feature_analysis.md)
+**Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-001, CB-003), [0.3.1 80/20 Analysis](results/0.3/0.3.1_80_20_feature_analysis.md)  
+**UX Reference**: [1.1.5 Today Dashboard + Briefing](results/1.1/1.1.5_today_dashboard_briefing_spec.md), [1.1.7 Evening Summary](results/1.1/1.1.7_evening_summary_spec.md)
 
 **Strategic Priority**: Highest retention impact (2.18 value score) — drives habit formation and DAU per [0.3.1](results/0.3/0.3.1_80_20_feature_analysis.md)
 
-**Acceptance Criteria Summary** (from user stories):
-- Morning: greeting, top 3 Q1/Q2 tasks, calendar preview, goal spotlight, AI insight ([CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md))
-- Evening: completed list, not-done with "move to tomorrow", goal progress delta, "Close Day" ([CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md))
+**Acceptance Criteria Summary** (from user stories + UX specs):
+- Morning: greeting, top 3 Q1/Q2 tasks, calendar preview, goal spotlight, AI insight per [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md)
+- Evening: completed list, not-done with "move to tomorrow", goal progress delta, "Close Day" per [1.1.7](results/1.1/1.1.7_evening_summary_spec.md)
 - Push notification at user-configured times ([CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md))
 
-| ID | Task | Owner | Duration | Source Story | Measurable Outcome |
-|----|------|-------|----------|--------------|-------------------|
-| 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Generates briefing from tasks (Q1/Q2), calendar, goals using LLM for insight |
-| 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Greeting, top 3 priorities, schedule preview, goal spotlight, AI insight, "Start Day" CTA |
-| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Completed vs planned, "move to tomorrow" action, goal progress Δ, AI reflection, "Close Day" animation |
-| 3.4.4 | Implement briefing notifications | Android Developer | 2h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Configurable morning/evening times, "Good morning!" / "Time to wrap up!" content |
-| 3.4.5 | Implement end-of-day nudge (Maya persona) | Android Developer | 1h | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | Configurable "stop working" reminder at user-set time for work-life balance |
-| 3.4.6 | Implement Today/Dashboard screen | Android Developer | 4h | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Combined view: briefing card + top tasks + calendar timeline + goals summary |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
+|----|------|-------|----------|---------|--------------|-------------------|
+| 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | — | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Generates briefing from tasks (Q1/Q2), calendar, goals using rule-based + LLM for insight |
+| 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#morning-briefing-card) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Greeting, Top Priorities, Schedule Preview, Goal Spotlight sections per spec layout |
+| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md) | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Accomplishments, Not Done, Goal Progress, Tomorrow Preview, "Close Day" per spec |
+| 3.4.4 | Implement briefing notifications | Android Developer | 2h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md#daily-briefings-settings) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Default 7am/6pm, configurable per spec |
+| 3.4.5 | Implement end-of-day nudge (Maya persona) | Android Developer | 1h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md#mayas-end-of-day-nudge) | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | Work-life boundary reminder per spec |
+| 3.4.6 | Implement Today/Dashboard screen | Android Developer | 4h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#today-dashboard) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Dashboard layout per spec: briefing card + quick stats + upcoming + goals summary |
 
 **Milestone Exit Criteria**:
-- [ ] Briefings generate in <3 seconds
+- [ ] Briefings generate in <3 seconds per spec timing
 - [ ] Briefings are contextual (use actual task/calendar/goal data)
 - [ ] Notifications trigger at configured times
-- [ ] "Move to tomorrow" updates task due date
+- [ ] "Move to tomorrow" updates task due date per [1.1.7](results/1.1/1.1.7_evening_summary_spec.md)
 - [ ] End-of-day nudge configurable per Maya persona need
 
 ### Milestone 3.5: Basic Analytics (Simplified)
@@ -751,21 +784,23 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 - Alex: Quick to value — show AI prioritization in onboarding
 - Jordan: Goal tracking preview to hook engagement
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 4.1.1 | Implement onboarding flow (5 screens) | Android Developer | 4h | Welcome, privacy promise (Maya), value props (AI demo), model download, permissions, first task |
-| 4.1.2 | Implement model download screen | Android Developer | 3h | Progress indicator, WiFi recommendation, skip option, resume support, ~2.5GB size warning |
-| 4.1.3 | Implement permissions explanation | Android Developer | 2h | Clear rationale for READ_CALENDAR, notifications; "data stays local" per Maya validation |
-| 4.1.4 | Implement Settings screen | Android Developer | 3h | Categories: Briefings (times), Notifications, Appearance, AI Model, About/Privacy |
-| 4.1.5 | Implement theme switching | Android Developer | 2h | Light/dark/system toggle with immediate preview |
-| 4.1.6 | Implement notification settings | Android Developer | 2h | Briefing times (default 7am/6pm per [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md)), nudge frequency, end-of-day time |
-| 4.1.7 | Implement local-only mode (Maya persona) | Android Developer | 2h | Full app usage without account, no sign-up prompt, per [0.3.7](results/0.3/0.3.7_persona_validation.md) |
-| 4.1.8 | Write onboarding tests | Android Developer | 2h | Full flow E2E test: welcome→permissions→model→first task→dashboard |
+**UX Reference**: [1.1.8 Onboarding Flow](results/1.1/1.1.8_onboarding_flow_spec.md), [1.1.9 Settings Screens](results/1.1/1.1.9_settings_screens_spec.md)
+
+| ID | Task | Owner | Duration | UX Spec | Measurable Outcome |
+|----|------|-------|----------|---------|-------------------|
+| 4.1.1 | Implement onboarding flow (5 screens) | Android Developer | 4h | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md) | Welcome, Privacy Promise, Value Props, Model Setup, Permissions, First Task per spec layouts |
+| 4.1.2 | Implement model download screen | Android Developer | 3h | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md#screen-4-ai-model-setup) | Progress ring, WiFi recommendation, "Later" skip option, resume support, 2.3GB size warning |
+| 4.1.3 | Implement permissions explanation | Android Developer | 2h | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md#screen-5-permissions) | Privacy-first rationale per spec, "stays on device" messaging, optional skip |
+| 4.1.4 | Implement Settings screen | Android Developer | 3h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md) | All settings sections per spec: Daily Briefings, Notifications, Appearance, AI Model, Backup, About |
+| 4.1.5 | Implement theme switching | Android Developer | 2h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md#appearance-settings) | Light/Dark/System toggle per spec, accent color options |
+| 4.1.6 | Implement notification settings | Android Developer | 2h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md#notification-settings) | Briefing times (7am/6pm default), per-type toggles per spec |
+| 4.1.7 | Implement local-only mode (Maya persona) | Android Developer | 2h | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md#screen-2-privacy-promise) | Full app usage without account, no sign-up prompt, per [0.3.7](results/0.3/0.3.7_persona_validation.md) |
+| 4.1.8 | Write onboarding tests | Android Developer | 2h | All 1.1.8 screens | Full flow E2E test: welcome→permissions→model→first task→dashboard |
 
 **Milestone Exit Criteria**:
-- [ ] New users complete onboarding in <3 minutes
+- [ ] New users complete onboarding in <3 minutes per [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md) timing targets
 - [ ] Model download works reliably with resume
-- [ ] All settings persist correctly
+- [ ] All settings persist correctly per [1.1.9](results/1.1/1.1.9_settings_screens_spec.md)
 - [ ] App fully functional without account creation (local-only mode)
 - [ ] Privacy messaging prominent per Maya persona validation
 
@@ -797,7 +832,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 4.3.3 | Optimize cold start time | Android Developer | 2h | Cold start <4s on mid-range device |
 | 4.3.4 | Create critical path E2E tests | Android Developer | 3h | 8 E2E tests: onboarding, task CRUD, goals, calendar |
 | 4.3.5 | Test on 3 device configurations | Android Developer | 3h | Test on Pixel, Samsung, and one budget device |
-| 4.3.6 | Accessibility smoke test | Android Developer | 2h | TalkBack navigation works, touch targets ≥48dp |
+| 4.3.6 | Accessibility smoke test | Android Developer | 2h | TalkBack per [1.1.11](results/1.1/1.1.11_accessibility_requirements_spec.md), touch targets ≥48dp, 4.5:1 contrast |
 | 4.3.7 | Configure ProGuard/R8 for release | Android Developer | 1h | Obfuscation and minification enabled |
 
 **Milestone Exit Criteria**:

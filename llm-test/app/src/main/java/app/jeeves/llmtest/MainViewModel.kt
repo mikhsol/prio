@@ -5,7 +5,11 @@ import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.jeeves.llmtest.benchmark.AccuracyTest
+import app.jeeves.llmtest.benchmark.ExtendedTestDataset
+import app.jeeves.llmtest.benchmark.FullBenchmarkResult
 import app.jeeves.llmtest.benchmark.LlmBenchmark
+import app.jeeves.llmtest.benchmark.PromptEngineeringBenchmark
+import app.jeeves.llmtest.benchmark.PromptStrategy
 import app.jeeves.llmtest.engine.EisenhowerClassifier
 import app.jeeves.llmtest.engine.LlamaEngine
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +20,8 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel for LLM Test main screen.
+ * 
+ * Milestone 0.2.6: Added prompt engineering benchmark support.
  */
 class MainViewModel(application: Application) : AndroidViewModel(application) {
     
@@ -23,6 +29,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val classifier = EisenhowerClassifier(llamaEngine)
     private val benchmark = LlmBenchmark(application, llamaEngine)
     private val accuracyTest = AccuracyTest(classifier)
+    private val promptBenchmark = PromptEngineeringBenchmark(llamaEngine) { log ->
+        addLog(log)
+    }
     
     private val _uiState = MutableStateFlow(MainUiState())
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
@@ -158,6 +167,65 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
+    /**
+     * Milestone 0.2.6: Run prompt engineering benchmark.
+     * Tests all prompt strategies on 50 diverse tasks.
+     */
+    fun runPromptEngineeringBenchmark(quick: Boolean = false) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTestingPrompts = true, promptBenchmarkResult = null) }
+            addLog("Starting Prompt Engineering Benchmark (0.2.6)...")
+            addLog("Test cases: ${if (quick) 20 else 50}")
+            
+            try {
+                val result = if (quick) {
+                    promptBenchmark.quickBenchmark()
+                } else {
+                    promptBenchmark.benchmarkAllStrategies()
+                }
+                
+                _uiState.update {
+                    it.copy(
+                        isTestingPrompts = false,
+                        promptBenchmarkResult = result
+                    )
+                }
+                
+                val status = if (result.meetsTarget) "✅ ACHIEVED" else "❌ NOT MET"
+                addLog("Best: ${result.bestStrategy.displayName} at ${String.format("%.1f", result.bestAccuracy * 100)}%")
+                addLog("70% target: $status")
+                
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isTestingPrompts = false) }
+                addLog("❌ Prompt benchmark error: ${e.message}")
+            }
+        }
+    }
+    
+    /**
+     * Test a single prompt strategy.
+     */
+    fun testSingleStrategy(strategy: PromptStrategy, quick: Boolean = true) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTestingPrompts = true) }
+            addLog("Testing strategy: ${strategy.displayName}...")
+            
+            try {
+                val testCases = if (quick) ExtendedTestDataset.TEST_CASES_20 else ExtendedTestDataset.TEST_CASES_50
+                val result = promptBenchmark.benchmarkStrategy(strategy, testCases)
+                
+                addLog("${strategy.displayName}: ${String.format("%.1f", result.accuracy * 100)}% (${result.correct}/${result.total})")
+                addLog("Avg latency: ${result.avgInferenceTimeMs}ms")
+                
+                _uiState.update { it.copy(isTestingPrompts = false) }
+                
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isTestingPrompts = false) }
+                addLog("❌ Strategy test error: ${e.message}")
+            }
+        }
+    }
+    
     fun classifyTask(taskText: String) {
         viewModelScope.launch {
             _uiState.update { it.copy(isClassifying = true) }
@@ -216,5 +284,7 @@ data class MainUiState(
     val ruleBasedAccuracy: Float? = null,
     val isClassifying: Boolean = false,
     val lastClassification: ClassificationResultUi? = null,
+    val isTestingPrompts: Boolean = false,
+    val promptBenchmarkResult: FullBenchmarkResult? = null,
     val logs: List<String> = emptyList()
 )

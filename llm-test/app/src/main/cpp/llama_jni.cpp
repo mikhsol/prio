@@ -1,11 +1,7 @@
 /**
  * Jeeves LLM Test Project - JNI Bridge to llama.cpp
  * 
- * This file provides the JNI interface for on-device LLM inference.
- * For the test project, it includes a stub implementation that simulates
- * llama.cpp behavior when the actual library is not available.
- * 
- * Task 0.2.1: Set up llama.cpp Android test project with JNI
+ * Updated for llama.cpp 2024+ API
  */
 
 #include <jni.h>
@@ -42,7 +38,6 @@ struct LlamaContext {
     std::mutex mutex;
     bool is_stub = false;
     
-    // Benchmark metrics
     long long load_time_ms = 0;
     long long last_inference_time_ms = 0;
     int last_tokens_generated = 0;
@@ -57,79 +52,24 @@ struct LlamaContext {
     ~LlamaContext() {
 #if LLAMA_AVAILABLE
         if (ctx) llama_free(ctx);
-        if (model) llama_free_model(model);
+        if (model) llama_model_free(model);
 #endif
     }
 };
 
 // ============================================================================
 // Stub implementation for testing without llama.cpp
-// Simulates realistic timing and provides rule-based classification
 // ============================================================================
 
 namespace stub {
 
-// Simulated model parameters
-const size_t SIMULATED_MODEL_SIZE = 2400000000; // 2.4 GB
+const size_t SIMULATED_MODEL_SIZE = 2400000000;
 const int SIMULATED_TOKENS_PER_SEC = 18;
 const int SIMULATED_LOAD_TIME_MS = 3500;
 
-// Eisenhower classification patterns
-struct Pattern {
-    const char* regex_like;
-    const char* quadrant;
-    float confidence;
-};
-
-const Pattern URGENT_PATTERNS[] = {
-    {"urgent", "Q1", 0.85f},
-    {"asap", "Q1", 0.80f},
-    {"immediately", "Q1", 0.90f},
-    {"deadline today", "Q1", 0.95f},
-    {"due today", "Q1", 0.90f},
-    {"emergency", "Q1", 0.95f},
-    {"critical", "Q1", 0.85f},
-    {"server down", "Q1", 0.95f},
-    {"client waiting", "Q1", 0.85f},
-};
-
-const Pattern IMPORTANT_PATTERNS[] = {
-    {"plan", "Q2", 0.80f},
-    {"strategy", "Q2", 0.85f},
-    {"goal", "Q2", 0.80f},
-    {"learn", "Q2", 0.75f},
-    {"health", "Q2", 0.80f},
-    {"exercise", "Q2", 0.75f},
-    {"relationship", "Q2", 0.80f},
-    {"career", "Q2", 0.85f},
-    {"quarterly", "Q2", 0.80f},
-};
-
-const Pattern DELEGATE_PATTERNS[] = {
-    {"routine", "Q3", 0.75f},
-    {"order supplies", "Q3", 0.80f},
-    {"schedule meeting", "Q3", 0.70f},
-    {"file", "Q3", 0.65f},
-    {"organize", "Q3", 0.65f},
-    {"survey", "Q3", 0.70f},
-    {"report", "Q3", 0.65f},
-};
-
-const Pattern ELIMINATE_PATTERNS[] = {
-    {"social media", "Q4", 0.90f},
-    {"youtube", "Q4", 0.80f},
-    {"browse", "Q4", 0.75f},
-    {"scroll", "Q4", 0.85f},
-    {"optional", "Q4", 0.70f},
-    {"someday", "Q4", 0.75f},
-    {"maybe", "Q4", 0.65f},
-};
-
 std::string to_lower(const std::string& s) {
     std::string result = s;
-    for (char& c : result) {
-        c = std::tolower(c);
-    }
+    for (char& c : result) c = std::tolower(c);
     return result;
 }
 
@@ -140,69 +80,49 @@ bool contains(const std::string& text, const char* pattern) {
 std::string classify_eisenhower(const std::string& task_text) {
     std::string lower_text = to_lower(task_text);
     
-    float urgent_score = 0.0f;
-    float important_score = 0.0f;
-    float delegate_score = 0.0f;
-    float eliminate_score = 0.0f;
+    std::string quadrant = "SCHEDULE";
+    float confidence = 0.6f;
+    std::string reasoning = "Default classification";
     
-    // Check patterns
-    for (const auto& p : URGENT_PATTERNS) {
-        if (contains(lower_text, p.regex_like)) {
-            urgent_score = std::max(urgent_score, p.confidence);
-        }
-    }
+    // Urgency patterns
+    bool is_urgent = contains(lower_text, "urgent") || contains(lower_text, "asap") ||
+        contains(lower_text, "immediately") || contains(lower_text, "deadline today") ||
+        contains(lower_text, "due today") || contains(lower_text, "emergency") ||
+        contains(lower_text, "server down") || contains(lower_text, "crisis") ||
+        contains(lower_text, "in 2 hours") || contains(lower_text, "in 30 minute");
     
-    for (const auto& p : IMPORTANT_PATTERNS) {
-        if (contains(lower_text, p.regex_like)) {
-            important_score = std::max(important_score, p.confidence);
-        }
-    }
+    // Importance patterns
+    bool is_important = contains(lower_text, "client") || contains(lower_text, "customer") ||
+        contains(lower_text, "board") || contains(lower_text, "investor") ||
+        contains(lower_text, "strategy") || contains(lower_text, "goal") ||
+        contains(lower_text, "health") || contains(lower_text, "career") ||
+        contains(lower_text, "tax") || contains(lower_text, "contract");
     
-    for (const auto& p : DELEGATE_PATTERNS) {
-        if (contains(lower_text, p.regex_like)) {
-            delegate_score = std::max(delegate_score, p.confidence);
-        }
-    }
+    // Low priority patterns
+    bool is_low = contains(lower_text, "social media") || contains(lower_text, "youtube") ||
+        contains(lower_text, "browse") || contains(lower_text, "optional") ||
+        contains(lower_text, "reorganize") || contains(lower_text, "third time");
     
-    for (const auto& p : ELIMINATE_PATTERNS) {
-        if (contains(lower_text, p.regex_like)) {
-            eliminate_score = std::max(eliminate_score, p.confidence);
-        }
-    }
+    // Delegation patterns
+    bool is_delegatable = contains(lower_text, "order supplies") || contains(lower_text, "survey") ||
+        contains(lower_text, "status report") || contains(lower_text, "schedule team");
     
-    // Determine quadrant
-    std::string quadrant;
-    float confidence;
-    std::string reasoning;
-    
-    bool is_urgent = urgent_score > 0.5f;
-    bool is_important = important_score > 0.5f || urgent_score > 0.8f;
-    
-    if (eliminate_score > 0.7f) {
+    if (is_low) {
         quadrant = "ELIMINATE";
-        confidence = eliminate_score;
-        reasoning = "Task appears to be low-value or time-wasting activity";
+        confidence = 0.85f;
+        reasoning = "Low priority activity detected";
     } else if (is_urgent && is_important) {
         quadrant = "DO";
-        confidence = std::max(urgent_score, important_score);
-        reasoning = "Task is both urgent and important - requires immediate attention";
+        confidence = 0.9f;
+        reasoning = "Both urgent and important";
     } else if (!is_urgent && is_important) {
         quadrant = "SCHEDULE";
-        confidence = important_score;
-        reasoning = "Task is important but not time-sensitive - schedule for focused work";
-    } else if (is_urgent && !is_important) {
+        confidence = 0.8f;
+        reasoning = "Important but not time-sensitive";
+    } else if (is_delegatable || (is_urgent && !is_important)) {
         quadrant = "DELEGATE";
-        confidence = std::max(urgent_score, delegate_score);
-        reasoning = "Task is urgent but not personally important - consider delegation";
-    } else if (delegate_score > 0.5f) {
-        quadrant = "DELEGATE";
-        confidence = delegate_score;
-        reasoning = "Routine task that can be handled by others";
-    } else {
-        // Default to SCHEDULE for ambiguous tasks
-        quadrant = "SCHEDULE";
-        confidence = 0.6f;
-        reasoning = "Task importance unclear - scheduling for review";
+        confidence = 0.75f;
+        reasoning = "Routine task suitable for delegation";
     }
     
     std::ostringstream json;
@@ -214,7 +134,6 @@ std::string classify_eisenhower(const std::string& task_text) {
 }
 
 void simulate_delay(int tokens) {
-    // Simulate realistic inference time
     int delay_ms = (tokens * 1000) / SIMULATED_TOKENS_PER_SEC;
     std::this_thread::sleep_for(std::chrono::milliseconds(delay_ms));
 }
@@ -239,48 +158,59 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_initBackend(JNIEnv* env, jobject thiz
 
 JNIEXPORT jlong JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_nativeLoadModel(
-    JNIEnv* env,
-    jobject thiz,
-    jstring modelPath,
-    jint contextSize,
-    jint nThreads
+    JNIEnv* env, jobject thiz, jstring modelPath, jint contextSize, jint nThreads
 ) {
     const char* path = env->GetStringUTFChars(modelPath, nullptr);
     LOGI("Loading model from: %s (context=%d, threads=%d)", path, contextSize, nThreads);
+    
+    // Check if file is readable
+    FILE* f = fopen(path, "rb");
+    if (!f) {
+        LOGE("Cannot open file: %s (errno=%d)", path, errno);
+        env->ReleaseStringUTFChars(modelPath, path);
+        return 0;
+    }
+    fseek(f, 0, SEEK_END);
+    long size = ftell(f);
+    fclose(f);
+    LOGI("File size: %ld bytes", size);
     
     auto start = std::chrono::steady_clock::now();
     auto* wrapper = new LlamaContext();
     
 #if LLAMA_AVAILABLE
-    // Real llama.cpp implementation
+    LOGI("Creating model params...");
     llama_model_params model_params = llama_model_default_params();
     model_params.n_gpu_layers = 0;
     
-    wrapper->model = llama_load_model_from_file(path, model_params);
+    LOGI("Calling llama_model_load_from_file...");
+    wrapper->model = llama_model_load_from_file(path, model_params);
     if (!wrapper->model) {
-        LOGE("Failed to load model");
+        LOGE("Failed to load model - llama_model_load_from_file returned null");
         env->ReleaseStringUTFChars(modelPath, path);
         delete wrapper;
         return 0;
     }
+    LOGI("Model loaded successfully");
     
     llama_context_params ctx_params = llama_context_default_params();
     ctx_params.n_ctx = contextSize;
     ctx_params.n_threads = nThreads;
     ctx_params.n_threads_batch = nThreads;
     
-    wrapper->ctx = llama_new_context_with_model(wrapper->model, ctx_params);
+    LOGI("Creating context...");
+    wrapper->ctx = llama_init_from_model(wrapper->model, ctx_params);
     if (!wrapper->ctx) {
         LOGE("Failed to create context");
-        llama_free_model(wrapper->model);
+        llama_model_free(wrapper->model);
         env->ReleaseStringUTFChars(modelPath, path);
         delete wrapper;
         return 0;
     }
+    LOGI("Context created successfully");
     
-    wrapper->memory_usage_bytes = llama_get_state_size(wrapper->ctx);
+    wrapper->memory_usage_bytes = llama_state_get_size(wrapper->ctx);
 #else
-    // Stub implementation - simulate loading
     std::this_thread::sleep_for(std::chrono::milliseconds(stub::SIMULATED_LOAD_TIME_MS));
     wrapper->is_stub = true;
     wrapper->memory_usage_bytes = stub::SIMULATED_MODEL_SIZE;
@@ -297,17 +227,10 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeLoadModel(
 
 JNIEXPORT jstring JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_nativeGenerate(
-    JNIEnv* env,
-    jobject thiz,
-    jlong handle,
-    jstring prompt,
-    jint maxTokens,
-    jfloat temperature,
-    jfloat topP
+    JNIEnv* env, jobject thiz, jlong handle, jstring prompt,
+    jint maxTokens, jfloat temperature, jfloat topP
 ) {
-    if (handle == 0) {
-        return env->NewStringUTF("");
-    }
+    if (handle == 0) return env->NewStringUTF("");
     
     auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
     std::lock_guard<std::mutex> lock(wrapper->mutex);
@@ -321,21 +244,34 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeGenerate(
     int tokens_generated = 0;
     
 #if LLAMA_AVAILABLE
-    // Real llama.cpp implementation
+    // Get vocabulary
+    const llama_vocab* vocab = llama_model_get_vocab(wrapper->model);
+    
+    // Tokenize input
     std::vector<llama_token> tokens(llama_n_ctx(wrapper->ctx));
-    int n_tokens = llama_tokenize(
-        wrapper->model, promptCpp.c_str(), promptCpp.length(),
-        tokens.data(), tokens.size(), true, false
-    );
+    int n_tokens = llama_tokenize(vocab, promptCpp.c_str(), promptCpp.length(),
+                                   tokens.data(), tokens.size(), true, false);
+    if (n_tokens < 0) {
+        LOGE("Tokenization failed");
+        return env->NewStringUTF("");
+    }
     tokens.resize(n_tokens);
+    LOGD("Tokenized %d tokens", n_tokens);
     
-    llama_kv_cache_clear(wrapper->ctx);
+    // Clear KV cache
+    llama_memory_t mem = llama_get_memory(wrapper->ctx);
+    llama_memory_clear(mem, true);
     
+    // Create batch for prompt
     llama_batch batch = llama_batch_init(tokens.size(), 0, 1);
     for (size_t i = 0; i < tokens.size(); i++) {
-        llama_batch_add(batch, tokens[i], i, {0}, false);
+        batch.token[i] = tokens[i];
+        batch.pos[i] = i;
+        batch.n_seq_id[i] = 1;
+        batch.seq_id[i][0] = 0;
+        batch.logits[i] = (i == tokens.size() - 1);
     }
-    batch.logits[batch.n_tokens - 1] = true;
+    batch.n_tokens = tokens.size();
     
     if (llama_decode(wrapper->ctx, batch) != 0) {
         LOGE("Prompt decode failed");
@@ -344,24 +280,33 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeGenerate(
     }
     llama_batch_free(batch);
     
+    // Setup sampler
     llama_sampler* sampler = llama_sampler_chain_init(llama_sampler_chain_default_params());
     llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
     llama_sampler_chain_add(sampler, llama_sampler_init_top_p(topP, 1));
     llama_sampler_chain_add(sampler, llama_sampler_init_dist(42));
     
+    // Generate tokens
     int n_cur = tokens.size();
     for (int i = 0; i < maxTokens; i++) {
         llama_token new_token = llama_sampler_sample(sampler, wrapper->ctx, -1);
         
-        if (llama_token_is_eog(wrapper->model, new_token)) break;
+        if (llama_vocab_is_eog(vocab, new_token)) break;
         
         char buf[256];
-        int n = llama_token_to_piece(wrapper->model, new_token, buf, sizeof(buf), 0, true);
+        int n = llama_token_to_piece(vocab, new_token, buf, sizeof(buf), 0, true);
         if (n > 0) result.append(buf, n);
         tokens_generated++;
         
+        // Decode next token
         llama_batch next_batch = llama_batch_init(1, 0, 1);
-        llama_batch_add(next_batch, new_token, n_cur, {0}, true);
+        next_batch.token[0] = new_token;
+        next_batch.pos[0] = n_cur;
+        next_batch.n_seq_id[0] = 1;
+        next_batch.seq_id[0][0] = 0;
+        next_batch.logits[0] = true;
+        next_batch.n_tokens = 1;
+        
         if (llama_decode(wrapper->ctx, next_batch) != 0) {
             llama_batch_free(next_batch);
             break;
@@ -371,30 +316,26 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeGenerate(
     }
     llama_sampler_free(sampler);
 #else
-    // Stub implementation - use rule-based classification
     LOGD("Using stub implementation for generation");
-    
-    // Check if this is an Eisenhower classification request
     if (promptCpp.find("Eisenhower") != std::string::npos || 
-        promptCpp.find("quadrant") != std::string::npos) {
-        
-        // Extract task text from prompt
-        size_t task_start = promptCpp.find("Task:");
+        promptCpp.find("quadrant") != std::string::npos ||
+        promptCpp.find("classify") != std::string::npos) {
+        size_t task_start = promptCpp.rfind("\"");
         if (task_start != std::string::npos) {
-            std::string task_text = promptCpp.substr(task_start + 5);
-            result = stub::classify_eisenhower(task_text);
-            tokens_generated = 50; // Approximate
-        } else {
-            result = "{\"quadrant\": \"SCHEDULE\", \"confidence\": 0.5, \"reasoning\": \"Unable to parse task\"}";
-            tokens_generated = 30;
+            size_t task_end = promptCpp.rfind("\"", task_start - 1);
+            if (task_end != std::string::npos) {
+                std::string task_text = promptCpp.substr(task_end + 1, task_start - task_end - 1);
+                result = stub::classify_eisenhower(task_text);
+            }
         }
+        if (result.empty()) {
+            result = stub::classify_eisenhower(promptCpp);
+        }
+        tokens_generated = 50;
     } else {
-        // Generic response
-        result = "This is a stub response. In production, this would be generated by Phi-3-mini.";
+        result = "This is a stub response.";
         tokens_generated = 20;
     }
-    
-    // Simulate realistic timing
     stub::simulate_delay(tokens_generated);
 #endif
     
@@ -403,7 +344,6 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeGenerate(
     wrapper->last_tokens_generated = tokens_generated;
     
     LOGD("Generated %d tokens in %lld ms", tokens_generated, wrapper->last_inference_time_ms);
-    
     return env->NewStringUTF(result.c_str());
 }
 
@@ -419,36 +359,31 @@ Java_app_jeeves_llmtest_engine_LlamaEngine_nativeUnloadModel(JNIEnv* env, jobjec
 JNIEXPORT jlong JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_getMemoryUsage(JNIEnv* env, jobject thiz, jlong handle) {
     if (handle == 0) return 0;
-    auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
-    return static_cast<jlong>(wrapper->memory_usage_bytes);
+    return static_cast<jlong>(reinterpret_cast<LlamaContext*>(handle)->memory_usage_bytes);
 }
 
 JNIEXPORT jlong JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_getLoadTimeMs(JNIEnv* env, jobject thiz, jlong handle) {
     if (handle == 0) return 0;
-    auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
-    return static_cast<jlong>(wrapper->load_time_ms);
+    return static_cast<jlong>(reinterpret_cast<LlamaContext*>(handle)->load_time_ms);
 }
 
 JNIEXPORT jlong JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_getLastInferenceTimeMs(JNIEnv* env, jobject thiz, jlong handle) {
     if (handle == 0) return 0;
-    auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
-    return static_cast<jlong>(wrapper->last_inference_time_ms);
+    return static_cast<jlong>(reinterpret_cast<LlamaContext*>(handle)->last_inference_time_ms);
 }
 
 JNIEXPORT jint JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_getLastTokenCount(JNIEnv* env, jobject thiz, jlong handle) {
     if (handle == 0) return 0;
-    auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
-    return static_cast<jint>(wrapper->last_tokens_generated);
+    return static_cast<jint>(reinterpret_cast<LlamaContext*>(handle)->last_tokens_generated);
 }
 
 JNIEXPORT jboolean JNICALL
 Java_app_jeeves_llmtest_engine_LlamaEngine_isStubImplementation(JNIEnv* env, jobject thiz, jlong handle) {
     if (handle == 0) return JNI_TRUE;
-    auto* wrapper = reinterpret_cast<LlamaContext*>(handle);
-    return wrapper->is_stub ? JNI_TRUE : JNI_FALSE;
+    return reinterpret_cast<LlamaContext*>(handle)->is_stub ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL
