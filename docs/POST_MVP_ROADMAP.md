@@ -12,6 +12,7 @@ The following features were removed from MVP scope to accelerate delivery:
 
 | Feature | Original Effort | Reason for Deferral | Priority |
 |---------|----------------|---------------------|----------|
+| **Background LLM Processing Queue** | 13h | Rule-based (75%) + real-time LLM (70%) sufficient for MVP; background refinement is enhancement | High |
 | **Gemma-2B benchmarking** | 3h | Phi-3-mini is sufficient; add Gemma only if issues arise | Low |
 | **SQLCipher encryption** | 1h extra | Standard Room + Android Keystore is secure enough for MVP | Medium |
 | **Streaming LLM inference** | 3h | Sync inference meets UX needs; streaming is polish | Medium |
@@ -24,7 +25,43 @@ The following features were removed from MVP scope to accelerate delivery:
 | **Quick Settings tile** | 2h | Nice-to-have, not core value | Low |
 | **Battery optimization task** | 3h | Standard practices sufficient; optimize based on feedback | Medium |
 
-**Total saved from MVP: ~30 hours (~4 dev days)**
+**Total saved from MVP: ~43 hours (~5.5 dev days)**
+
+---
+
+## Phase 6.5: Background LLM Processing (Weeks 16-17)
+
+### Overview
+Implement background classification queue for larger models (Mistral 7B) to achieve higher accuracy through async refinement. Deferred from Milestone 2.2 as rule-based (75%) meets MVP requirements.
+
+### Context
+From Milestone 0.2.6 findings:
+- Mistral 7B achieves **80% accuracy** but takes 45-60 seconds
+- Phi-3-mini achieves **70% accuracy** in 3-8 seconds (real-time viable)
+- Rule-based achieves **75% accuracy** in <50ms
+- Background processing enables high-accuracy refinement without blocking UX
+
+### Milestone 6.5.1: Background Classification Architecture
+**Goal**: Enable async LLM classification with optimistic UI  
+**Owner**: Android Developer  
+**Source**: ACTION_PLAN.md tasks 0.2.6.11-0.2.6.15
+
+| ID | Task | Owner | Duration | Measurable Outcome |
+|----|------|-------|----------|-------------------|
+| 6.5.1.1 | Design background classification queue | Android Developer | 3h | WorkManager-based queue for async LLM processing |
+| 6.5.1.2 | Implement optimistic UI with pending state | Android Developer | 2h | Show "Classifying..." badge, update when LLM completes |
+| 6.5.1.3 | Benchmark Mistral 7B in background mode | Android Developer | 2h | Test battery impact, time-to-classification, user notification |
+| 6.5.1.4 | Design classification refinement UX | UX Designer | 2h | How to notify user when AI improves initial rule-based guess |
+| 6.5.1.5 | Prototype hybrid rule→LLM refinement flow | Android Developer | 4h | Rule-based instant → LLM refines in background → notify if changed |
+
+**Milestone Exit Criteria**:
+- [ ] WorkManager queue processes classification requests in background
+- [ ] UI shows pending state and updates on completion
+- [ ] Battery impact <5% for typical daily usage
+- [ ] User notified only when classification changes (not on every task)
+- [ ] Mistral 7B available as optional "High Accuracy" mode
+
+---
 
 ### v1.1 Release Plan (Weeks 16-18)
 

@@ -365,6 +365,20 @@ sealed interface AiResult {
         @SerialName("message")
         val message: String
     ) : AiResult
+    
+    /**
+     * Result of general text generation.
+     * Used for briefings, summaries, and other generated content.
+     */
+    @Serializable
+    @SerialName("generated_text")
+    data class GeneratedText(
+        @SerialName("text")
+        val text: String,
+        
+        @SerialName("sections")
+        val sections: List<String> = emptyList()
+    ) : AiResult
 }
 
 /**
@@ -427,11 +441,17 @@ data class TokenUsage(
  */
 @Serializable
 data class AiStreamChunk(
+    @SerialName("request_id")
+    val requestId: String = "",
+    
     @SerialName("text")
     val text: String,
     
     @SerialName("is_complete")
     val isComplete: Boolean = false,
+    
+    @SerialName("tokens_generated")
+    val tokensGenerated: Int = 0,
     
     @SerialName("token_index")
     val tokenIndex: Int = 0,
