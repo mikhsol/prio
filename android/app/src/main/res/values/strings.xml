@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jeeves</string>
+    <string name="app_tagline">Your Private Productivity AI</string>
+    
+    <!-- Navigation -->
+    <string name="nav_today">Today</string>
+    <string name="nav_tasks">Tasks</string>
+    <string name="nav_goals">Goals</string>
+    <string name="nav_calendar">Calendar</string>
+    <string name="nav_more">More</string>
+    
+    <!-- Eisenhower Quadrants -->
+    <string name="quadrant_do_first">Do First</string>
+    <string name="quadrant_schedule">Schedule</string>
+    <string name="quadrant_delegate">Delegate</string>
+    <string name="quadrant_eliminate">Later</string>
+    
+    <!-- Actions -->
+    <string name="action_add_task">Add Task</string>
+    <string name="action_add_goal">Add Goal</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_done">Done</string>
+    <string name="action_undo">Undo</string>
+    
+    <!-- Empty States -->
+    <string name="empty_tasks">No tasks yet</string>
+    <string name="empty_tasks_subtitle">Tap + to add your first task</string>
+    <string name="empty_goals">No goals yet</string>
+    <string name="empty_goals_subtitle">Set a goal to track your progress</string>
+    
+    <!-- AI Messages -->
+    <string name="ai_classifying">Classifying…</string>
+    <string name="ai_parsing">Understanding…</string>
+    <string name="ai_error">AI temporarily unavailable</string>
+    
+    <!-- Privacy -->
+    <string name="privacy_badge">Your data stays on device</string>
+</resources>
