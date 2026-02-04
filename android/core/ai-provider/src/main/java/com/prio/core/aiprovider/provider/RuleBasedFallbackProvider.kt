@@ -362,7 +362,7 @@ class RuleBasedFallbackProvider @Inject constructor() : AiProvider {
             
             // DO: Urgent AND Important
             isUrgent && isImportant -> Triple(
-                EisenhowerQuadrant.DO,
+                EisenhowerQuadrant.DO_FIRST,
                 0.75f + minOf(urgencyScore + importanceScore, 4) * 0.05f,
                 buildExplanation("Urgent and important", urgencyMatches, importanceMatches)
             )

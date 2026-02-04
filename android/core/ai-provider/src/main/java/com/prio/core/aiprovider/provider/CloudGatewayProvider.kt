@@ -192,13 +192,12 @@ class CloudGatewayProvider @Inject constructor(
      */
     override suspend fun getModelInfo(): ModelInfo {
         return ModelInfo(
-            id = currentModel.modelId,
-            name = currentModel.displayName,
+            modelId = currentModel.modelId,
+            displayName = currentModel.displayName,
             version = currentModel.version,
             provider = currentModel.provider,
             contextLength = currentModel.contextLength,
-            isLoaded = isInitialized,
-            memoryUsageBytes = 0 // No local memory for cloud
+            capabilities = currentModel.capabilities
         )
     }
     
@@ -262,7 +261,7 @@ class CloudGatewayProvider @Inject constructor(
         // Simple mock classification based on keywords
         val input = request.input.lowercase()
         val quadrant = when {
-            input.contains("urgent") || input.contains("asap") -> EisenhowerQuadrant.DO
+            input.contains("urgent") || input.contains("asap") -> EisenhowerQuadrant.DO_FIRST
             input.contains("plan") || input.contains("learn") -> EisenhowerQuadrant.SCHEDULE
             input.contains("meeting") || input.contains("routine") -> EisenhowerQuadrant.DELEGATE
             else -> EisenhowerQuadrant.ELIMINATE
@@ -275,8 +274,8 @@ class CloudGatewayProvider @Inject constructor(
                 quadrant = quadrant,
                 confidence = 0.85f,
                 explanation = "Cloud classification (mock): detected ${quadrant.name} signals",
-                isUrgent = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.DELEGATE,
-                isImportant = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.SCHEDULE
+                isUrgent = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.DELEGATE,
+                isImportant = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.SCHEDULE
             ),
             rawText = """{"quadrant": "${quadrant.name}", "confidence": 0.85}""",
             metadata = AiResponseMetadata(tokensUsed = 50, wasRuleBased = false)
@@ -292,7 +291,6 @@ class CloudGatewayProvider @Inject constructor(
                 dueDate = null,
                 dueTime = null,
                 priority = null,
-                project = null,
                 recurrence = null
             ),
             rawText = """{"title": "${request.input.take(50)}"}""",
@@ -369,7 +367,8 @@ enum class CloudModel(
     val version: String,
     val contextLength: Int,
     val inputCostPer1kTokens: Float,
-    val outputCostPer1kTokens: Float
+    val outputCostPer1kTokens: Float,
+    val capabilities: Set<AiCapability> = AiCapability.entries.toSet()
 ) {
     // OpenAI Models
     GPT_4O(

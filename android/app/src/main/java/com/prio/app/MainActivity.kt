@@ -9,9 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.prio.core.ui.components.ComponentShowcase
 import com.prio.core.ui.theme.PrioTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -38,11 +43,21 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             PrioTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    // Placeholder content - will be replaced with navigation
-                    WelcomeScreen(
-                        modifier = Modifier.padding(innerPadding)
+                // TODO: Remove showShowcase flag after development - for component preview only
+                var showShowcase by rememberSaveable { mutableStateOf(true) }
+                
+                if (showShowcase) {
+                    // Component showcase for design review
+                    ComponentShowcase(
+                        onBackClick = { showShowcase = false }
                     )
+                } else {
+                    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                        // Placeholder content - will be replaced with navigation
+                        WelcomeScreen(
+                            modifier = Modifier.padding(innerPadding)
+                        )
+                    }
                 }
             }
         }

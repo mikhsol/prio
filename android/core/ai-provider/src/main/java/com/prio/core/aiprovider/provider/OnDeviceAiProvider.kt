@@ -97,10 +97,10 @@ class OnDeviceAiProvider @Inject constructor(
         // Check if we have an active model
         val activeModelId = modelRegistry.activeModelId.value
         if (activeModelId != null) {
-            val modelFile = modelRegistry.getModelFile(activeModelId)
-            if (modelFile?.exists() == true) {
+            val modelPath = modelRegistry.getModelPath(activeModelId)
+            if (modelPath != null) {
                 currentModelDefinition = PredefinedModels.ALL.find { it.id == activeModelId }
-                val result = llamaEngine.loadModel(modelFile.absolutePath)
+                val result = llamaEngine.loadModel(modelPath)
                 _isAvailable.value = result.success
                 Timber.tag(TAG).i("Model loaded: ${result.success}")
                 return@withContext result.success
@@ -120,14 +120,14 @@ class OnDeviceAiProvider @Inject constructor(
      * @return true if model loaded successfully
      */
     suspend fun loadModel(modelId: String): Boolean = withContext(Dispatchers.IO) {
-        val modelFile = modelRegistry.getModelFile(modelId)
-        if (modelFile?.exists() != true) {
+        val modelPath = modelRegistry.getModelPath(modelId)
+        if (modelPath == null) {
             Timber.tag(TAG).e("Model file not found for: $modelId")
             return@withContext false
         }
         
         currentModelDefinition = PredefinedModels.ALL.find { it.id == modelId }
-        val result = llamaEngine.loadModel(modelFile.absolutePath)
+        val result = llamaEngine.loadModel(modelPath)
         _isAvailable.value = result.success && !result.isStub
         
         if (result.success) {
@@ -224,15 +224,15 @@ class OnDeviceAiProvider @Inject constructor(
                 val reasoning = jsonObj["reasoning"]?.jsonPrimitive?.content ?: "AI classification"
                 
                 val quadrant = when (quadrantStr) {
-                    "DO" -> EisenhowerQuadrant.DO
+                    "DO", "DO_FIRST" -> EisenhowerQuadrant.DO_FIRST
                     "SCHEDULE" -> EisenhowerQuadrant.SCHEDULE
                     "DELEGATE" -> EisenhowerQuadrant.DELEGATE
                     "ELIMINATE" -> EisenhowerQuadrant.ELIMINATE
                     else -> EisenhowerQuadrant.SCHEDULE
                 }
                 
-                val isUrgent = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.DELEGATE
-                val isImportant = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.SCHEDULE
+                val isUrgent = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.DELEGATE
+                val isImportant = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.SCHEDULE
                 
                 return AiResponse(
                     success = true,
@@ -265,8 +265,8 @@ class OnDeviceAiProvider @Inject constructor(
                 quadrant = quadrant,
                 confidence = 0.5f,
                 explanation = "Parsed from raw output",
-                isUrgent = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.DELEGATE,
-                isImportant = quadrant == EisenhowerQuadrant.DO || quadrant == EisenhowerQuadrant.SCHEDULE
+                isUrgent = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.DELEGATE,
+                isImportant = quadrant == EisenhowerQuadrant.DO_FIRST || quadrant == EisenhowerQuadrant.SCHEDULE
             ),
             rawText = text,
             metadata = AiResponseMetadata(
@@ -280,7 +280,7 @@ class OnDeviceAiProvider @Inject constructor(
     private fun detectQuadrantFromText(text: String): EisenhowerQuadrant {
         val upperText = text.uppercase()
         return when {
-            upperText.contains("\"DO\"") || upperText.contains("QUADRANT: DO") -> EisenhowerQuadrant.DO
+            upperText.contains("\"DO\"") || upperText.contains("QUADRANT: DO") -> EisenhowerQuadrant.DO_FIRST
             upperText.contains("\"SCHEDULE\"") || upperText.contains("QUADRANT: SCHEDULE") -> EisenhowerQuadrant.SCHEDULE
             upperText.contains("\"DELEGATE\"") || upperText.contains("QUADRANT: DELEGATE") -> EisenhowerQuadrant.DELEGATE
             upperText.contains("\"ELIMINATE\"") || upperText.contains("QUADRANT: ELIMINATE") -> EisenhowerQuadrant.ELIMINATE
