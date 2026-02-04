@@ -5,7 +5,9 @@ import com.prio.core.ai.model.AiRequest
 import com.prio.core.ai.model.AiRequestType
 import com.prio.core.ai.model.AiResult
 import com.prio.core.common.model.EisenhowerQuadrant
+import com.prio.core.domain.eisenhower.EisenhowerEngine
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -30,10 +32,12 @@ import org.junit.jupiter.params.provider.ValueSource
 class RuleBasedFallbackProviderTest {
     
     private lateinit var provider: RuleBasedFallbackProvider
+    private lateinit var eisenhowerEngine: EisenhowerEngine
     
     @BeforeEach
     fun setup() {
-        provider = RuleBasedFallbackProvider()
+        eisenhowerEngine = EisenhowerEngine(Clock.System)
+        provider = RuleBasedFallbackProvider(eisenhowerEngine)
     }
     
     @Nested
@@ -71,8 +75,8 @@ class RuleBasedFallbackProviderTest {
             "Deadline today: Sign the contract with our biggest client"
         ])
         fun urgentImportantTasksClassifiedAsDo(taskText: String) {
-            val result = provider.classify(taskText)
-            assertEquals(EisenhowerQuadrant.DO, result.quadrant, "Task: $taskText")
+            val result = eisenhowerEngine.classify(taskText)
+            assertEquals(EisenhowerQuadrant.DO_FIRST, result.quadrant, "Task: $taskText")
             assertTrue(result.isUrgent, "Should be marked as urgent: $taskText")
             assertTrue(result.isImportant, "Should be marked as important: $taskText")
         }
@@ -80,8 +84,8 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("DO tasks should have high confidence")
         fun doTasksHighConfidence() {
-            val result = provider.classify("URGENT: Client meeting in 30 minutes, prepare the deck")
-            assertEquals(EisenhowerQuadrant.DO, result.quadrant)
+            val result = eisenhowerEngine.classify("URGENT: Client meeting in 30 minutes, prepare the deck")
+            assertEquals(EisenhowerQuadrant.DO_FIRST, result.quadrant)
             assertTrue(result.confidence >= 0.7f, "Confidence should be >= 0.7: ${result.confidence}")
             assertFalse(result.shouldEscalateToLlm, "High confidence DO should not escalate")
         }
@@ -101,7 +105,7 @@ class RuleBasedFallbackProviderTest {
             "Study for AWS certification exam"
         ])
         fun importantNonUrgentTasksScheduled(taskText: String) {
-            val result = provider.classify(taskText)
+            val result = eisenhowerEngine.classify(taskText)
             assertEquals(EisenhowerQuadrant.SCHEDULE, result.quadrant, "Task: $taskText")
             assertFalse(result.isUrgent, "Should NOT be marked as urgent: $taskText")
             assertTrue(result.isImportant, "Should be marked as important: $taskText")
@@ -110,7 +114,7 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("SCHEDULE tasks with clear importance have good confidence")
         fun scheduleTasksConfidence() {
-            val result = provider.classify("Work on career development plan for promotion")
+            val result = eisenhowerEngine.classify("Work on career development plan for promotion")
             assertEquals(EisenhowerQuadrant.SCHEDULE, result.quadrant)
             assertTrue(result.confidence >= 0.65f, "Confidence should be >= 0.65: ${result.confidence}")
         }
@@ -130,14 +134,14 @@ class RuleBasedFallbackProviderTest {
             "Book conference room for recurring standup"
         ])
         fun routineUrgentTasksDelegated(taskText: String) {
-            val result = provider.classify(taskText)
+            val result = eisenhowerEngine.classify(taskText)
             assertEquals(EisenhowerQuadrant.DELEGATE, result.quadrant, "Task: $taskText")
         }
         
         @Test
         @DisplayName("Delegation patterns are detected")
         fun delegationPatternsDetected() {
-            val result = provider.classify("Have the intern update the spreadsheet")
+            val result = eisenhowerEngine.classify("Have the intern update the spreadsheet")
             assertEquals(EisenhowerQuadrant.DELEGATE, result.quadrant)
             assertTrue(result.explanation.contains("delegation") || 
                        result.explanation.contains("delegate") ||
@@ -159,14 +163,14 @@ class RuleBasedFallbackProviderTest {
             "Binge-watch the new Netflix series"
         ])
         fun lowPriorityTasksEliminated(taskText: String) {
-            val result = provider.classify(taskText)
+            val result = eisenhowerEngine.classify(taskText)
             assertEquals(EisenhowerQuadrant.ELIMINATE, result.quadrant, "Task: $taskText")
         }
         
         @Test
         @DisplayName("ELIMINATE tasks should have good confidence")
         fun eliminateTasksConfidence() {
-            val result = provider.classify("Maybe if I have time browse social media youtube")
+            val result = eisenhowerEngine.classify("Maybe if I have time browse social media youtube")
             assertEquals(EisenhowerQuadrant.ELIMINATE, result.quadrant)
             assertTrue(result.confidence >= 0.7f, "Confidence should be >= 0.7: ${result.confidence}")
         }
@@ -184,11 +188,11 @@ class RuleBasedFallbackProviderTest {
         @DisplayName("Accuracy test dataset from 0.2.3")
         @CsvSource(
             // Quadrant, Task
-            "DO, 'URGENT: Server down affecting all customers'",
-            "DO, 'Client deadline today - submit proposal by 5pm'",
-            "DO, 'Emergency meeting in 2 hours with board'",
-            "DO, 'Production bug - fix immediately before more data loss'",
-            "DO, 'Tax filing deadline today - must submit'",
+            "DO_FIRST, 'URGENT: Server down affecting all customers'",
+            "DO_FIRST, 'Client deadline today - submit proposal by 5pm'",
+            "DO_FIRST, 'Emergency meeting in 2 hours with board'",
+            "DO_FIRST, 'Production bug - fix immediately before more data loss'",
+            "DO_FIRST, 'Tax filing deadline today - must submit'",
             
             "SCHEDULE, 'Research new technologies for Q3 project'",
             "SCHEDULE, 'Work on career development plan'",
@@ -209,7 +213,7 @@ class RuleBasedFallbackProviderTest {
             "ELIMINATE, 'Play mobile games during lunch'"
         )
         fun accuracyTestDataset(expected: String, taskText: String) {
-            val result = provider.classify(taskText)
+            val result = eisenhowerEngine.classify(taskText)
             val expectedQuadrant = EisenhowerQuadrant.valueOf(expected)
             assertEquals(expectedQuadrant, result.quadrant, 
                 "Task: $taskText\nExpected: $expected\nGot: ${result.quadrant}\nExplanation: ${result.explanation}")
@@ -232,7 +236,7 @@ class RuleBasedFallbackProviderTest {
             
             testTasks.forEach { task ->
                 val startTime = System.currentTimeMillis()
-                provider.classify(task)
+                eisenhowerEngine.classify(task)
                 val latency = System.currentTimeMillis() - startTime
                 
                 assertTrue(latency < 50, "Classification took ${latency}ms, should be <50ms for: $task")
@@ -245,7 +249,7 @@ class RuleBasedFallbackProviderTest {
             val tasks = (1..100).map { "Task number $it with various content" }
             
             val startTime = System.currentTimeMillis()
-            tasks.forEach { provider.classify(it) }
+            tasks.forEach { eisenhowerEngine.classify(it) }
             val totalTime = System.currentTimeMillis() - startTime
             
             assertTrue(totalTime < 500, "100 classifications took ${totalTime}ms, should be <500ms")
@@ -259,14 +263,14 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Clear signals result in high confidence")
         fun clearSignalsHighConfidence() {
-            val result = provider.classify("URGENT EMERGENCY: Production server crashed affecting all customers")
+            val result = eisenhowerEngine.classify("URGENT EMERGENCY: Production server crashed affecting all customers")
             assertTrue(result.confidence >= 0.8f, "Clear DO signal should have high confidence: ${result.confidence}")
         }
         
         @Test
         @DisplayName("Ambiguous tasks have lower confidence and recommend LLM")
         fun ambiguousTasksLowConfidence() {
-            val result = provider.classify("Think about updating the thing")
+            val result = eisenhowerEngine.classify("Think about updating the thing")
             assertTrue(result.confidence <= 0.65f, "Ambiguous task should have low confidence: ${result.confidence}")
             assertTrue(result.shouldEscalateToLlm, "Low confidence should recommend LLM escalation")
         }
@@ -274,8 +278,8 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Multiple matching patterns increase confidence")
         fun multiplePatternsBetterConfidence() {
-            val singleSignal = provider.classify("Important task")
-            val multipleSignals = provider.classify("URGENT: Important client meeting today deadline")
+            val singleSignal = eisenhowerEngine.classify("Important task")
+            val multipleSignals = eisenhowerEngine.classify("URGENT: Important client meeting today deadline")
             
             assertTrue(multipleSignals.confidence > singleSignal.confidence,
                 "Multiple signals (${multipleSignals.confidence}) should beat single (${singleSignal.confidence})")
@@ -289,7 +293,7 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Urgency signals are captured")
         fun urgencySignalsCaptured() {
-            val result = provider.classify("URGENT: Server down, fix ASAP")
+            val result = eisenhowerEngine.classify("URGENT: Server down, fix ASAP")
             assertTrue(result.urgencySignals.isNotEmpty(), "Should detect urgency signals")
             assertTrue(result.isUrgent)
         }
@@ -297,7 +301,7 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Importance signals are captured")
         fun importanceSignalsCaptured() {
-            val result = provider.classify("Strategic planning for career development")
+            val result = eisenhowerEngine.classify("Strategic planning for career development")
             assertTrue(result.importanceSignals.isNotEmpty(), "Should detect importance signals")
             assertTrue(result.isImportant)
         }
@@ -305,7 +309,7 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Explanations include detected signals")
         fun explanationsIncludeSignals() {
-            val result = provider.classify("Client meeting today - prepare presentation")
+            val result = eisenhowerEngine.classify("Client meeting today - prepare presentation")
             assertTrue(result.explanation.isNotEmpty())
             // Explanation should reference detected patterns
         }
@@ -318,7 +322,7 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Empty input defaults to SCHEDULE")
         fun emptyInputDefaultsToSchedule() {
-            val result = provider.classify("")
+            val result = eisenhowerEngine.classify("")
             assertEquals(EisenhowerQuadrant.SCHEDULE, result.quadrant)
             assertTrue(result.confidence < 0.6f, "Empty input should have low confidence")
         }
@@ -327,7 +331,7 @@ class RuleBasedFallbackProviderTest {
         @DisplayName("Very long input is handled")
         fun longInputHandled() {
             val longTask = "Important task ".repeat(100)
-            val result = provider.classify(longTask)
+            val result = eisenhowerEngine.classify(longTask)
             assertNotNull(result.quadrant)
             assertTrue(result.isImportant)
         }
@@ -335,14 +339,14 @@ class RuleBasedFallbackProviderTest {
         @Test
         @DisplayName("Special characters are handled")
         fun specialCharactersHandled() {
-            val result = provider.classify("Fix bug #1234 @urgent $$$")
+            val result = eisenhowerEngine.classify("Fix bug #1234 @urgent $$$")
             assertNotNull(result.quadrant)
         }
         
         @Test
         @DisplayName("Unicode text is handled")
         fun unicodeHandled() {
-            val result = provider.classify("重要な会議 - Important meeting today")
+            val result = eisenhowerEngine.classify("重要な会議 - Important meeting today")
             assertNotNull(result.quadrant)
         }
     }

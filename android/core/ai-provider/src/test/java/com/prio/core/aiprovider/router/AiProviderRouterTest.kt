@@ -11,12 +11,14 @@ import com.prio.core.aiprovider.llm.LlamaEngine
 import com.prio.core.aiprovider.provider.OnDeviceAiProvider
 import com.prio.core.aiprovider.provider.RuleBasedFallbackProvider
 import com.prio.core.common.model.EisenhowerQuadrant
+import com.prio.core.domain.eisenhower.EisenhowerEngine
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -40,12 +42,14 @@ class AiProviderRouterTest {
     private lateinit var onDeviceProvider: OnDeviceAiProvider
     private lateinit var mockLlamaEngine: LlamaEngine
     private lateinit var mockModelRegistry: ModelRegistry
+    private lateinit var eisenhowerEngine: EisenhowerEngine
     
     private val llmAvailable = MutableStateFlow(false)
     
     @BeforeEach
     fun setup() {
-        ruleBasedProvider = RuleBasedFallbackProvider()
+        eisenhowerEngine = EisenhowerEngine(Clock.System)
+        ruleBasedProvider = RuleBasedFallbackProvider(eisenhowerEngine)
         
         mockLlamaEngine = mockk(relaxed = true)
         mockModelRegistry = mockk(relaxed = true)
@@ -136,7 +140,7 @@ class AiProviderRouterTest {
             
             assertTrue(result.isSuccess)
             val response = result.getOrThrow()
-            assertEquals(EisenhowerQuadrant.DO, 
+            assertEquals(EisenhowerQuadrant.DO_FIRST, 
                 (response.result as AiResult.EisenhowerClassification).quadrant)
             
             // High confidence - should not escalate to LLM
@@ -223,7 +227,7 @@ class AiProviderRouterTest {
                 success = true,
                 requestId = "test",
                 result = AiResult.EisenhowerClassification(
-                    quadrant = EisenhowerQuadrant.DO,
+                    quadrant = EisenhowerQuadrant.DO_FIRST,
                     confidence = 0.9f,
                     explanation = "LLM",
                     isUrgent = true,
@@ -403,7 +407,7 @@ class AiProviderRouterTest {
                     success = true,
                     requestId = "test",
                     result = AiResult.EisenhowerClassification(
-                        quadrant = EisenhowerQuadrant.DO,
+                        quadrant = EisenhowerQuadrant.DO_FIRST,
                         confidence = 0.95f,
                         explanation = "LLM",
                         isUrgent = true,

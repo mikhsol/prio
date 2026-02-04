@@ -723,26 +723,28 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 - Quadrant badges: Q1=Red #DC2626, Q2=Amber #F59E0B, Q3=Orange #F97316, Q4=Gray #6B7280 per [1.1.13](results/1.1/1.1.13_component_specifications.md)
 - Override: 1-tap to change quadrant ([TM-010](results/0.3/0.3.2_task_management_user_stories.md))
 
-| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
-|----|------|-------|----------|---------|--------------|-------------------|
-| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | — | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | **Rule-based primary** (per 0.2.5): deadline urgency (7d/3d/24h/overdue=Q1), keyword dictionaries (50+ per quadrant), temporal pattern matching ("tomorrow", "by Friday"), confidence scoring for LLM escalation; target **≥75% accuracy, <100ms** |
-| 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | LazyColumn per spec layout, section headers (DO FIRST/SCHEDULE/etc.), quadrant badges, overdue left border, sort by Q1→Q4, 60fps scroll, empty states per [1.1.10](results/1.1/1.1.10_error_empty_offline_states_spec.md) |
-| 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Half/full expand states, AI explanation display, goal linking picker, quadrant override pills, delete with 5s undo |
-| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | [1.1.3](results/1.1/1.1.3_quick_capture_flow_spec.md) | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <100ms per spec, voice input, AI parsing preview, haptic confirm, <5s total flow, works offline |
-| 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Long press to reorder per spec, haptic feedback, persist order |
-| 3.1.7 | Implement swipe actions | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (green bg), swipe left = delete (red bg) per spec gestures |
-| 3.1.8 | Implement task filters and search | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#elements) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter chips per spec, FTS search, completed show/hide toggle |
-| 3.1.9 | Implement recurring tasks | Android Developer | 2h | — | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete |
-| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | — | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support |
-| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All 1.1 task specs | All TM stories | 10+ tests: capture flow timing, AI classification display, CRUD, swipe actions, filters |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome | Status |
+|----|------|-------|----------|---------|--------------|-------------------|--------|
+| 3.1.1 | Implement EisenhowerEngine (priority calculation) | Android Developer | 4h | — | [TM-003](results/0.3/0.3.2_task_management_user_stories.md), [TM-005](results/0.3/0.3.2_task_management_user_stories.md) | **Rule-based primary** (per 0.2.5): deadline urgency (7d/3d/24h/overdue=Q1), keyword dictionaries (50+ per quadrant), temporal pattern matching ("tomorrow", "by Friday"), confidence scoring for LLM escalation; target **≥75% accuracy, <100ms** | ✅ Done |
+| 3.1.2 | Implement Task List screen with filters | Android Developer | 4h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | LazyColumn per spec layout, section headers (DO FIRST/SCHEDULE/etc.), quadrant badges, overdue left border, sort by Q1→Q4, 60fps scroll, empty states per [1.1.10](results/1.1/1.1.10_error_empty_offline_states_spec.md) | ✅ Done |
+| 3.1.4 | Implement Task Detail bottom sheet | Android Developer | 3h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md), [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Half/full expand states, AI explanation display, goal linking picker, quadrant override pills, delete with 5s undo | ⏳ |
+| 3.1.5 | Implement Quick Capture with AI | Android Developer | 4h | [1.1.3](results/1.1/1.1.3_quick_capture_flow_spec.md) | [TM-001](results/0.3/0.3.2_task_management_user_stories.md), [TM-002](results/0.3/0.3.2_task_management_user_stories.md) | FAB→focus <100ms per spec, voice input, AI parsing preview, haptic confirm, <5s total flow, works offline | ⏳ |
+| 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Long press to reorder per spec, haptic feedback, persist order | ⏳ |
+| 3.1.7 | Implement swipe actions | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (green bg), swipe left = delete (red bg) per spec gestures | ✅ Done |
+| 3.1.8 | Implement task filters and search | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#elements) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter chips per spec, FTS search, completed show/hide toggle | ✅ Done |
+| 3.1.9 | Implement recurring tasks | Android Developer | 2h | — | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete | ⏳ |
+| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | — | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support | ⏳ |
+| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All 1.1 task specs | All TM stories | 10+ tests: capture flow timing, AI classification display, CRUD, swipe actions, filters | ⏳ |
 
 **Milestone Exit Criteria**:
 - [ ] Tasks can be created via AI natural language in **<3 seconds** (rule-based instant, LLM optional)
-- [ ] Eisenhower prioritization accuracy ≥**75%** initial, ≥**80%** with LLM refinement (track override rate per [0.3.8](results/0.3/0.3.8_success_metrics.md))
-- [ ] **Q1 (Do Now) accuracy ≥90%** — critical to not miss urgent items (per 0.2.3 failure analysis)
+- [x] Eisenhower prioritization accuracy ≥**75%** initial, ≥**80%** with LLM refinement (track override rate per [0.3.8](results/0.3/0.3.8_success_metrics.md)) — **EisenhowerEngine implemented with 50+ patterns/quadrant**
+- [x] **Q1 (Do Now) accuracy ≥90%** — critical to not miss urgent items (per 0.2.3 failure analysis) — **Tested with 20 Q1 test cases**
 - [ ] All CRUD operations functional with undo support
 - [ ] Reminders trigger correctly via WorkManager
 - [ ] Goal linking functional per [GL-003](results/0.3/0.3.3_goals_user_stories.md)
+
+**Progress**: 4/11 tasks completed (3.1.1, 3.1.2, 3.1.7, 3.1.8). See [docs/results/3.1/](results/3.1/) for implementation details.
 
 ### Milestone 3.2: Goals Plugin
 **Goal**: Goal setting and progress tracking linked to tasks  
