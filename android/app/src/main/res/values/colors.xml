@@ -21,4 +21,7 @@
     <color name="background">#F9FAFB</color>
     <color name="surface">#FFFFFF</color>
     <color name="splash_background">#0D9488</color>
+    
+    <!-- Launcher Icon -->
+    <color name="ic_launcher_background">#0D9488</color>
 </resources>

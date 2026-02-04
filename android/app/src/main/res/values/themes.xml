@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Base application theme -->
-    <style name="Theme.Jeeves" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Prio" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
     </style>
     
     <!-- Splash screen theme -->
-    <style name="Theme.Jeeves.Splash" parent="Theme.SplashScreen">
+    <style name="Theme.Prio.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splash_background</item>
         <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
-        <item name="postSplashScreenTheme">@style/Theme.Jeeves</item>
+        <item name="postSplashScreenTheme">@style/Theme.Prio</item>
     </style>
 </resources>

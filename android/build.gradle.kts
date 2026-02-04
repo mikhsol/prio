@@ -1,4 +1,4 @@
-// Top-level build file for Jeeves Android Application
+// Top-level build file for Prio Android Application
 // Version: 1.0.0 MVP
 // Architecture: Multi-module MVVM with Hilt DI
 

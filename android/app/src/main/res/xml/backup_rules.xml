@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
     <include domain="sharedpref" path="." />
-    <include domain="database" path="jeeves_database" />
-    <exclude domain="database" path="jeeves_database-journal" />
+    <include domain="database" path="prio_database" />
+    <exclude domain="database" path="prio_database-journal" />
     <exclude domain="sharedpref" path="datastore" />
 </full-backup-content>

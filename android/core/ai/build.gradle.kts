@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.jeeves.core.ai"
+    namespace = "com.prio.core.ai"
     compileSdk = 34
 
     defaultConfig {

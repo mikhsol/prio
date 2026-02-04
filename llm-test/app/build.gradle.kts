@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "app.jeeves.llmtest"
+    namespace = "app.prio.llmtest"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "app.jeeves.llmtest"
+        applicationId = "app.prio.llmtest"
         minSdk = 29
         targetSdk = 34
         versionCode = 1

@@ -44,7 +44,7 @@
 3. **Jordan Williams** (Aspiring Achiever) - Future growth segment
 
 ### Recommended Positioning
-> "For privacy-conscious Android users who are overwhelmed by their tasks and goals, Jeeves is an intelligent personal assistant that automatically prioritizes your work using on-device AI, keeping your data completely private."
+> "For privacy-conscious Android users who are overwhelmed by their tasks and goals, Prio is an intelligent personal assistant that automatically prioritizes your work using on-device AI, keeping your data completely private."
 
 **Tagline**: "Your private productivity AI"
 

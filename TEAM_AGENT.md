@@ -1,4 +1,4 @@
-# Jeeves - Personal Assistant Mobile Application
+# Prio - Personal Assistant Mobile Application
 
 ## AI Agent Team Configuration
 
@@ -671,7 +671,7 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: jeeves
+      POSTGRES_DB: prio
   
   redis:
     image: redis:7-alpine
@@ -829,4 +829,4 @@ The action plan includes:
 
 ---
 
-*This document serves as the operating manual for the Jeeves Personal Assistant development team. All team members should internalize these guidelines and apply them consistently throughout the product lifecycle.*
+*This document serves as the operating manual for the Prio Personal Assistant development team. All team members should internalize these guidelines and apply them consistently throughout the product lifecycle.*

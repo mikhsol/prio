@@ -1,4 +1,4 @@
-# Jeeves ProGuard Rules
+# Prio ProGuard Rules
 
 # Keep serialization
 -keepattributes *Annotation*, InnerClasses
@@ -34,11 +34,11 @@
 -keep class * extends dagger.hilt.android.internal.managers.ComponentSupplier { *; }
 
 # Keep Room entities
--keep class com.jeeves.core.data.local.entity.** { *; }
+-keep class com.prio.core.data.local.entity.** { *; }
 
 # Keep AI model classes
--keep class com.jeeves.core.ai.model.** { *; }
--keep class com.jeeves.core.ai.provider.** { *; }
+-keep class com.prio.core.ai.model.** { *; }
+-keep class com.prio.core.ai.provider.** { *; }
 
 # Keep enums
 -keepclassmembers enum * {

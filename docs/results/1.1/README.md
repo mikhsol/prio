@@ -10,7 +10,7 @@
 
 ## Overview
 
-This milestone contains detailed text-based screen specifications for all Jeeves MVP screens. These specifications define the UI/UX requirements for developers to implement using Jetpack Compose and Material Design 3.
+This milestone contains detailed text-based screen specifications for all Prio MVP screens. These specifications define the UI/UX requirements for developers to implement using Jetpack Compose and Material Design 3.
 
 ---
 

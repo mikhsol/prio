@@ -8,7 +8,7 @@
 
 ## Overview
 
-This milestone defined the minimal feature set that delivers 80% of value for Jeeves MVP, validated with target user personas.
+This milestone defined the minimal feature set that delivers 80% of value for Prio MVP, validated with target user personas.
 
 ---
 

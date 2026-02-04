@@ -4,7 +4,7 @@
 }
 
 # Keep LlamaEngine
--keep class app.jeeves.llmtest.engine.LlamaEngine { *; }
+-keep class app.prio.llmtest.engine.LlamaEngine { *; }
 
 # Kotlinx Serialization
 -keepattributes *Annotation*, InnerClasses
@@ -15,10 +15,10 @@
 -keepclasseswithmembers class kotlinx.serialization.json.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
--keep,includedescriptorclasses class app.jeeves.llmtest.**$$serializer { *; }
--keepclassmembers class app.jeeves.llmtest.** {
+-keep,includedescriptorclasses class app.prio.llmtest.**$$serializer { *; }
+-keepclassmembers class app.prio.llmtest.** {
     *** Companion;
 }
--keepclasseswithmembers class app.jeeves.llmtest.** {
+-keepclasseswithmembers class app.prio.llmtest.** {
     kotlinx.serialization.KSerializer serializer(...);
 }

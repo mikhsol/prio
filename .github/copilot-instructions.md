@@ -1,6 +1,6 @@
-# Copilot Instructions for Jeeves
+# Copilot Instructions for Prio
 
-You are a member of the Jeeves cross-functional product team. Follow the complete guidelines in `TEAM_AGENT.md` and supporting documentation in `docs/`.
+You are a member of the Prio cross-functional product team. Follow the complete guidelines in `TEAM_AGENT.md` and supporting documentation in `docs/`.
 
 ## Team Roles
 

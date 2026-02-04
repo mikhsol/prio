@@ -1,8 +1,8 @@
-# Jeeves - MVP Action Plan
+# Prio - MVP Action Plan
 
 ## Overview
 
-This action plan outlines the complete development roadmap for Jeeves MVP, from research to Play Store launch. 
+This action plan outlines the complete development roadmap for Prio MVP, from research to Play Store launch. 
 
 ### Guiding Principles
 
@@ -483,8 +483,8 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 1.2.4 | Configure Hilt dependency injection | Android Developer | 2h | ✅ Completed | Hilt set up in all modules, DatabaseModule and PreferencesModule created |
 | 1.2.5 | Set up Room database with Task-Goal schema | Android Developer | 2h | ✅ Completed | 5 entities (Task, Goal, Milestone, Meeting, DailyAnalytics) with FKs and DAOs |
 | 1.2.6 | Configure DataStore for preferences | Android Developer | 1h | ✅ Completed | UserPreferencesRepository with briefing times, theme, AI settings |
-| 1.2.7 | Set up Compose navigation with type-safe routes | Android Developer | 2h | ✅ Completed | JeevesRoute sealed interface with all routes per 1.1.12 navigation map |
-| 1.2.8 | Create Material 3 theme (colors, typography) | Android Developer | 2h | ✅ Completed | QuadrantColors, SemanticColors, JeevesTypography, light/dark themes |
+| 1.2.7 | Set up Compose navigation with type-safe routes | Android Developer | 2h | ✅ Completed | PrioRoute sealed interface with all routes per 1.1.12 navigation map |
+| 1.2.8 | Create Material 3 theme (colors, typography) | Android Developer | 2h | ✅ Completed | QuadrantColors, SemanticColors, PrioTypography, light/dark themes |
 | 1.2.9 | Set up testing infrastructure | Android Developer | 2h | ✅ Completed | JUnit 5, MockK, Turbine configured, sample tests passing |
 | 1.2.10 | Configure GitHub Actions CI | Android Developer | 2h | ✅ Completed | android-ci.yml workflow: build, lint, test on PR |
 | 1.2.11 | Set up Firebase Crashlytics + Analytics | Android Developer | 1h | ✅ Completed | Firebase BOM, Crashlytics, Analytics in dependencies |
@@ -620,7 +620,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | ID | Task | Owner | Duration | Status | UX Spec | Measurable Outcome |
 |----|------|-------|----------|--------|---------|-------------------|
 | 2.3.1 | Implement color tokens and theme provider | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#color-tokens) | QuadrantColors, SemanticColors per spec, dynamic theming support |
-| 2.3.2 | Implement typography scale | Android Developer | 1h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#typography-scale) | JeevesTypography matching Material 3 scale from spec |
+| 2.3.2 | Implement typography scale | Android Developer | 1h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#typography-scale) | PrioTypography matching Material 3 scale from spec |
 | 2.3.3 | Create TaskCard component | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#taskcard-component) | Card with all states: default, overdue, completed, swiping; 72dp min height |
 | 2.3.4 | Create GoalCard component | Android Developer | 2h | 🔲 Not Started | [1.1.13](results/1.1/1.1.13_component_specifications.md#goalcard-component) | Card with progress bar (Linear/Circular), milestone count, category icon |
 | 2.3.5 | Create MeetingCard component | Android Developer | 2h | 🔲 Not Started | [1.1.6](results/1.1/1.1.6_calendar_day_view_spec.md) | Card with time, title, attendees, action items count |

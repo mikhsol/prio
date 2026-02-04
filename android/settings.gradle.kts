@@ -20,7 +20,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Jeeves"
+rootProject.name = "Prio"
 
 // Application module
 include(":app")

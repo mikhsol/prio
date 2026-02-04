@@ -9,11 +9,11 @@ plugins {
 }
 
 android {
-    namespace = "com.jeeves.app"
+    namespace = "com.prio.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.jeeves.app"
+        applicationId = "com.prio.app"
         minSdk = 29  // Android 10 (API 29) per ACTION_PLAN.md constraints
         targetSdk = 34
         versionCode = 1
@@ -55,7 +55,7 @@ android {
             // Firebase Crashlytics - enable for release
             configure<com.google.firebase.crashlytics.buildtools.gradle.CrashlyticsExtension> {
                 mappingFileUploadEnabled = true
-                nativeSymbolUploadEnabled = true
+                nativeSymbolUploadEnabled = false  // Disabled until native libs are configured
             }
         }
         

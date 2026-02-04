@@ -1,4 +1,4 @@
-# Jeeves - Security & Privacy Guidelines
+# Prio - Security & Privacy Guidelines
 
 ## Security Philosophy
 
@@ -222,7 +222,7 @@ Permissions-Policy: geolocation=(), microphone=(self), camera=()
 // iOS - Keychain example
 let query: [String: Any] = [
     kSecClass: kSecClassGenericPassword,
-    kSecAttrService: "com.jeeves.auth",
+    kSecAttrService: "com.prio.auth",
     kSecAttrAccount: "access_token",
     kSecValueData: tokenData,
     kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
@@ -471,7 +471,7 @@ affected your account...
 - **Containers**: Trivy, Clair
 
 ### Vulnerability Disclosure
-- security@jeeves.app for reports
+- security@prio.app for reports
 - Response within 48 hours
 - Bug bounty program (post-launch)
 - Responsible disclosure timeline: 90 days
@@ -503,7 +503,7 @@ Log format:
   "resource": "tasks",
   "action": "read",
   "ip_address": "192.168.1.1",
-  "user_agent": "Jeeves/1.0 iOS/17.0",
+  "user_agent": "Prio/1.0 iOS/17.0",
   "request_id": "req_abc123"
 }
 ```

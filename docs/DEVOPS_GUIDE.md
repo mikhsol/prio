@@ -1,4 +1,4 @@
-# Jeeves - DevOps & Infrastructure Guide
+# Prio - DevOps & Infrastructure Guide
 
 ## Infrastructure Overview
 
@@ -95,7 +95,7 @@ infrastructure/
 │       ├── staging/
 │       └── production/
 └── helm/
-    └── jeeves/
+    └── prio/
         ├── Chart.yaml
         ├── values.yaml
         └── templates/
@@ -202,7 +202,7 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_DB: jeeves_test
+          POSTGRES_DB: prio_test
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
         ports:
@@ -226,7 +226,7 @@ jobs:
       - name: Run Rust tests
         run: cargo test -j 2 -- --test-threads=4
         env:
-          DATABASE_URL: postgres://test:test@localhost:5432/jeeves_test
+          DATABASE_URL: postgres://test:test@localhost:5432/prio_test
           REDIS_URL: redis://localhost:6379
           
       - name: Setup Go
@@ -282,8 +282,8 @@ jobs:
           context: ./services/api
           push: true
           tags: |
-            ${{ env.ECR_REGISTRY }}/jeeves-api:${{ github.sha }}
-            ${{ env.ECR_REGISTRY }}/jeeves-api:${{ github.ref_name }}
+            ${{ env.ECR_REGISTRY }}/prio-api:${{ github.sha }}
+            ${{ env.ECR_REGISTRY }}/prio-api:${{ github.ref_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -299,7 +299,7 @@ jobs:
       - name: Deploy to staging
         run: |
           # ArgoCD sync or kubectl apply
-          argocd app sync jeeves-staging --revision ${{ github.sha }}
+          argocd app sync prio-staging --revision ${{ github.sha }}
 
   deploy-production:
     runs-on: ubuntu-latest
@@ -310,7 +310,7 @@ jobs:
     steps:
       - name: Deploy canary
         run: |
-          argocd app sync jeeves-production --revision ${{ github.sha }} \
+          argocd app sync prio-production --revision ${{ github.sha }} \
             --preview-name canary --preview-replicas 1
             
       - name: Wait for canary metrics
@@ -320,8 +320,8 @@ jobs:
         run: |
           # Check metrics and either promote or rollback
           ./scripts/check-canary-metrics.sh && \
-          argocd app sync jeeves-production --revision ${{ github.sha }} || \
-          argocd app rollback jeeves-production
+          argocd app sync prio-production --revision ${{ github.sha }} || \
+          argocd app rollback prio-production
 ```
 
 ---
@@ -415,7 +415,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DATABASE_URL=postgres://jeeves:password@postgres:5432/jeeves
+      - DATABASE_URL=postgres://prio:password@postgres:5432/prio
       - REDIS_URL=redis://redis:6379
       - LOG_LEVEL=debug
     volumes:
@@ -440,8 +440,8 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: jeeves
-      POSTGRES_USER: jeeves
+      POSTGRES_DB: prio
+      POSTGRES_USER: prio
       POSTGRES_PASSWORD: password
     ports:
       - "5432:5432"
@@ -483,9 +483,9 @@ volumes:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: jeeves
+  name: prio
   labels:
-    app.kubernetes.io/name: jeeves
+    app.kubernetes.io/name: prio
     pod-security.kubernetes.io/enforce: restricted
 ```
 
@@ -495,7 +495,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: api
-  namespace: jeeves
+  namespace: prio
 spec:
   replicas: 3
   selector:
@@ -523,7 +523,7 @@ spec:
           type: RuntimeDefault
       containers:
         - name: api
-          image: jeeves/api:latest
+          image: prio/api:latest
           ports:
             - containerPort: 8080
               name: http
@@ -588,7 +588,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: api
-  namespace: jeeves
+  namespace: prio
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -635,11 +635,11 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  name: jeeves-alerts
+  name: prio-alerts
   namespace: monitoring
 spec:
   groups:
-    - name: jeeves.rules
+    - name: prio.rules
       rules:
         - alert: HighErrorRate
           expr: |
@@ -666,7 +666,7 @@ spec:
             
         - alert: PodRestarting
           expr: |
-            increase(kube_pod_container_status_restarts_total{namespace="jeeves"}[1h]) > 3
+            increase(kube_pod_container_status_restarts_total{namespace="prio"}[1h]) > 3
           labels:
             severity: warning
           annotations:
@@ -678,7 +678,7 @@ spec:
 ```json
 {
   "dashboard": {
-    "title": "Jeeves Overview",
+    "title": "Prio Overview",
     "panels": [
       {
         "title": "Request Rate",
@@ -733,7 +733,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
   name: api
-  namespace: jeeves
+  namespace: prio
 spec:
   replicas: 10
   strategy:
@@ -770,7 +770,7 @@ spec:
 
 set -e
 
-NAMESPACE="jeeves"
+NAMESPACE="prio"
 DEPLOYMENT="api"
 REVISION="${1:-1}"  # Default to previous revision
 
@@ -815,7 +815,7 @@ cargo install cargo-watch cargo-audit
 # scripts/local-setup.sh
 
 # Create kind cluster
-kind create cluster --name jeeves --config=- <<EOF
+kind create cluster --name prio --config=- <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
@@ -861,7 +861,7 @@ kubectl apply -k kubernetes/overlays/local/
 # Graceful restart of a service
 
 SERVICE=$1
-NAMESPACE="${2:-jeeves}"
+NAMESPACE="${2:-prio}"
 
 echo "Restarting $SERVICE in $NAMESPACE..."
 
@@ -883,12 +883,12 @@ echo "Restart complete"
 ENV="${1:-staging}"
 
 # Get database credentials
-DB_URL=$(kubectl get secret database-credentials -n jeeves -o jsonpath='{.data.url}' | base64 -d)
+DB_URL=$(kubectl get secret database-credentials -n prio -o jsonpath='{.data.url}' | base64 -d)
 
 # Run migrations
 docker run --rm \
   -e DATABASE_URL="$DB_URL" \
-  jeeves/migrator:latest \
+  prio/migrator:latest \
   migrate up
 
 echo "Migrations complete"
@@ -907,11 +907,11 @@ OUTPUT_DIR="./logs-$(date +%Y%m%d-%H%M%S)"
 mkdir -p $OUTPUT_DIR
 
 # Get pod names
-PODS=$(kubectl get pods -n jeeves -l app=$SERVICE -o jsonpath='{.items[*].metadata.name}')
+PODS=$(kubectl get pods -n prio -l app=$SERVICE -o jsonpath='{.items[*].metadata.name}')
 
 for POD in $PODS; do
   echo "Collecting logs from $POD..."
-  kubectl logs -n jeeves $POD --since=$SINCE > "$OUTPUT_DIR/$POD.log"
+  kubectl logs -n prio $POD --since=$SINCE > "$OUTPUT_DIR/$POD.log"
 done
 
 # Create archive
@@ -933,7 +933,7 @@ apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
   name: api-vpa
-  namespace: jeeves
+  namespace: prio
 spec:
   targetRef:
     apiVersion: apps/v1

@@ -9,7 +9,7 @@
 
 ## Overview
 
-This milestone establishes the Android project foundation for Jeeves MVP. The project uses modern Android development practices with Jetpack Compose, Hilt DI, Room database, and a multi-module architecture designed for scalability.
+This milestone establishes the Android project foundation for Prio MVP. The project uses modern Android development practices with Jetpack Compose, Hilt DI, Room database, and a multi-module architecture designed for scalability.
 
 ---
 
@@ -211,7 +211,7 @@ Implemented UserPreferencesRepository with:
 | All modules created and connected | ✅ | 7 modules in settings.gradle.kts |
 | CI pipeline passing | ✅ | android-ci.yml workflow created |
 | Kotlin Serialization configured for AI types | ✅ | AiTypes.kt with @Serializable |
-| Database initialized | ✅ | JeevesDatabase with 5 entities |
+| Database initialized | ✅ | PrioDatabase with 5 entities |
 
 ---
 

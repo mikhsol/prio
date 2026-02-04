@@ -4,7 +4,7 @@
         <!-- Include preferences and database -->
         <include domain="sharedpref" path="." />
         <include domain="database" path="." />
-        <exclude domain="database" path="jeeves_database-journal" />
+        <exclude domain="database" path="prio_database-journal" />
     </cloud-backup>
     <device-transfer>
         <include domain="sharedpref" path="." />

@@ -1,4 +1,4 @@
-# Jeeves - UX Design System & Guidelines
+# Prio - UX Design System & Guidelines
 
 ## Design Philosophy
 
@@ -96,7 +96,7 @@ Each feature is a self-contained module. Navigation adapts to enabled plugins. F
 ### App Structure (MVP)
 
 ```
-Jeeves App
+Prio App
 ├── Today (Home)
 │   ├── Morning/Evening Briefing Card
 │   ├── Eisenhower Quick View (2x2 counts)
@@ -754,7 +754,7 @@ Users can switch views via bottom tab or settings. Default: List View (80/20: mo
 
 ```
 ┌────────────────────────────────────────────────────────────────┐
-│  💡 Jeeves Suggestion                                          │
+│  💡 Prio Suggestion                                          │
 │  ─────────────────────────────────────────                     │
 │  "You have 5 tasks in Q3 (Delegate). Consider:                 │
 │   delegating to team members or declining"                     │
@@ -771,7 +771,7 @@ Users can switch views via bottom tab or settings. Default: List View (80/20: mo
 
 ```
 1. Welcome Screen
-   ├── "Welcome to Jeeves"
+   ├── "Welcome to Prio"
    ├── Privacy-first messaging
    └── [Get Started]
 
@@ -807,7 +807,7 @@ Users can switch views via bottom tab or settings. Default: List View (80/20: mo
 ### Figma Structure
 
 ```
-Jeeves Design System/
+Prio Design System/
 ├── 🎨 Foundations/
 │   ├── Material 3 Colors
 │   ├── Typography
@@ -1127,7 +1127,7 @@ User opens app in morning
 ### Task Creation Flow
 
 ```
-Voice: "Hey Jeeves, remind me to call mom tomorrow at 2pm"
+Voice: "Hey Prio, remind me to call mom tomorrow at 2pm"
     │
     ├── Parse intent: reminder, contact, time
     │
@@ -1146,7 +1146,7 @@ Voice: "Hey Jeeves, remind me to call mom tomorrow at 2pm"
 ### Figma Structure
 
 ```
-Jeeves Design System/
+Prio Design System/
 ├── 🎨 Foundations/
 │   ├── Colors
 │   ├── Typography

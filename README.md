@@ -1,4 +1,4 @@
-# Jeeves - Personal Assistant
+# Prio - Personal Assistant
 
 > Your priorities, clarified. AI that stays on your phone.
 
@@ -8,9 +8,9 @@
 
 ## Overview
 
-Jeeves is a **privacy-first, offline-capable** personal assistant powered by **on-device AI**. Built around the Eisenhower Matrix methodology, Jeeves helps you focus on what truly matters—without sending your data to the cloud.
+Prio is a **privacy-first, offline-capable** personal assistant powered by **on-device AI**. Built around the Eisenhower Matrix methodology, Prio helps you focus on what truly matters—without sending your data to the cloud.
 
-### Why Jeeves?
+### Why Prio?
 
 - 🧠 **On-Device AI** - LLM runs locally on your phone. No internet required.
 - 🎯 **Eisenhower Matrix** - Visual priority system: Do, Schedule, Delegate, Eliminate
@@ -225,4 +225,4 @@ Proprietary - All rights reserved
 
 ---
 
-*Built with ❤️ and on-device AI by the Jeeves Team*
+*Built with ❤️ and on-device AI by the Prio Team*

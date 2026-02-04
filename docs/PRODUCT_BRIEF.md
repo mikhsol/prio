@@ -1,16 +1,16 @@
-# Jeeves - Personal Assistant Mobile Application
+# Prio - Personal Assistant Mobile Application
 
 ## Product Brief
 
 ### Vision Statement
-Jeeves is a privacy-first, AI-powered personal assistant that runs primarily on-device to help you take control of your life. Built around the Eisenhower Matrix philosophy, Jeeves transforms how you manage tasks, goals, and time—anticipating your needs while keeping your data secure on your smartphone. Unlike cloud-dependent assistants, Jeeves delivers intelligence without sacrificing privacy or requiring constant connectivity.
+Prio is a privacy-first, AI-powered personal assistant that runs primarily on-device to help you take control of your life. Built around the Eisenhower Matrix philosophy, Prio transforms how you manage tasks, goals, and time—anticipating your needs while keeping your data secure on your smartphone. Unlike cloud-dependent assistants, Prio delivers intelligence without sacrificing privacy or requiring constant connectivity.
 
 ---
 
 ## Core Philosophy
 
 ### 80/20 Principle (Pareto)
-- **Focus on What Matters**: 20% of tasks drive 80% of results—Jeeves helps identify them
+- **Focus on What Matters**: 20% of tasks drive 80% of results—Prio helps identify them
 - **Minimal Viable Features**: Ship the 20% of features that deliver 80% of value
 - **Smart Defaults**: Reduce configuration; most users need the same core experience
 - **High-Impact Insights**: Analytics focus on actionable patterns, not vanity metrics
@@ -77,7 +77,7 @@ Jeeves is a privacy-first, AI-powered personal assistant that runs primarily on-
 
 ### 🎯 1. Eisenhower Task Management (MVP Core)
 
-The heart of Jeeves—intelligent task prioritization based on the Eisenhower Matrix methodology. The matrix is used as a **prioritization engine**, not necessarily a visual interface.
+The heart of Prio—intelligent task prioritization based on the Eisenhower Matrix methodology. The matrix is used as a **prioritization engine**, not necessarily a visual interface.
 
 #### Features
 - **Eisenhower Prioritization Engine**
@@ -241,7 +241,7 @@ Intelligent automation for complex tasks.
   - Context-aware suggestions
 
 #### User Stories
-- "As a user, I want to plan a trip by describing it and have Jeeves create the full itinerary"
+- "As a user, I want to plan a trip by describing it and have Prio create the full itinerary"
 
 ---
 
@@ -438,7 +438,7 @@ The MVP focuses on delivering a complete, offline-capable task and goal manageme
 ### Plugin System
 
 ```
-Jeeves Core
+Prio Core
 ├── Plugin: Task Management (MVP - built-in)
 ├── Plugin: Goals & Progress (MVP - built-in)  
 ├── Plugin: Smart Calendar (MVP - built-in)

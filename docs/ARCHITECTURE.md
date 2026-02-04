@@ -1,8 +1,8 @@
-# Jeeves - Technical Architecture
+# Prio - Technical Architecture
 
 ## Overview
 
-Jeeves is designed as an **offline-first, privacy-first** personal assistant with an Android-first architecture. The system prioritizes on-device processing, minimal backend dependency, and a pluggable module system. Core AI features run locally using on-device LLMs, enabling full functionality without internet connectivity.
+Prio is designed as an **offline-first, privacy-first** personal assistant with an Android-first architecture. The system prioritizes on-device processing, minimal backend dependency, and a pluggable module system. Core AI features run locally using on-device LLMs, enabling full functionality without internet connectivity.
 
 ---
 
@@ -479,7 +479,7 @@ class ModelRegistry(
             displayName = "Phi-3 Mini (Recommended)",
             fileName = "phi-3-mini-4k-instruct-q4_k_m.gguf",
             sizeBytes = 2_400_000_000L,
-            downloadUrl = "https://cdn.jeeves.app/models/phi-3-mini-4k-q4km.gguf",
+            downloadUrl = "https://cdn.prio.app/models/phi-3-mini-4k-q4km.gguf",
             sha256 = "abc123...",
             capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
             contextLength = 4096,
@@ -490,7 +490,7 @@ class ModelRegistry(
             displayName = "Gemma 2 2B (Smaller)",
             fileName = "gemma-2-2b-it-q4_k_m.gguf",
             sizeBytes = 1_700_000_000L,
-            downloadUrl = "https://cdn.jeeves.app/models/gemma-2-2b-q4km.gguf",
+            downloadUrl = "https://cdn.prio.app/models/gemma-2-2b-q4km.gguf",
             sha256 = "def456...",
             capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
             contextLength = 8192,
@@ -501,7 +501,7 @@ class ModelRegistry(
             displayName = "Qwen 2.5 3B (Multilingual)",
             fileName = "qwen2.5-3b-instruct-q4_k_m.gguf",
             sizeBytes = 2_000_000_000L,
-            downloadUrl = "https://cdn.jeeves.app/models/qwen2.5-3b-q4km.gguf",
+            downloadUrl = "https://cdn.prio.app/models/qwen2.5-3b-q4km.gguf",
             sha256 = "ghi789...",
             capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION, AiCapability.GENERATION),
             contextLength = 32768,
@@ -523,7 +523,7 @@ For users who want cloud AI while maintaining privacy, requests go through our b
 
 ```kotlin
 /**
- * Cloud AI access via Jeeves backend.
+ * Cloud AI access via Prio backend.
  * Benefits:
  * - API keys stay on server (user never sees them)
  * - Usage tracking and cost control
@@ -531,13 +531,13 @@ For users who want cloud AI while maintaining privacy, requests go through our b
  * - Unified billing
  */
 class CloudGatewayProvider(
-    private val apiClient: JeevesApiClient,
+    private val apiClient: PrioApiClient,
     private val authManager: AuthManager,
     private val preferences: UserPreferences
 ) : AiProvider {
     
     override val providerId = "cloud-gateway"
-    override val displayName = "Cloud AI (via Jeeves)"
+    override val displayName = "Cloud AI (via Prio)"
     override val capabilities = setOf(
         AiCapability.CLASSIFICATION,
         AiCapability.EXTRACTION,
@@ -756,7 +756,7 @@ ModelDefinition(
     displayName = "New Model Name",
     fileName = "new-model-q4_k_m.gguf",
     sizeBytes = 2_000_000_000L,
-    downloadUrl = "https://cdn.jeeves.app/models/new-model.gguf",
+    downloadUrl = "https://cdn.prio.app/models/new-model.gguf",
     sha256 = "...",
     capabilities = setOf(AiCapability.CLASSIFICATION, AiCapability.EXTRACTION),
     contextLength = 4096,
@@ -952,7 +952,7 @@ For premium users or when on-device AI is insufficient, the backend serves as an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                      JEEVES AI GATEWAY (Rust/Axum)                           │
+│                      PRIO AI GATEWAY (Rust/Axum)                           │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
@@ -1550,7 +1550,7 @@ sealed class SuggestedAction {
 │  ┌────────────────────────────────────────────────────────────┐ │
 │  │                     PLUGIN INTERFACE                        │ │
 │  │                                                              │ │
-│  │  interface JeevesPlugin {                                   │ │
+│  │  interface PrioPlugin {                                   │ │
 │  │    val id: String                                           │ │
 │  │    val name: String                                         │ │
 │  │    val version: String                                      │ │
@@ -1741,8 +1741,8 @@ apps/android/
 ├── app/                          # Main application module
 │   ├── src/main/
 │   │   ├── kotlin/
-│   │   │   └── com/jeeves/app/
-│   │   │       ├── JeevesApplication.kt
+│   │   │   └── com/prio/app/
+│   │   │       ├── PrioApplication.kt
 │   │   │       ├── MainActivity.kt
 │   │   │       └── navigation/
 │   │   └── res/
@@ -1757,14 +1757,14 @@ apps/android/
 │   │   ├── src/main/
 │   │   │   ├── cpp/              # NDK/JNI code for llama.cpp
 │   │   │   └── kotlin/
-│   │   │       └── com/jeeves/ai/
+│   │   │       └── com/prio/ai/
 │   │   │           ├── LlamaCppEngine.kt
 │   │   │           └── jni/
 │   │   └── build.gradle.kts      # NDK configuration
 │   │
 │   ├── ai-provider/              # AI Provider Abstraction Layer
 │   │   └── src/main/kotlin/
-│   │       └── com/jeeves/ai/provider/
+│   │       └── com/prio/ai/provider/
 │   │           ├── AiProvider.kt           # Core interface
 │   │           ├── AiRequest.kt            # Request types
 │   │           ├── AiResponse.kt           # Response types
@@ -1963,7 +1963,7 @@ class BriefingGenerator(
 
 | Approach | Cost/1000 MAU | Notes |
 |----------|---------------|-------|
-| **Jeeves (on-device)** | $5-10 | Minimal backend |
+| **Prio (on-device)** | $5-10 | Minimal backend |
 | Cloud LLM approach | $500-2000 | API costs dominate |
 | Hybrid approach | $100-300 | Selective cloud usage |
 
@@ -2177,7 +2177,7 @@ spec:
     spec:
       containers:
       - name: ai-engine
-        image: jeeves/ai-engine:latest
+        image: prio/ai-engine:latest
         resources:
           requests:
             cpu: "500m"

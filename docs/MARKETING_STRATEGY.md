@@ -1,8 +1,8 @@
-# Jeeves - Marketing Strategy
+# Prio - Marketing Strategy
 
 ## Executive Summary
 
-This document outlines the marketing strategy for Jeeves, a privacy-first, offline-capable personal assistant powered by on-device AI. Our initial focus is the Android platform, targeting productivity-focused users who value privacy and simplicity.
+This document outlines the marketing strategy for Prio, a privacy-first, offline-capable personal assistant powered by on-device AI. Our initial focus is the Android platform, targeting productivity-focused users who value privacy and simplicity.
 
 **Strategic Imperative**: Competitors will respond within 12-18 months. First-mover advantage in "private AI productivity" is time-limited.
 
@@ -58,12 +58,12 @@ This document outlines the marketing strategy for Jeeves, a privacy-first, offli
 
 ## Brand Identity
 
-### Brand Name: Jeeves
-Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticipatory. The name conveys:
-- **Intelligence**: Smart and capable
-- **Privacy**: Discreet and trustworthy
-- **Service**: Dedicated to helping
-- **Sophistication**: Premium but accessible
+### Brand Name: Prio
+Short for "priority"—instantly communicates the app's core function of smart prioritization. The name conveys:
+- **Clarity**: What matters most, prioritized
+- **Efficiency**: Get to what's important fast
+- **Intelligence**: Smart prioritization powered by AI
+- **Simplicity**: Short, memorable, action-oriented
 
 ### Brand Personality
 - **Private**: Your data stays yours
@@ -73,8 +73,8 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 - **Calm**: Reduces overwhelm, doesn't add to it
 
 ### Taglines
-1. **"Your Private Productivity AI"** (primary) ← Recommended by competitive analysis
-2. **"Intelligence That Stays With You"**
+1. **"Smart Priorities. Always Private."** (primary)
+2. **"Your Private Productivity AI"**
 3. **"Focus on What Matters. Privately."**
 4. **"AI-Powered Priorities, Zero Data Exposure"**
 
@@ -82,7 +82,7 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 - **Primary Color**: Deep teal (#0D9488) - calm, trustworthy, focused
 - **Eisenhower Colors**: Red, Amber, Orange, Gray for quadrants
 - **Typography**: Clean, modern Roboto (Android system)
-- **Logo**: Stylized "J" with subtle checkmark element
+- **Logo**: Stylized "P" with subtle checkmark/priority arrow element
 - **Iconography**: Material Symbols, outlined style
 
 ---
@@ -92,13 +92,13 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 ### Positioning Statement
 > **For** privacy-conscious Android users overwhelmed by their tasks and goals,
 >
-> **Jeeves is** an intelligent personal assistant
+> **Prio is** an intelligent personal assistant
 >
 > **That** automatically prioritizes your work using on-device AI, keeping your data completely private.
 >
 > **Unlike** Todoist, Google Tasks, or cloud-based AI assistants,
 >
-> **Jeeves** combines smart Eisenhower prioritization, goal tracking, and daily briefings—all powered by AI that never leaves your device.
+> **Prio** combines smart Eisenhower prioritization, goal tracking, and daily briefings—all powered by AI that never leaves your device.
 
 ### Key Differentiators
 
@@ -116,7 +116,7 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
                     High AI Intelligence
                            ↑
                            │
-        Jeeves ────────────┼──────────── Google Assistant
+        Prio ────────────┼──────────── Google Assistant
         (Private)          │             (Cloud)
                            │
     ←──────────────────────┼────────────────────────→
@@ -133,20 +133,20 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 ### Competitive Battlecards
 
 **vs. Todoist:**
-- "Todoist uploads your tasks to their cloud. Jeeves keeps everything on your device."
-- "Todoist requires manual prioritization. Jeeves uses AI to decide what matters."
+- "Todoist uploads your tasks to their cloud. Prio keeps everything on your device."
+- "Todoist requires manual prioritization. Prio uses AI to decide what matters."
 
 **vs. TickTick:**
-- "TickTick has Eisenhower view, but you still sort manually. Jeeves classifies automatically."
-- "TickTick syncs to Chinese servers. Jeeves never leaves your phone."
+- "TickTick has Eisenhower view, but you still sort manually. Prio classifies automatically."
+- "TickTick syncs to Chinese servers. Prio never leaves your phone."
 
 **vs. Google Tasks:**
-- "Google already knows too much. Jeeves keeps your productivity private."
-- "Google Tasks is basic. Jeeves is intelligent."
+- "Google already knows too much. Prio keeps your productivity private."
+- "Google Tasks is basic. Prio is intelligent."
 
 **vs. Things 3:**
-- "Things 3 is iOS-only. Jeeves brings privacy-first productivity to Android."
-- "Things 3 has no AI. Jeeves thinks for you."
+- "Things 3 is iOS-only. Prio brings privacy-first productivity to Android."
+- "Things 3 has no AI. Prio thinks for you."
 
 ### Threat Assessment & Response Timeline
 
@@ -207,7 +207,7 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 - **Goal**: 5,000 waitlist signups
 
 #### Content Creation
-- "Building Jeeves" development blog series
+- "Building Prio" development blog series
 - Privacy in AI thought leadership
 - Eisenhower Matrix tutorial content
 - On-device LLM technical deep-dives
@@ -237,7 +237,7 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 #### App Store Optimization (ASO)
 
 **Google Play Store**:
-- **Title**: Jeeves: AI Task Manager & Eisenhower Matrix
+- **Title**: Prio: AI Task Manager & Eisenhower Matrix
 - **Keywords**: productivity, task manager, eisenhower matrix, ai assistant, offline, privacy, goals, todo
 - **Short Description**: "Private AI assistant for task prioritization. Works offline, stays on your phone."
 - **Screenshots**: Eisenhower matrix view, goal progress, AI task creation, daily briefing
@@ -269,7 +269,7 @@ Inspired by the fictional valet Reginald Jeeves—intelligent, discreet, anticip
 2. **Privacy in AI**: Why on-device AI matters, privacy best practices
 3. **Goal Achievement**: Goal-setting strategies, progress tracking
 4. **Product Updates**: New features, behind-the-scenes development
-5. **User Stories**: How Jeeves helps real people
+5. **User Stories**: How Prio helps real people
 
 ### Content Calendar
 
