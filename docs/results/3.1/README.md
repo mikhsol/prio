@@ -147,12 +147,74 @@ class RuleBasedFallbackProvider(
 - Jetpack Compose (UI)
 - Room (data persistence)
 
+### 3.1.4 - Task Detail Bottom Sheet ✅
+
+**Locations**:
+- `android/app/src/main/java/com/prio/app/feature/tasks/detail/TaskDetailSheet.kt`
+- `android/app/src/main/java/com/prio/app/feature/tasks/detail/TaskDetailViewModel.kt`
+
+See [3.1.4_task_detail_sheet.md](3.1.4_task_detail_sheet.md) for full details.
+
+#### Key Features
+- Half/full expand states per 1.1.2 spec
+- AI explanation display with 🤖 emoji
+- One-tap quadrant override with 2×2 selector
+- Goal linking picker with progress display
+- Subtasks with completion tracking
+- Delete confirmation with undo support
+
+### 3.1.5 - Quick Capture with AI ✅
+
+**Locations**:
+- `android/app/src/main/java/com/prio/app/feature/capture/QuickCaptureSheet.kt`
+- `android/app/src/main/java/com/prio/app/feature/capture/QuickCaptureViewModel.kt`
+- `android/core/domain/src/main/java/com/prio/core/domain/parser/NaturalLanguageParser.kt`
+
+See [3.1.5_quick_capture.md](3.1.5_quick_capture.md) for full details.
+
+#### Key Features
+- FAB→focus <100ms target
+- Voice input ready with privacy indicator ("on-device")
+- AI parsing with rule-based NLP (<50ms)
+- Time-based quick suggestions
+- Parsed result preview with confidence indicators
+- Haptic feedback on task creation
+- Works fully offline
+
+### 3.1.6 - Drag-and-Drop Reordering ✅
+
+**Location**: `android/app/src/main/java/com/prio/app/feature/tasks/reorder/ReorderableList.kt`
+
+See [3.1.6_drag_and_drop_reorder.md](3.1.6_drag_and_drop_reorder.md) for full details.
+
+#### Key Features
+- Long-press (300ms) to initiate drag
+- Haptic feedback on drag start/end
+- Elevation animation (1dp → 8dp) during drag
+- Visual drag handle after long-press
+- First-time reorder hint for user education
+- Immediate position persistence
+
+## Progress Summary
+
+| Task | Status | Owner |
+|------|--------|-------|
+| 3.1.1 EisenhowerEngine | ✅ Done | Android Developer |
+| 3.1.2 Task List Screen | ✅ Done | Android Developer |
+| 3.1.4 Task Detail Sheet | ✅ Done | Android Developer |
+| 3.1.5 Quick Capture | ✅ Done | Android Developer |
+| 3.1.6 Drag-and-Drop | ✅ Done | Android Developer |
+| 3.1.7 Swipe Actions | ✅ Done | Android Developer |
+| 3.1.8 Filters & Search | ✅ Done | Android Developer |
+| 3.1.9 Recurring Tasks | ⏳ Pending | Android Developer |
+| 3.1.10 Smart Reminders | ⏳ Pending | Android Developer |
+| 3.1.11 UI Tests | ⏳ Pending | Android Developer |
+
 ## Next Steps
 
-- [ ] 3.1.3: Task Detail sheet (create/edit)
-- [ ] 3.1.4: Voice input for tasks
-- [ ] 3.1.5: Natural language date parsing
-- [ ] UI tests for TaskListScreen
+- [ ] 3.1.9: Recurring tasks
+- [ ] 3.1.10: Smart reminders (WorkManager)
+- [ ] 3.1.11: UI tests for Tasks plugin
 - [ ] Integration tests for EisenhowerEngine + TaskRepository
 
 ## References

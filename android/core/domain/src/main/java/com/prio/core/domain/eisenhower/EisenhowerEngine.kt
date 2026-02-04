@@ -37,7 +37,7 @@ import kotlin.math.min
  */
 @Singleton
 class EisenhowerEngine @Inject constructor(
-    private val clock: Clock = Clock.System
+    private val clock: Clock
 ) {
     
     companion object {
