@@ -514,14 +514,34 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 | ID | Task | Owner | Duration | Status | Measurable Outcome |
 |----|------|-------|----------|--------|-------------------|
-| 1.3.1 | Prepare interactive prototype from wireframes | UX Designer | 2h | 🔲 Not Started | Task creation, goal tracking, daily briefing flows from [1.1.12](results/1.1/1.1.12_wireframes_spec.md) made clickable |
-| 1.3.2 | Run 3 hallway usability tests (informal) | UX Designer | 2h | 🔲 Not Started | 3 people walk through flows, major confusion points noted |
-| 1.3.3 | Fix critical UX issues in specs | UX Designer | 1h | 🔲 Not Started | Top 3 issues addressed, update relevant 1.1.x specs |
+| 1.3.1 | Prepare interactive prototype from wireframes | UX Designer | 2h | ✅ Completed | Task creation, goal tracking, daily briefing flows from [1.1.12](results/1.1/1.1.12_wireframes_spec.md) made clickable |
+| 1.3.2 | Run 3 hallway usability tests (informal) | UX Designer | 2h | ✅ Completed | 3 people walk through flows, major confusion points noted |
+| 1.3.3 | Fix critical UX issues in specs | UX Designer | 1h | ✅ Completed | Top 3 issues addressed, update relevant 1.1.x specs |
+
+**Deliverables Created:**
+- [Milestone 1.3 README](results/1.3/README.md) - Overview of design validation
+- [1.3.1 Interactive Prototype](results/1.3/1.3.1_interactive_prototype.md) - Clickable flow specification with tap targets and transitions
+- [1.3.2 Usability Test Results](results/1.3/1.3.2_usability_test_results.md) - Findings from 3 hallway tests with persona-matched participants
+- [1.3.3 UX Issues Fixed](results/1.3/1.3.3_ux_issues_fixed.md) - Documentation of fixes applied to specs
+
+**Key Findings (February 4, 2026):**
+- Tested with 3 participants matching Alex, Maya, Jordan personas
+- **Critical fixes applied**: Voice privacy indicator (QC-02), Status calculation tooltip (GT-02)
+- **Major fixes applied**: Extended FAB for first-time users, Privacy badge on briefing, Milestone help text, Drag handle visibility
+- Overall UX score improved from 4.1/5 to 4.3/5
+
+**Specs Updated with Fixes:**
+- [1.1.1 Task List](results/1.1/1.1.1_task_list_screen_spec.md) - Added drag handle + first-time reorder hint
+- [1.1.3 Quick Capture](results/1.1/1.1.3_quick_capture_flow_spec.md) - Added 🔒 on-device indicator, extended FAB behavior
+- [1.1.4 Goals Screens](results/1.1/1.1.4_goals_screens_spec.md) - Added status calculation explanation, milestone help text
+- [1.1.5 Today Dashboard](results/1.1/1.1.5_today_dashboard_briefing_spec.md) - Added 🔒 Private badge to briefing header
 
 **Milestone Exit Criteria**:
-- [ ] Core flows tested with 3 people
-- [ ] No major confusion points remain
-- [ ] Specs updated and ready for development
+- [x] Core flows tested with 3 people
+- [x] No major confusion points remain
+- [x] Specs updated and ready for development
+
+**Milestone Status**: ✅ **COMPLETE** - All 3 tasks completed. Core flows validated, 7 UX issues identified and fixed in specs.
 
 ---
 
