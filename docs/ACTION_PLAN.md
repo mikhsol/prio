@@ -754,9 +754,213 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 
 **Milestone Status**: ✅ **COMPLETE** - All 11 tasks finished, all exit criteria met. See [docs/results/3.1/](results/3.1/) for implementation details.
 
+### Milestone 3.1.5: App Navigation Integration (NEW)
+**Goal**: Wire all created components together with Compose Navigation and Bottom Navigation bar  
+**Owner**: Android Developer  
+**Priority**: P0 - **BLOCKING** for Milestones 3.2, 3.3, 3.4, 4.1  
+**Source**: [1.1.12 Wireframes Navigation Map](results/1.1/1.1.12_wireframes_spec.md#navigation-map), [1.2.7 Navigation Setup](results/1.2/README.md)  
+**Analysis**: [3.1.12 Navigation Integration Analysis](results/3.1/3.1.12_navigation_integration_analysis.md)
+
+*Note: This milestone was identified as a critical gap during Phase 3 review. Without navigation integration, feature plugins cannot be accessed by users, blocking all subsequent development.*
+
+**Current State:**
+- Navigation routes (PrioRoute) defined ✅
+- Bottom Navigation UI component created ✅
+- TaskListScreen working in isolation ✅
+- **Missing**: NavHost, App Shell, screen wiring ❌
+
+**Architecture Target:**
+```
+MainActivity → PrioAppShell → Scaffold
+                              ├── PrioNavHost (screen content)
+                              │   ├── composable(Today)
+                              │   ├── composable(Tasks)
+                              │   ├── composable(Goals)
+                              │   ├── composable(Calendar)
+                              │   └── composable(More)
+                              └── PrioBottomNavigation (bottom bar)
+```
+
+**Referenced User Stories:**
+- [TM-001](results/0.3/0.3.2_task_management_user_stories.md#tm-001-quick-task-capture): "FAB visible on all main screens" → FAB in bottom nav
+- [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md#cb-001-morning-daily-briefing): "Briefing available... Can be viewed later from dashboard" → Today tab
+- [GL-005](results/0.3/0.3.3_goals_user_stories.md#gl-005-goals-overview-screen): "Goals list accessible from main navigation" → Goals tab
+
+**Referenced UX Specs:**
+- [1.1.12 Navigation Map](results/1.1/1.1.12_wireframes_spec.md#navigation-map): Bottom Nav structure with 5 tabs + FAB
+- [1.1.5 Today Dashboard](results/1.1/1.1.5_today_dashboard_briefing_spec.md#entry-points): Entry points and navigation flows
+- [1.1.8 Onboarding Flow](results/1.1/1.1.8_onboarding_flow_spec.md): Onboarding → Main app routing
+- [1.1.13 PrioBottomNavigation](results/1.1/1.1.13_component_specifications.md#bottom-navigation): Component specs
+
+| ID | Task | Owner | Duration | UX Spec | Source Story | Status | Measurable Outcome |
+|----|------|-------|----------|---------|--------------|--------|-------------------|
+| 3.1.5.1 | Create PrioNavHost with navigation graph | Android Developer | 3h | [1.1.12 Nav Map](results/1.1/1.1.12_wireframes_spec.md#navigation-map) | All TM/GL/CB stories | 🔲 Not Started | NavHost with all routes from PrioNavigation.kt; type-safe args; 5 main destinations + nested routes |
+| 3.1.5.2 | Create PrioAppShell (Scaffold + BottomNav) | Android Developer | 2h | [1.1.12 Bottom Nav](results/1.1/1.1.12_wireframes_spec.md), [1.1.13 BottomNav](results/1.1/1.1.13_component_specifications.md#bottom-navigation) | [TM-001](results/0.3/0.3.2_task_management_user_stories.md#tm-001-quick-task-capture) | 🔲 Not Started | Scaffold with content area, bottom nav visible on main screens, FAB in center per spec |
+| 3.1.5.3 | Create placeholder screens (Today, Goals, Calendar, More) | Android Developer | 2h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md), [1.1.4](results/1.1/1.1.4_goals_screens_spec.md), [1.1.6](results/1.1/1.1.6_calendar_day_view_spec.md), [1.1.9](results/1.1/1.1.9_settings_screens_spec.md) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md#cb-001-morning-daily-briefing), [GL-005](results/0.3/0.3.3_goals_user_stories.md#gl-005-goals-overview-screen) | 🔲 Not Started | Basic screens with top bar, empty state per [1.1.10](results/1.1/1.1.10_error_empty_offline_states_spec.md), FAB works from any tab |
+| 3.1.5.4 | Wire nested navigation (TaskDetail, GoalDetail, etc.) | Android Developer | 2h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md), [1.1.4 Goal Detail](results/1.1/1.1.4_goals_screens_spec.md#goal-detail-screen) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md#tm-006-task-editing), [GL-002](results/0.3/0.3.3_goals_user_stories.md#gl-002-goal-progress-visualization) | 🔲 Not Started | TaskDetail(taskId), GoalDetail(goalId), MeetingDetail(meetingId) with back navigation |
+| 3.1.5.5 | Integrate QuickCapture as modal overlay | Android Developer | 1h | [1.1.3](results/1.1/1.1.3_quick_capture_flow_spec.md) | [TM-001](results/0.3/0.3.2_task_management_user_stories.md#tm-001-quick-task-capture): "FAB visible on all main screens" | 🔲 Not Started | FAB tap → QuickCaptureSheet from any screen; task created shows in Tasks tab |
+| 3.1.5.6 | Handle deep links and start destinations | Android Developer | 2h | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md#cb-001-morning-daily-briefing): "Push notification → Opens to Briefing card" | 🔲 Not Started | prio://task/{id}, prio://goal/{id}, prio://briefing; first-launch → Onboarding |
+| 3.1.5.7 | Add navigation transitions/animations | Android Developer | 1h | [1.1.12 Flow Direction](results/1.1/1.1.12_wireframes_spec.md#annotation-key) | — | 🔲 Not Started | Shared element for cards, fade for tabs, slide for nested; 60fps verified |
+| 3.1.5.8 | Write navigation E2E tests | Android Developer | 3h | All 1.1 specs | All TM/GL/CB stories | 🔲 Not Started | 12+ E2E tests covering all routes, back handling, deep links, state preservation |
+
+**Files to Create:**
+- `android/app/src/main/java/com/prio/app/navigation/PrioNavHost.kt`
+- `android/app/src/main/java/com/prio/app/PrioAppShell.kt`
+- `android/app/src/main/java/com/prio/app/feature/today/TodayScreen.kt` (placeholder per [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md))
+- `android/app/src/main/java/com/prio/app/feature/goals/GoalsListScreen.kt` (placeholder per [1.1.4](results/1.1/1.1.4_goals_screens_spec.md))
+- `android/app/src/main/java/com/prio/app/feature/calendar/CalendarScreen.kt` (placeholder per [1.1.6](results/1.1/1.1.6_calendar_day_view_spec.md))
+- `android/app/src/main/java/com/prio/app/feature/more/MoreScreen.kt` (placeholder per [1.1.9](results/1.1/1.1.9_settings_screens_spec.md))
+- `android/app/src/androidTest/java/com/prio/app/navigation/NavigationE2ETest.kt`
+
+**Files to Modify:**
+- `android/app/src/main/java/com/prio/app/MainActivity.kt` - Use PrioAppShell instead of direct TaskListScreen
+
+---
+
+#### E2E Test Plan (Simulator + Real Device)
+
+**Framework**: Maestro (cross-platform, no code changes required) + Compose UI Testing (for CI)
+
+**Test Environment:**
+| Platform | Device | API Level | Notes |
+|----------|--------|-----------|-------|
+| Emulator | Pixel 6 | API 34 | CI default |
+| Emulator | Pixel 4a | API 29 | Min SDK |
+| Real Device | Pixel 9a | API 35 | Performance verification |
+| Real Device | Samsung S24 | API 34 | OEM compatibility |
+
+**E2E Test Cases:**
+
+| Test ID | Category | Test Name | Steps | Expected Result | Source Story/Spec |
+|---------|----------|-----------|-------|-----------------|-------------------|
+| NAV-E2E-001 | Bottom Nav | Tab switching preserves state | 1. Open Tasks, scroll down 2. Tap Goals tab 3. Tap Tasks tab | Tasks list scroll position preserved | [1.1.12](results/1.1/1.1.12_wireframes_spec.md) |
+| NAV-E2E-002 | Bottom Nav | All tabs accessible | 1. Tap each tab (Today, Tasks, Goals, Calendar, More) | Each screen loads with correct title | [1.1.12 Nav Map](results/1.1/1.1.12_wireframes_spec.md#navigation-map) |
+| NAV-E2E-003 | FAB | Quick capture from any tab | 1. On each tab, tap FAB 2. Enter "Test task" 3. Save | QuickCapture opens; task appears in Tasks | [TM-001](results/0.3/0.3.2_task_management_user_stories.md#tm-001-quick-task-capture) |
+| NAV-E2E-004 | Deep Link | Task detail deep link | 1. Create task via UI 2. Navigate away 3. Open prio://task/{id} | Task detail sheet opens with correct task | [TM-006](results/0.3/0.3.2_task_management_user_stories.md#tm-006-task-editing) |
+| NAV-E2E-005 | Deep Link | Goal detail deep link | 1. Create goal via UI 2. Navigate away 3. Open prio://goal/{id} | Goal detail screen opens with correct goal | [GL-002](results/0.3/0.3.3_goals_user_stories.md#gl-002-goal-progress-visualization) |
+| NAV-E2E-006 | Deep Link | Briefing deep link | 1. Open prio://briefing | Today screen opens with briefing card visible | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md#cb-001-morning-daily-briefing) |
+| NAV-E2E-007 | Back Navigation | Nested back navigation | 1. Tasks → Task Detail → Back | Returns to Tasks list at same position | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md) |
+| NAV-E2E-008 | Back Navigation | Back from settings subscreens | 1. More → Notifications Settings → Back → Back | Returns to More, then exits app/returns home | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md) |
+| NAV-E2E-009 | Onboarding | First launch → Onboarding | 1. Fresh install 2. Launch app | Onboarding screen appears, not main app | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md) |
+| NAV-E2E-010 | Onboarding | Skip → Main app | 1. Complete onboarding 2. Relaunch app | Main app opens (Today), no onboarding | [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md) |
+| NAV-E2E-011 | Animation | Tab transition smoothness | 1. Rapidly tap between tabs 10x | No frame drops, 60fps maintained | [1.1.12](results/1.1/1.1.12_wireframes_spec.md) |
+| NAV-E2E-012 | Edge Case | Rotation during navigation | 1. Open task detail 2. Rotate device 3. Rotate back | State preserved, no crash | — |
+
+**Maestro Flow Examples:**
+
+```yaml
+# maestro/flows/nav_tab_switching.yaml
+appId: com.prio.app
+---
+- launchApp
+- assertVisible: "Today"
+- tapOn: "Tasks"
+- assertVisible: "TASKS"
+- scrollDown
+- tapOn: "Goals"
+- assertVisible: "Goals"
+- tapOn: "Tasks"
+- assertVisible: "TASKS"  # Scroll position should be preserved
+```
+
+```yaml
+# maestro/flows/nav_quick_capture_all_tabs.yaml
+appId: com.prio.app
+---
+- launchApp
+# Test FAB from Today
+- tapOn:
+    id: "fab_add_task"
+- assertVisible: "What do you need to do?"
+- tapOn: "Cancel"
+
+# Test FAB from Tasks
+- tapOn: "Tasks"
+- tapOn:
+    id: "fab_add_task"
+- assertVisible: "What do you need to do?"
+- inputText: "Test from Tasks tab"
+- tapOn: "Add Task"
+- assertVisible: "Test from Tasks tab"
+
+# Test FAB from Goals
+- tapOn: "Goals"
+- tapOn:
+    id: "fab_add_task"
+- assertVisible: "What do you need to do?"
+- tapOn: "Cancel"
+```
+
+```yaml
+# maestro/flows/nav_deep_links.yaml
+appId: com.prio.app
+---
+- launchApp
+# Create a task first
+- tapOn: "Tasks"
+- tapOn:
+    id: "fab_add_task"
+- inputText: "Deep link test task"
+- tapOn: "Add Task"
+- back
+
+# Test deep link (requires adb command wrapper)
+- runScript:
+    file: scripts/open_task_deeplink.js
+- assertVisible: "Deep link test task"
+- assertVisible: "Task Detail"
+```
+
+**CI Integration (GitHub Actions):**
+
+```yaml
+# .github/workflows/e2e-tests.yml (excerpt)
+jobs:
+  e2e-tests:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      
+      - name: Install Maestro
+        run: curl -Ls "https://get.maestro.mobile.dev" | bash
+        
+      - name: Start emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          profile: Pixel 6
+          script: |
+            ./gradlew :app:installDebug
+            ~/.maestro/bin/maestro test maestro/flows/
+```
+
+---
+
+**Milestone Exit Criteria**:
+- [ ] Bottom navigation visible on all main screens (Today, Tasks, Goals, Calendar, More)
+- [ ] FAB triggers QuickCapture from any tab per [TM-001](results/0.3/0.3.2_task_management_user_stories.md#tm-001-quick-task-capture)
+- [ ] Tab switching preserves state (no re-render on back navigation)
+- [ ] Back button navigates correctly within nested graphs
+- [ ] Deep links route to correct screens (prio://task/, prio://goal/, prio://briefing) per [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md#cb-001-morning-daily-briefing)
+- [ ] First launch routes to Onboarding per [1.1.8](results/1.1/1.1.8_onboarding_flow_spec.md)
+- [ ] Navigation animations smooth (no jank, 60fps)
+- [ ] 12 E2E tests passing on emulator AND real device
+
+**Milestone Status**: 🔲 **NOT STARTED** - Required before Milestone 3.2
+
+---
+
 ### Milestone 3.2: Goals Plugin
 **Goal**: Goal setting and progress tracking linked to tasks  
 **Owner**: Android Developer  
+**Depends On**: Milestone 3.1.5 (Navigation Integration) ⚠️  
 **Source**: [0.3.3 Goals User Stories](results/0.3/0.3.3_goals_user_stories.md) (GL-001 through GL-006)  
 **UX Reference**: [1.1.4 Goals Screens](results/1.1/1.1.4_goals_screens_spec.md)
 
@@ -787,6 +991,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.3: Calendar Plugin
 **Goal**: Calendar integration with meeting notes and action items  
 **Owner**: Android Developer  
+**Depends On**: Milestone 3.1.5 (Navigation Integration) ⚠️  
 **Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-002, CB-004, CB-005)  
 **UX Reference**: [1.1.6 Calendar Day View](results/1.1/1.1.6_calendar_day_view_spec.md)
 
@@ -814,6 +1019,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 ### Milestone 3.4: Daily Briefings
 **Goal**: AI-generated morning and evening summaries  
 **Owner**: Android Developer  
+**Depends On**: Milestone 3.1.5 (Navigation Integration) ⚠️  
 **Source**: [0.3.4 Calendar & Briefings Stories](results/0.3/0.3.4_calendar_briefings_user_stories.md) (CB-001, CB-003), [0.3.1 80/20 Analysis](results/0.3/0.3.1_80_20_feature_analysis.md)  
 **UX Reference**: [1.1.5 Today Dashboard + Briefing](results/1.1/1.1.5_today_dashboard_briefing_spec.md), [1.1.7 Evening Summary](results/1.1/1.1.7_evening_summary_spec.md)
 
@@ -1066,12 +1272,14 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 0: Research | 1-2 (+parallel) | Market analysis, LLM selection, MVP PRD, **LLM accuracy exploration** | [0.1](results/0.1/), [0.2](results/0.2/), [0.3](results/0.3/) |
 | 1: Design & Setup | 2-3 | UX specs, project architecture | [0.3.2-0.3.4 User Stories](results/0.3/), [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) |
 | 2: Core | 3-5 | Data layer, AI engine, design system | [0.2.5 LLM Rec](results/0.2/0.2.5_llm_selection_recommendation.md), [0.3.8 Metrics](results/0.3/0.3.8_success_metrics.md) |
-| 3: Features | 5-10 | Tasks, Goals, Calendar, Briefings, Analytics | [0.3.2](results/0.3/0.3.2_task_management_user_stories.md), [0.3.3](results/0.3/0.3.3_goals_user_stories.md), [0.3.4](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
+| 3: Features | 5-10 | Tasks, **Navigation Integration**, Goals, Calendar, Briefings, Analytics | [0.3.2](results/0.3/0.3.2_task_management_user_stories.md), [0.3.3](results/0.3/0.3.3_goals_user_stories.md), [0.3.4](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
 | 4: Polish | 10-12 | Onboarding, notifications, testing | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) |
 | 5: Launch | 12-14 | Beta testing, Play Store launch | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
 | 6: Post-Launch | 14-16 | Stabilization, iteration | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
 
 *Milestone 0.2.6 (LLM Accuracy Improvement) runs parallel to Phase 1-2. See [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md) for v1.1 features.*
+
+> ⚠️ **New Milestone Added**: Milestone 3.1.5 (Navigation Integration) was identified as a critical gap and added to Phase 3. It is **BLOCKING** for Milestones 3.2, 3.3, 3.4, and 4.1. See [3.1.12 Navigation Integration Analysis](results/3.1/3.1.12_navigation_integration_analysis.md) for details.
 
 ### Key Reference Documents
 
@@ -1088,6 +1296,7 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | **[0.2.3 Accuracy Report](results/0.2/0.2.3_task_categorization_accuracy.md)** | **Classification accuracy** | **40% LLM vs 75% rule-based** |
 | **[Mistral Comparison](results/0.2/mistral_7b_benchmark_comparison.md)** | **Model comparison** | **80% accuracy but 45-60s too slow** |
 | **[0.2.4 Device Matrix](results/0.2/0.2.4_device_compatibility_matrix.md)** | **Device support** | **4-tier: 65% market gets full LLM** |
+| **[3.1.12 Navigation Analysis](results/3.1/3.1.12_navigation_integration_analysis.md)** | **Navigation gap** | **Critical: NavHost + App Shell needed** |
 
 ### Critical Technical Findings (from Milestone 0.2)
 
@@ -1152,13 +1361,15 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | Phase 0: Research | 18 + **20 (0.2.6)** | ~37h + **~45h** |
 | Phase 1: Design & Setup | 28 | ~55h |
 | Phase 2: Core | 33 | ~68h |
-| Phase 3: Features | 35 | ~105h |
+| Phase 3: Features | 35 + **8 (3.1.5 Navigation)** | ~105h + **~16h** |
 | Phase 4: Polish | 17 | ~40h |
 | Phase 5: Launch | 16 | ~35h |
 | Phase 6: Post-Launch | 9 | ~20h |
-| **Total MVP** | **~176** | **~405h** |
+| **Total MVP** | **~184** | **~421h** |
 
 *Note: Milestone 0.2.6 (LLM Accuracy Improvement) is optional/parallel work. Core MVP can proceed with rule-based classifier (75% accuracy) while exploration continues.*
+
+*Note: Milestone 3.1.5 (Navigation Integration) adds 8 tasks (~16h) but is essential for app usability and enables parallel development of Milestones 3.2-3.4.*
 
 *MVP scope includes AI Provider abstraction layer for easy model replacement and cloud integration readiness. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
 
