@@ -2,6 +2,7 @@ package com.prio.app.feature.tasks
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.prio.app.worker.RecurringTaskScheduler
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.data.local.entity.TaskEntity
 import com.prio.core.data.repository.GoalRepository
@@ -44,6 +45,7 @@ class TaskListViewModel @Inject constructor(
     private val taskRepository: TaskRepository,
     private val goalRepository: GoalRepository,
     private val eisenhowerEngine: EisenhowerEngine,
+    private val recurringTaskScheduler: RecurringTaskScheduler,
     private val clock: Clock
 ) : ViewModel() {
     
@@ -296,13 +298,19 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 // Store for undo
-                lastCompletedTask = taskRepository.getTaskById(taskId)
+                val task = taskRepository.getTaskById(taskId)
+                lastCompletedTask = task
                 
                 taskRepository.completeTask(taskId)
                 
+                // Schedule next occurrence if recurring (TM-008)
+                if (task?.isRecurring == true && task.recurrencePattern != null) {
+                    recurringTaskScheduler.scheduleNextOccurrence(taskId)
+                }
+                
                 _effect.send(
                     TaskListEffect.ShowSnackbar(
-                        message = "Task completed",
+                        message = if (task?.isRecurring == true) "Task completed. Next occurrence created." else "Task completed",
                         actionLabel = "Undo"
                     )
                 )

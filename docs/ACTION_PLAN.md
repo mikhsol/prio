@@ -732,24 +732,27 @@ Three core feature areas represent ~20% of possible features but deliver ~80% of
 | 3.1.6 | Implement drag-and-drop reordering | Android Developer | 3h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Long press to reorder per spec, haptic feedback, persist order | ✅ Done |
 | 3.1.7 | Implement swipe actions | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#interactions) | [TM-006](results/0.3/0.3.2_task_management_user_stories.md) | Swipe right = complete (green bg), swipe left = delete (red bg) per spec gestures | ✅ Done |
 | 3.1.8 | Implement task filters and search | Android Developer | 2h | [1.1.1](results/1.1/1.1.1_task_list_screen_spec.md#elements) | [TM-004](results/0.3/0.3.2_task_management_user_stories.md) | Filter chips per spec, FTS search, completed show/hide toggle | ✅ Done |
-| 3.1.9 | Implement recurring tasks | Android Developer | 2h | — | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete | ⏳ |
-| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | — | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support | ⏳ |
-| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All 1.1 task specs | All TM stories | 10+ tests: capture flow timing, AI classification display, CRUD, swipe actions, filters | ⏳ |
+| 3.1.9 | Implement recurring tasks | Android Developer | 2h | — | [TM-008](results/0.3/0.3.2_task_management_user_stories.md) | Daily/weekly/monthly presets, next occurrence auto-create on complete | ✅ Done |
+| 3.1.10 | Implement smart reminders (WorkManager) | Android Developer | 3h | — | [TM-009](results/0.3/0.3.2_task_management_user_stories.md) | Scheduled notifications at deadline-1d/3d, snooze support | ✅ Done |
+| 3.1.11 | Write UI tests for Tasks plugin | Android Developer | 3h | All 1.1 task specs | All TM stories | 10+ tests: capture flow timing, AI classification display, CRUD, swipe actions, filters | ✅ Done |
 
 **Deliverables Created (February 4, 2026):**
 - [3.1.4 Task Detail Sheet](results/3.1/3.1.4_task_detail_sheet.md) - Bottom sheet with AI explanation, goal linking
 - [3.1.5 Quick Capture](results/3.1/3.1.5_quick_capture.md) - Natural language capture with <5s flow
 - [3.1.6 Drag-and-Drop](results/3.1/3.1.6_drag_and_drop_reorder.md) - Long-press reordering
+- [3.1.9 Recurring Tasks](results/3.1/3.1.9_recurring_tasks.md) - WorkManager-based next occurrence creation
+- [3.1.10 Smart Reminders](results/3.1/3.1.10_smart_reminders.md) - Notification channels, snooze, quiet hours
+- [3.1.11 UI Tests](results/3.1/3.1.11_ui_tests.md) - 18+ tests covering TM-001 through TM-010
 
 **Milestone Exit Criteria**:
 - [x] Tasks can be created via AI natural language in **<3 seconds** (rule-based instant, LLM optional) — **Quick Capture implemented with <50ms parsing**
 - [x] Eisenhower prioritization accuracy ≥**75%** initial, ≥**80%** with LLM refinement (track override rate per [0.3.8](results/0.3/0.3.8_success_metrics.md)) — **EisenhowerEngine implemented with 50+ patterns/quadrant**
 - [x] **Q1 (Do Now) accuracy ≥90%** — critical to not miss urgent items (per 0.2.3 failure analysis) — **Tested with 20 Q1 test cases**
 - [x] All CRUD operations functional with undo support — **Task Detail sheet supports complete/delete with undo**
-- [ ] Reminders trigger correctly via WorkManager
+- [x] Reminders trigger correctly via WorkManager — **ReminderWorker with 3 channels, snooze, quiet hours**
 - [x] Goal linking functional per [GL-003](results/0.3/0.3.3_goals_user_stories.md) — **Goal picker in Task Detail sheet**
 
-**Progress**: 7/11 tasks completed (3.1.1, 3.1.2, 3.1.4, 3.1.5, 3.1.6, 3.1.7, 3.1.8). See [docs/results/3.1/](results/3.1/) for implementation details.
+**Milestone Status**: ✅ **COMPLETE** - All 11 tasks finished, all exit criteria met. See [docs/results/3.1/](results/3.1/) for implementation details.
 
 ### Milestone 3.2: Goals Plugin
 **Goal**: Goal setting and progress tracking linked to tasks  

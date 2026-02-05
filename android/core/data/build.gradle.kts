@@ -75,5 +75,6 @@ dependencies {
     // Testing
     testImplementation(libs.bundles.testing)
     testRuntimeOnly(libs.junit.jupiter.engine)
+    androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.bundles.testing.android)
 }

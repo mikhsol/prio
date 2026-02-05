@@ -1,16 +1,31 @@
 package com.prio.app
 
 import android.app.Application
+import androidx.hilt.work.HiltWorkerFactory
+import androidx.work.Configuration
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
+import javax.inject.Inject
 
 /**
- * Prio Application class with Hilt dependency injection.
+ * Prio Application class with Hilt dependency injection and WorkManager.
  * 
  * Your Private Productivity AI
  */
 @HiltAndroidApp
-class PrioApplication : Application() {
+class PrioApplication : Application(), Configuration.Provider {
+    
+    @Inject
+    lateinit var workerFactory: HiltWorkerFactory
+    
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .setMinimumLoggingLevel(
+                if (BuildConfig.DEBUG) android.util.Log.DEBUG 
+                else android.util.Log.INFO
+            )
+            .build()
     
     override fun onCreate() {
         super.onCreate()

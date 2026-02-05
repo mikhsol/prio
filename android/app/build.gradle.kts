@@ -146,6 +146,10 @@ dependencies {
     // Coroutines
     implementation(libs.bundles.coroutines)
 
+    // WorkManager (for recurring tasks, reminders)
+    implementation(libs.bundles.workmanager)
+    ksp(libs.hilt.work.compiler)
+
     // Firebase
     implementation(platform(libs.firebase.bom))
     implementation(libs.bundles.firebase)

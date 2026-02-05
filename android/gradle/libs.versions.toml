@@ -49,6 +49,9 @@ firebaseBom = "32.7.2"
 # Timber Logging
 timber = "5.0.1"
 
+# WorkManager (for background tasks, reminders, recurring tasks)
+workManager = "2.9.0"
+
 # Accompanist (Google Compose utilities)
 accompanist = "0.34.0"
 
@@ -122,6 +125,12 @@ firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashly
 # Logging
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
+# WorkManager
+workmanager-runtime = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workManager" }
+workmanager-testing = { group = "androidx.work", name = "work-testing", version.ref = "workManager" }
+hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltNavigationCompose" }
+hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltNavigationCompose" }
+
 # Accompanist
 accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
@@ -162,6 +171,10 @@ room = [
 coroutines = [
     "kotlinx-coroutines-core",
     "kotlinx-coroutines-android",
+]
+workmanager = [
+    "workmanager-runtime",
+    "hilt-work",
 ]
 firebase = [
     "firebase-analytics",
