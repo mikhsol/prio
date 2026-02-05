@@ -77,12 +77,12 @@ data class TaskUiModel(
  * Task filter options.
  * Per 1.1.1 filter chips spec.
  */
-enum class TaskFilter {
-    All,
-    Today,
-    Upcoming,
-    HasGoal,
-    Recurring
+enum class TaskFilter(val displayName: String) {
+    All("All"),
+    Today("Today"),
+    Upcoming("Upcoming"),
+    HasGoal("Has Goal"),
+    Recurring("Recurring")
 }
 
 /**

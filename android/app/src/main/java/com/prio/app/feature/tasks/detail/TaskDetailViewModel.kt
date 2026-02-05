@@ -141,6 +141,9 @@ class TaskDetailViewModel @Inject constructor(
             is TaskDetailEvent.AddSubtask -> addSubtask(event.title)
             is TaskDetailEvent.Dismiss -> dismiss()
             is TaskDetailEvent.Save -> saveChanges()
+            is TaskDetailEvent.ToggleEditing -> toggleEditing()
+            is TaskDetailEvent.DuplicateTask -> duplicateTask()
+            is TaskDetailEvent.CopyToClipboard -> copyToClipboard()
         }
     }
     
@@ -347,6 +350,64 @@ class TaskDetailViewModel @Inject constructor(
         }
     }
     
+    /**
+     * Toggle editing mode.
+     * Per 1.1.2: overflow "Edit" toggles inline editing.
+     */
+    private fun toggleEditing() {
+        val currentlyEditing = _uiState.value.isEditing
+        if (currentlyEditing) {
+            // Exiting edit mode — auto-save
+            saveChanges()
+        }
+        _uiState.update { it.copy(isEditing = !currentlyEditing) }
+    }
+    
+    /**
+     * Duplicate the current task.
+     * Per 1.1.2: overflow "Duplicate" creates a copy of this task.
+     */
+    private fun duplicateTask() {
+        viewModelScope.launch {
+            try {
+                val state = _uiState.value
+                val newTaskId = taskRepository.createTask(
+                    title = "${state.title} (copy)",
+                    notes = state.notes,
+                    dueDate = originalTask?.dueDate,
+                    quadrant = state.quadrant,
+                    aiExplanation = state.aiExplanation,
+                    goalId = state.linkedGoal?.id
+                )
+                _effect.send(TaskDetailEffect.ShowSnackbar(
+                    message = "Task duplicated",
+                    actionLabel = "View"
+                ))
+            } catch (e: Exception) {
+                _effect.send(TaskDetailEffect.ShowError("Failed to duplicate task"))
+            }
+        }
+    }
+    
+    /**
+     * Copy task title + notes to clipboard.
+     * Per 1.1.2: overflow "Copy to Clipboard".
+     */
+    private fun copyToClipboard() {
+        viewModelScope.launch {
+            val state = _uiState.value
+            val clipText = buildString {
+                append(state.title)
+                state.notes?.let { notes ->
+                    append("\n\n")
+                    append(notes)
+                }
+            }
+            _effect.send(TaskDetailEffect.CopyToClipboard(clipText))
+            _effect.send(TaskDetailEffect.ShowSnackbar(message = "Copied to clipboard"))
+        }
+    }
+    
     private fun formatDueDate(instant: Instant): String {
         val now = clock.now()
         val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
@@ -387,4 +448,5 @@ sealed interface TaskDetailEffect {
     data class OpenGoalPicker(val taskId: Long) : TaskDetailEffect
     data class OpenRecurrencePicker(val taskId: Long) : TaskDetailEffect
     data class OpenReminderPicker(val taskId: Long) : TaskDetailEffect
+    data class CopyToClipboard(val text: String) : TaskDetailEffect
 }

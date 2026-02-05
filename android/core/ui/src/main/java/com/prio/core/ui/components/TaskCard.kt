@@ -55,7 +55,8 @@ data class TaskCardData(
     val isOverdue: Boolean = false,
     val dueText: String? = null,
     val goalName: String? = null,
-    val aiExplanation: String? = null
+    val aiExplanation: String? = null,
+    val hasReminder: Boolean = false
 )
 
 /**
@@ -112,6 +113,7 @@ fun TaskCard(
         if (task.isCompleted) append(". Completed")
         if (task.isOverdue) append(". Overdue")
         task.dueText?.let { append(". Due: $it") }
+        if (task.hasReminder) append(". Reminder set")
         task.goalName?.let { append(". Goal: $it") }
     }
     
@@ -200,12 +202,13 @@ fun TaskCard(
                 )
                 
                 // Metadata row
-                if (showMetadata && (task.isOverdue || task.dueText != null || task.goalName != null)) {
+                if (showMetadata && (task.isOverdue || task.dueText != null || task.goalName != null || task.hasReminder)) {
                     Spacer(modifier = Modifier.height(4.dp))
                     MetadataRow(
                         isOverdue = task.isOverdue && !task.isCompleted,
                         dueText = task.dueText,
-                        goalName = task.goalName
+                        goalName = task.goalName,
+                        hasReminder = task.hasReminder
                     )
                 }
             }
@@ -217,7 +220,8 @@ fun TaskCard(
 private fun MetadataRow(
     isOverdue: Boolean,
     dueText: String?,
-    goalName: String?
+    goalName: String?,
+    hasReminder: Boolean = false
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -247,9 +251,29 @@ private fun MetadataRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+
+        // Reminder indicator (3.1.5.B.6)
+        if (hasReminder) {
+            if (isOverdue || dueText != null) {
+                Text(
+                    text = "\u2022",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "\uD83D\uDD14",
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
         
         if (goalName != null) {
-            if (isOverdue || dueText != null) {
+            if (isOverdue || dueText != null || hasReminder) {
                 Text(
                     text = "•",
                     style = MaterialTheme.typography.labelSmall,

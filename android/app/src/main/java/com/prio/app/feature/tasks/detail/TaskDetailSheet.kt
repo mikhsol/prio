@@ -29,7 +29,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.FileCopy
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Notifications
@@ -43,6 +46,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -145,6 +150,12 @@ sealed interface TaskDetailEvent {
     data class AddSubtask(val title: String) : TaskDetailEvent
     object Dismiss : TaskDetailEvent
     object Save : TaskDetailEvent
+    /** Toggle inline editing mode via overflow menu. */
+    object ToggleEditing : TaskDetailEvent
+    /** Duplicate current task via overflow menu. */
+    object DuplicateTask : TaskDetailEvent
+    /** Copy task title + notes to clipboard via overflow menu. */
+    object CopyToClipboard : TaskDetailEvent
 }
 
 /**
@@ -211,7 +222,10 @@ fun TaskDetailSheet(
                     isEditing = state.isEditing,
                     onTitleChange = { onEvent(TaskDetailEvent.UpdateTitle(it)) },
                     onCheckboxClick = { onEvent(TaskDetailEvent.ToggleComplete) },
-                    onOverflowClick = { /* TODO: Show overflow menu */ }
+                    onEditClick = { onEvent(TaskDetailEvent.ToggleEditing) },
+                    onDuplicateClick = { onEvent(TaskDetailEvent.DuplicateTask) },
+                    onCopyClick = { onEvent(TaskDetailEvent.CopyToClipboard) },
+                    onDeleteClick = { showDeleteDialog = true }
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -360,12 +374,17 @@ private fun TitleSection(
     isEditing: Boolean,
     onTitleChange: (String) -> Unit,
     onCheckboxClick: () -> Unit,
-    onOverflowClick: () -> Unit
+    onEditClick: () -> Unit,
+    onDuplicateClick: () -> Unit,
+    onCopyClick: () -> Unit,
+    onDeleteClick: () -> Unit
 ) {
     val contentAlpha by animateFloatAsState(
         targetValue = if (isCompleted) 0.6f else 1f,
         label = "title_alpha"
     )
+    
+    var showOverflowMenu by remember { mutableStateOf(false) }
     
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -422,14 +441,85 @@ private fun TitleSection(
         }
         
         // Overflow menu
-        IconButton(
-            onClick = onOverflowClick,
-            modifier = Modifier.semantics { contentDescription = "More options" }
-        ) {
-            Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = null
-            )
+        Box {
+            IconButton(
+                onClick = { showOverflowMenu = true },
+                modifier = Modifier.semantics { contentDescription = "More options" }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = null
+                )
+            }
+            
+            DropdownMenu(
+                expanded = showOverflowMenu,
+                onDismissRequest = { showOverflowMenu = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text(if (isEditing) "Done Editing" else "Edit") },
+                    onClick = {
+                        showOverflowMenu = false
+                        onEditClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Duplicate") },
+                    onClick = {
+                        showOverflowMenu = false
+                        onDuplicateClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.FileCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                DropdownMenuItem(
+                    text = { Text("Copy to Clipboard") },
+                    onClick = {
+                        showOverflowMenu = false
+                        onCopyClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                )
+                Divider()
+                DropdownMenuItem(
+                    text = {
+                        Text(
+                            "Delete",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    },
+                    onClick = {
+                        showOverflowMenu = false
+                        onDeleteClick()
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.error
+                        )
+                    }
+                )
+            }
         }
     }
 }

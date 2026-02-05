@@ -131,15 +131,22 @@ fun PrioBottomNavigation(
 ) {
     require(items.size <= 4) { "Maximum 4 nav items supported (FAB is center)" }
     
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shadowElevation = 8.dp,
-        color = MaterialTheme.colorScheme.surface
+    // Use Box with clip disabled to allow FAB to extend above the surface
+    // Height = nav bar (80dp) + FAB overhang (28dp = half of 56dp FAB)
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(108.dp) // 80dp nav bar + 28dp FAB overhang
+            .navigationBarsPadding(),
+        contentAlignment = Alignment.BottomCenter
     ) {
-        Box(
+        // Background surface for the nav bar
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
+                .align(Alignment.BottomCenter),
+            shadowElevation = 8.dp,
+            color = MaterialTheme.colorScheme.surface
         ) {
             // Navigation bar
             Row(
@@ -171,50 +178,50 @@ fun PrioBottomNavigation(
                     )
                 }
             }
-            
-            // FAB (centered, elevated above bar)
-            FloatingActionButton(
-                onClick = onFabClick,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .offset(y = (-20).dp)
-                    .size(56.dp)
-                    .semantics {
-                        contentDescription = "Add new task"
-                    },
-                shape = CircleShape,
-                containerColor = MaterialTheme.colorScheme.primary,
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 6.dp,
-                    pressedElevation = 12.dp
+        }
+        
+        // FAB (centered, elevated above bar) - outside Surface to avoid clipping
+        FloatingActionButton(
+            onClick = onFabClick,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .offset(y = (80.dp - 56.dp) / 2 - 20.dp) // Position FAB to overlap top of nav bar
+                .size(56.dp)
+                .semantics {
+                    contentDescription = "Add new task"
+                },
+            shape = CircleShape,
+            containerColor = MaterialTheme.colorScheme.primary,
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 6.dp,
+                pressedElevation = 12.dp
+            )
+        ) {
+            Box {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
                 )
-            ) {
-                Box {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    
-                    // Badge on FAB
-                    if (fabBadgeCount > 0) {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .offset(x = 4.dp, y = (-4).dp)
-                                .size(16.dp)
-                                .clip(CircleShape)
-                                .background(SemanticColors.error),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = if (fabBadgeCount > 9) "9+" else fabBadgeCount.toString(),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onError,
-                                fontSize = 10.sp
-                            )
-                        }
+                
+                // Badge on FAB
+                if (fabBadgeCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = 4.dp, y = (-4).dp)
+                            .size(16.dp)
+                            .clip(CircleShape)
+                            .background(SemanticColors.error),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = if (fabBadgeCount > 9) "9+" else fabBadgeCount.toString(),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onError,
+                            fontSize = 10.sp
+                        )
                     }
                 }
             }

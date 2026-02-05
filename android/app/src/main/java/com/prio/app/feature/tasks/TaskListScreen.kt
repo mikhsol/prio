@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -130,9 +131,10 @@ fun TaskListScreen(
             TaskListTopBar(
                 isSearchActive = state.isSearchActive,
                 searchQuery = state.searchQuery,
+                showCompletedTasks = state.showCompletedTasks,
                 onSearchQueryChange = { viewModel.onEvent(TaskListEvent.OnSearchQueryChange(it)) },
                 onSearchToggle = { viewModel.onEvent(TaskListEvent.OnSearchToggle) },
-                onFilterClick = { /* TODO: Show filter sheet */ }
+                onToggleShowCompleted = { viewModel.onEvent(TaskListEvent.OnToggleShowCompleted) }
             )
         },
         floatingActionButton = {
@@ -193,25 +195,29 @@ fun TaskListScreen(
 private fun TaskListTopBar(
     isSearchActive: Boolean,
     searchQuery: String,
+    showCompletedTasks: Boolean,
     onSearchQueryChange: (String) -> Unit,
     onSearchToggle: () -> Unit,
-    onFilterClick: () -> Unit
+    onToggleShowCompleted: () -> Unit
 ) {
     TopAppBar(
         title = {
             if (isSearchActive) {
-                SearchBar(
-                    query = searchQuery,
-                    onQueryChange = onSearchQueryChange,
-                    onSearch = { /* Search as you type */ },
-                    active = false,
-                    onActiveChange = { },
+                // Use OutlinedTextField instead of SearchBar for better fit in TopAppBar
+                androidx.compose.material3.OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    placeholder = { Text("Search tasks...") },
+                    singleLine = true,
                     leadingIcon = {
                         Icon(Icons.Default.Search, contentDescription = null)
                     },
-                    placeholder = { Text("Search tasks...") },
-                    modifier = Modifier.fillMaxWidth()
-                ) { }
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    )
+                )
             } else {
                 Text(
                     text = "Tasks",
@@ -228,19 +234,24 @@ private fun TaskListTopBar(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Default.Search,
+                    imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
                     contentDescription = null
                 )
             }
             IconButton(
-                onClick = onFilterClick,
+                onClick = onToggleShowCompleted,
                 modifier = Modifier.semantics {
-                    contentDescription = "Filter tasks"
+                    contentDescription = if (showCompletedTasks) "Hide completed tasks" else "Show completed tasks"
                 }
             ) {
                 Icon(
                     imageVector = Icons.Default.FilterList,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = if (showCompletedTasks) {
+                        MaterialTheme.colorScheme.primary
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
                 )
             }
         }
@@ -264,7 +275,7 @@ private fun FilterChipsRow(
                 onClick = { onFilterSelected(filter) },
                 label = { 
                     Text(
-                        text = filter.name.lowercase().replaceFirstChar { it.uppercase() },
+                        text = filter.displayName,
                         maxLines = 1
                     ) 
                 },
@@ -563,7 +574,8 @@ private fun TaskUiModel.toCardData(): TaskCardData {
         isCompleted = isCompleted,
         isOverdue = isOverdue,
         dueText = dueText,
-        goalName = goalName
+        goalName = goalName,
+        hasReminder = hasReminder
     )
 }
 

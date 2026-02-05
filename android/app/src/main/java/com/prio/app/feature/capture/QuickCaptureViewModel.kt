@@ -2,6 +2,7 @@ package com.prio.app.feature.capture
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.prio.app.feature.capture.voice.VoiceInputState
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.data.repository.GoalRepository
 import com.prio.core.data.repository.TaskRepository
@@ -53,9 +54,9 @@ class QuickCaptureViewModel @Inject constructor(
     private val _effect = Channel<QuickCaptureEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
     
-    // Debounce job for parsing
+    // Debounce job for parsing - longer delay to not interrupt typing
     private var parseJob: Job? = null
-    private val PARSE_DEBOUNCE_MS = 500L
+    private val PARSE_DEBOUNCE_MS = 800L
     
     /**
      * Handle UI events.
@@ -65,9 +66,15 @@ class QuickCaptureViewModel @Inject constructor(
             is QuickCaptureEvent.UpdateInput -> updateInput(event.text)
             is QuickCaptureEvent.StartVoiceInput -> startVoiceInput()
             is QuickCaptureEvent.StopVoiceInput -> stopVoiceInput()
+            is QuickCaptureEvent.RetryVoiceInput -> retryVoiceInput()
+            is QuickCaptureEvent.CancelVoiceInput -> cancelVoiceInput()
             is QuickCaptureEvent.ParseInput -> parseInput()
             is QuickCaptureEvent.UpdateParsedTitle -> updateParsedTitle(event.title)
             is QuickCaptureEvent.UpdateParsedQuadrant -> updateParsedQuadrant(event.quadrant)
+            is QuickCaptureEvent.UpdateParsedDueDate -> updateParsedDueDate(event.dateMillis)
+            is QuickCaptureEvent.ToggleDatePicker -> toggleDatePicker()
+            is QuickCaptureEvent.ToggleGoalPicker -> toggleGoalPicker()
+            is QuickCaptureEvent.SelectGoal -> selectGoal(event.goalId, event.goalTitle)
             is QuickCaptureEvent.AddSuggestionToInput -> addSuggestion(event.suggestion)
             is QuickCaptureEvent.CreateTask -> createTask()
             is QuickCaptureEvent.OpenEditDetails -> openEditDetails()
@@ -77,29 +84,71 @@ class QuickCaptureViewModel @Inject constructor(
     }
     
     private fun updateInput(text: String) {
-        _uiState.update { it.copy(inputText = text, showPreview = false) }
+        // Keep current parsed result while typing to avoid flicker
+        _uiState.update { it.copy(inputText = text) }
         
-        // Debounce parsing
+        // Debounce parsing - cancel previous and wait for typing to stop
         parseJob?.cancel()
         if (text.isNotBlank()) {
             parseJob = viewModelScope.launch {
                 delay(PARSE_DEBOUNCE_MS)
-                parseInput()
+                // Only parse if text hasn't changed during delay (user stopped typing)
+                if (_uiState.value.inputText == text) {
+                    parseInputSilently()
+                }
             }
         } else {
-            _uiState.update { it.copy(parsedResult = null) }
+            _uiState.update { it.copy(parsedResult = null, showPreview = false) }
         }
     }
     
     private fun startVoiceInput() {
         viewModelScope.launch {
-            _uiState.update { it.copy(isVoiceInputActive = true) }
+            _uiState.update { 
+                it.copy(
+                    isVoiceInputActive = true,
+                    voiceState = VoiceInputState.Initializing
+                ) 
+            }
             _effect.send(QuickCaptureEffect.StartVoiceRecognition)
         }
     }
     
     private fun stopVoiceInput() {
-        _uiState.update { it.copy(isVoiceInputActive = false) }
+        _uiState.update { 
+            it.copy(
+                isVoiceInputActive = false,
+                voiceState = VoiceInputState.Idle
+            ) 
+        }
+    }
+    
+    /**
+     * Retry voice input after an error.
+     * Resets voice state and re-triggers recognition.
+     */
+    private fun retryVoiceInput() {
+        viewModelScope.launch {
+            _uiState.update { 
+                it.copy(
+                    isVoiceInputActive = true,
+                    voiceState = VoiceInputState.Initializing
+                )
+            }
+            _effect.send(QuickCaptureEffect.StartVoiceRecognition)
+        }
+    }
+    
+    /**
+     * Cancel voice mode and return to keyboard typing.
+     */
+    private fun cancelVoiceInput() {
+        _uiState.update { 
+            it.copy(
+                isVoiceInputActive = false,
+                voiceState = VoiceInputState.Idle
+            )
+        }
     }
     
     /**
@@ -109,65 +158,109 @@ class QuickCaptureViewModel @Inject constructor(
         _uiState.update { 
             it.copy(
                 inputText = text,
-                isVoiceInputActive = false
+                isVoiceInputActive = false,
+                voiceState = VoiceInputState.Idle
             )
         }
         parseInput()
     }
     
+    /**
+     * Update the voice state from the VoiceInputManager.
+     * Called by the hosting composable that manages the VoiceInputManager lifecycle.
+     */
+    fun updateVoiceState(voiceState: VoiceInputState) {
+        _uiState.update { it.copy(voiceState = voiceState) }
+        
+        // Auto-handle terminal states
+        when (voiceState) {
+            is VoiceInputState.Result -> {
+                onVoiceResult(voiceState.text)
+            }
+            is VoiceInputState.Error -> {
+                // Keep voice active so the error UI shows with retry/type-instead buttons
+                _uiState.update { it.copy(isVoiceInputActive = true) }
+            }
+            else -> { /* Non-terminal states: just update UI */ }
+        }
+    }
+    
+    /**
+     * Parse input with loading indicator - used for explicit parse action (Done button).
+     */
     private fun parseInput() {
         val input = _uiState.value.inputText.trim()
         if (input.isBlank()) return
         
         viewModelScope.launch {
             _uiState.update { it.copy(isAiParsing = true) }
+            performParsing(input)
+        }
+    }
+    
+    /**
+     * Parse input silently in background without showing loading indicator.
+     * This prevents keyboard dismissal and UI disruption while typing.
+     */
+    private fun parseInputSilently() {
+        val input = _uiState.value.inputText.trim()
+        if (input.isBlank()) return
+        
+        viewModelScope.launch {
+            // Don't show isAiParsing = true to avoid UI disruption
+            performParsing(input)
+        }
+    }
+    
+    /**
+     * Common parsing logic used by both parseInput and parseInputSilently.
+     */
+    private suspend fun performParsing(input: String) {
+        try {
+            // Parse natural language input
+            val parsed = naturalLanguageParser.parse(input)
             
-            try {
-                // Parse natural language input
-                val parsed = naturalLanguageParser.parse(input)
-                
-                // Classify with Eisenhower engine (rule-based, <50ms)
-                val classification = eisenhowerEngine.classify(
-                    taskText = parsed.title,
-                    dueDate = parsed.dueDate
+            // Classify with Eisenhower engine (rule-based, <50ms)
+            val classification = eisenhowerEngine.classify(
+                taskText = parsed.title,
+                dueDate = parsed.dueDate
+            )
+            
+            // Find suggested goal based on content
+            val suggestedGoal = findSuggestedGoal(parsed.title)
+            
+            val result = ParsedTaskResult(
+                title = parsed.title,
+                dueDate = parsed.dueDate?.toString(),
+                dueDateFormatted = parsed.dueDate?.let { formatDueDate(it) },
+                dueTime = parsed.dueTime,
+                quadrant = classification.quadrant,
+                aiExplanation = classification.explanation,
+                suggestedGoal = suggestedGoal,
+                confidence = classification.confidence
+            )
+            
+            _uiState.update { 
+                it.copy(
+                    isAiParsing = false,
+                    parsedResult = result,
+                    showPreview = true
                 )
-                
-                // Find suggested goal based on content
-                val suggestedGoal = findSuggestedGoal(parsed.title)
-                
-                val result = ParsedTaskResult(
-                    title = parsed.title,
-                    dueDate = parsed.dueDate?.toString(),
-                    dueDateFormatted = parsed.dueDate?.let { formatDueDate(it) },
-                    dueTime = parsed.dueTime,
-                    quadrant = classification.quadrant,
-                    aiExplanation = classification.explanation,
-                    suggestedGoal = suggestedGoal,
-                    confidence = classification.confidence
+            }
+        } catch (e: Exception) {
+            // Fallback: use input as title, default quadrant
+            val fallbackResult = ParsedTaskResult(
+                title = input,
+                quadrant = EisenhowerQuadrant.ELIMINATE,
+                aiExplanation = "AI will classify in background"
+            )
+            
+            _uiState.update {
+                it.copy(
+                    isAiParsing = false,
+                    parsedResult = fallbackResult,
+                    showPreview = true
                 )
-                
-                _uiState.update { 
-                    it.copy(
-                        isAiParsing = false,
-                        parsedResult = result,
-                        showPreview = true
-                    )
-                }
-            } catch (e: Exception) {
-                // Fallback: use input as title, default quadrant
-                val fallbackResult = ParsedTaskResult(
-                    title = input,
-                    quadrant = EisenhowerQuadrant.ELIMINATE,
-                    aiExplanation = "AI will classify in background"
-                )
-                
-                _uiState.update {
-                    it.copy(
-                        isAiParsing = false,
-                        parsedResult = fallbackResult,
-                        showPreview = true
-                    )
-                }
             }
         }
     }
@@ -211,6 +304,91 @@ class QuickCaptureViewModel @Inject constructor(
                 parsedResult = current.parsedResult?.copy(
                     quadrant = quadrant,
                     aiExplanation = "Manually set by user"
+                )
+            )
+        }
+    }
+
+    /**
+     * Toggle date picker visibility (3.1.5.B.4).
+     */
+    private fun toggleDatePicker() {
+        _uiState.update { it.copy(showDatePicker = !it.showDatePicker) }
+    }
+
+    /**
+     * Update parsed due date from date picker selection (3.1.5.B.4).
+     * Converts epoch millis to formatted date string.
+     */
+    private fun updateParsedDueDate(dateMillis: Long?) {
+        _uiState.update { current ->
+            if (dateMillis == null) {
+                current.copy(
+                    parsedResult = current.parsedResult?.copy(
+                        dueDate = null,
+                        dueDateFormatted = null
+                    )
+                )
+            } else {
+                val instant = Instant.fromEpochMilliseconds(dateMillis)
+                val formatted = formatDueDate(instant)
+                current.copy(
+                    parsedResult = current.parsedResult?.copy(
+                        dueDate = instant.toString(),
+                        dueDateFormatted = formatted
+                    )
+                )
+            }
+        }
+    }
+
+    /**
+     * Toggle goal picker visibility and load goals (3.1.5.B.5).
+     */
+    private fun toggleGoalPicker() {
+        val willShow = !_uiState.value.showGoalPicker
+        if (willShow) {
+            viewModelScope.launch {
+                val goals = goalRepository.getAllActiveGoals().firstOrNull() ?: emptyList()
+                val pickerItems = goals.map { goal ->
+                    GoalPickerItem(
+                        id = goal.id,
+                        title = goal.title,
+                        progress = goal.progress,
+                        category = goal.category.name.lowercase()
+                            .replaceFirstChar { it.uppercase() },
+                        emoji = "\uD83C\uDFAF"
+                    )
+                }
+                _uiState.update {
+                    it.copy(
+                        showGoalPicker = true,
+                        availableGoals = pickerItems
+                    )
+                }
+            }
+        } else {
+            _uiState.update { it.copy(showGoalPicker = false) }
+        }
+    }
+
+    /**
+     * Select a goal to link to the parsed task (3.1.5.B.5).
+     */
+    private fun selectGoal(goalId: Long?, goalTitle: String?) {
+        _uiState.update { current ->
+            val suggestedGoal = if (goalId != null && goalTitle != null) {
+                SuggestedGoal(
+                    id = goalId,
+                    title = goalTitle,
+                    reason = "Selected by user"
+                )
+            } else {
+                null
+            }
+            current.copy(
+                parsedResult = current.parsedResult?.copy(
+                    suggestedGoal = suggestedGoal
                 )
             )
         }
@@ -299,7 +477,7 @@ class QuickCaptureViewModel @Inject constructor(
     }
     
     private fun reset() {
-        _uiState.update { QuickCaptureUiState() }
+        _uiState.update { QuickCaptureUiState() }  // voiceState defaults to Idle
     }
     
     private fun formatDueDate(instant: Instant): String {

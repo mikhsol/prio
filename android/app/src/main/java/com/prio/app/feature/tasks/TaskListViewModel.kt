@@ -69,19 +69,28 @@ class TaskListViewModel @Inject constructor(
         )
     )
     
+    // Filter state - separate flows to trigger combine
+    private val searchQueryFlow = MutableStateFlow("")
+    private val selectedFilterFlow = MutableStateFlow(TaskFilter.All)
+    private val showCompletedFlow = MutableStateFlow(false)
+    
     init {
         observeTasks()
     }
     
     /**
      * Observe tasks from repository and transform to UI state.
+     * Combines task data with filter/search state to re-evaluate when any changes.
      */
     private fun observeTasks() {
         combine(
             taskRepository.getAllTasks(),
-            sectionCollapseState
-        ) { tasks, collapseState ->
-            transformToUiState(tasks, collapseState)
+            sectionCollapseState,
+            searchQueryFlow,
+            selectedFilterFlow,
+            showCompletedFlow
+        ) { tasks, collapseState, searchQuery, filter, showCompleted ->
+            transformToUiState(tasks, collapseState, searchQuery, filter, showCompleted)
         }.launchIn(viewModelScope)
     }
     
@@ -90,12 +99,12 @@ class TaskListViewModel @Inject constructor(
      */
     private suspend fun transformToUiState(
         tasks: List<TaskEntity>,
-        collapseState: Map<EisenhowerQuadrant, Boolean>
+        collapseState: Map<EisenhowerQuadrant, Boolean>,
+        searchQuery: String,
+        filter: TaskFilter,
+        showCompleted: Boolean
     ) {
         val now = clock.now()
-        val showCompleted = _uiState.value.showCompletedTasks
-        val searchQuery = _uiState.value.searchQuery
-        val filter = _uiState.value.selectedFilter
         
         // Filter tasks
         var filteredTasks = tasks
@@ -370,10 +379,12 @@ class TaskListViewModel @Inject constructor(
     }
     
     private fun handleFilterSelect(filter: TaskFilter) {
+        selectedFilterFlow.value = filter
         _uiState.update { it.copy(selectedFilter = filter) }
     }
     
     private fun handleSearchQuery(query: String) {
+        searchQueryFlow.value = query
         _uiState.update { it.copy(searchQuery = query) }
     }
     
@@ -382,11 +393,17 @@ class TaskListViewModel @Inject constructor(
     }
     
     private fun handleToggleShowCompleted() {
-        _uiState.update { it.copy(showCompletedTasks = !it.showCompletedTasks) }
+        val newValue = !showCompletedFlow.value
+        showCompletedFlow.value = newValue
+        _uiState.update { it.copy(showCompletedTasks = newValue) }
     }
     
     private fun handleSearchToggle() {
-        _uiState.update { it.copy(isSearchActive = !it.isSearchActive, searchQuery = "") }
+        val newActive = !_uiState.value.isSearchActive
+        if (!newActive) {
+            searchQueryFlow.value = ""
+        }
+        _uiState.update { it.copy(isSearchActive = newActive, searchQuery = "") }
     }
     
     private fun handleFabClick() {
@@ -427,6 +444,8 @@ class TaskListViewModel @Inject constructor(
     }
     
     private fun handleClearFilters() {
+        searchQueryFlow.value = ""
+        selectedFilterFlow.value = TaskFilter.All
         _uiState.update { 
             it.copy(
                 selectedFilter = TaskFilter.All,

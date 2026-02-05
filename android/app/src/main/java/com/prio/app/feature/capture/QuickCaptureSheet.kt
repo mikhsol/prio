@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -47,6 +48,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -58,8 +61,10 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -82,6 +87,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.prio.app.feature.capture.voice.VoiceInputOverlay
+import com.prio.app.feature.capture.voice.VoiceInputState
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.ui.theme.PrioTheme
 import com.prio.core.ui.theme.QuadrantColors
@@ -100,7 +107,15 @@ data class QuickCaptureUiState(
     val showPreview: Boolean = false,
     val isCreating: Boolean = false,
     val isCreated: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    /** Current voice input pipeline state for overlay display. */
+    val voiceState: VoiceInputState = VoiceInputState.Idle,
+    /** Whether the date picker dialog is visible. */
+    val showDatePicker: Boolean = false,
+    /** Whether the goal picker sheet is visible. */
+    val showGoalPicker: Boolean = false,
+    /** Available goals for the goal picker. */
+    val availableGoals: List<GoalPickerItem> = emptyList()
 )
 
 /**
@@ -127,15 +142,38 @@ data class SuggestedGoal(
 )
 
 /**
+ * Goal item for the goal picker in Quick Capture.
+ */
+data class GoalPickerItem(
+    val id: Long,
+    val title: String,
+    val progress: Int,
+    val category: String,
+    val emoji: String = "🎯"
+)
+
+/**
  * Quick Capture events.
  */
 sealed interface QuickCaptureEvent {
     data class UpdateInput(val text: String) : QuickCaptureEvent
     object StartVoiceInput : QuickCaptureEvent
     object StopVoiceInput : QuickCaptureEvent
+    /** Retry voice input after an error. */
+    object RetryVoiceInput : QuickCaptureEvent
+    /** Cancel voice mode and return to typing. */
+    object CancelVoiceInput : QuickCaptureEvent
     object ParseInput : QuickCaptureEvent
     data class UpdateParsedTitle(val title: String) : QuickCaptureEvent
     data class UpdateParsedQuadrant(val quadrant: EisenhowerQuadrant) : QuickCaptureEvent
+    /** Update parsed due date from date picker. */
+    data class UpdateParsedDueDate(val dateMillis: Long?) : QuickCaptureEvent
+    /** Open/close date picker in Quick Capture. */
+    object ToggleDatePicker : QuickCaptureEvent
+    /** Open/close goal picker in Quick Capture. */
+    object ToggleGoalPicker : QuickCaptureEvent
+    /** Link task to selected goal. */
+    data class SelectGoal(val goalId: Long?, val goalTitle: String?) : QuickCaptureEvent
     data class AddSuggestionToInput(val suggestion: String) : QuickCaptureEvent
     object CreateTask : QuickCaptureEvent
     object OpenEditDetails : QuickCaptureEvent
@@ -265,6 +303,20 @@ fun QuickCaptureSheet(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
+                    // Voice input overlay - shown when voice is active
+                    AnimatedVisibility(
+                        visible = state.isVoiceInputActive && state.voiceState !is VoiceInputState.Idle,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+                        exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut()
+                    ) {
+                        VoiceInputOverlay(
+                            voiceState = state.voiceState,
+                            onStopListening = { onEvent(QuickCaptureEvent.StopVoiceInput) },
+                            onRetry = { onEvent(QuickCaptureEvent.RetryVoiceInput) },
+                            onTypeInstead = { onEvent(QuickCaptureEvent.CancelVoiceInput) }
+                        )
+                    }
+                    
                     // Quick suggestions
                     AnimatedVisibility(
                         visible = !state.showPreview && state.inputText.isEmpty(),
@@ -295,7 +347,9 @@ fun QuickCaptureSheet(
                             ParsedResultPreview(
                                 result = result,
                                 onTitleChange = { onEvent(QuickCaptureEvent.UpdateParsedTitle(it)) },
-                                onQuadrantChange = { onEvent(QuickCaptureEvent.UpdateParsedQuadrant(it)) }
+                                onQuadrantChange = { onEvent(QuickCaptureEvent.UpdateParsedQuadrant(it)) },
+                                onDateEditClick = { onEvent(QuickCaptureEvent.ToggleDatePicker) },
+                                onGoalEditClick = { onEvent(QuickCaptureEvent.ToggleGoalPicker) }
                             )
                         }
                     }
@@ -317,6 +371,47 @@ fun QuickCaptureSheet(
                 }
             }
         }
+    }
+
+    // Date Picker Dialog (3.1.5.B.4)
+    if (state.showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { onEvent(QuickCaptureEvent.ToggleDatePicker) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(QuickCaptureEvent.UpdateParsedDueDate(datePickerState.selectedDateMillis))
+                        onEvent(QuickCaptureEvent.ToggleDatePicker)
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(QuickCaptureEvent.ToggleDatePicker) }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Goal Picker Sheet (3.1.5.B.5)
+    if (state.showGoalPicker) {
+        GoalPickerSheet(
+            goals = state.availableGoals,
+            onSelectGoal = { goal ->
+                onEvent(QuickCaptureEvent.SelectGoal(goal.id, goal.title))
+                onEvent(QuickCaptureEvent.ToggleGoalPicker)
+            },
+            onClearGoal = {
+                onEvent(QuickCaptureEvent.SelectGoal(null, null))
+                onEvent(QuickCaptureEvent.ToggleGoalPicker)
+            },
+            onDismiss = { onEvent(QuickCaptureEvent.ToggleGoalPicker) }
+        )
     }
 }
 
@@ -368,7 +463,7 @@ private fun InputSection(
                 }
             }
             
-            // Text input
+            // Text input - always enabled to prevent keyboard dismissal during parsing
             TextField(
                 value = inputText,
                 onValueChange = onInputChange,
@@ -390,8 +485,7 @@ private fun InputSection(
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onDone() }),
-                enabled = !isParsing
+                keyboardActions = KeyboardActions(onDone = { onDone() })
             )
             
             // Close button
@@ -497,7 +591,9 @@ private fun AiParsingIndicator() {
 private fun ParsedResultPreview(
     result: ParsedTaskResult,
     onTitleChange: (String) -> Unit,
-    onQuadrantChange: (EisenhowerQuadrant) -> Unit
+    onQuadrantChange: (EisenhowerQuadrant) -> Unit,
+    onDateEditClick: () -> Unit = {},
+    onGoalEditClick: () -> Unit = {}
 ) {
     var showQuadrantPicker by remember { mutableStateOf(false) }
     
@@ -539,7 +635,7 @@ private fun ParsedResultPreview(
                         emoji = "📅",
                         label = result.dueDateFormatted,
                         confidence = result.confidence,
-                        onEditClick = { /* TODO: Date picker */ }
+                        onEditClick = onDateEditClick
                     )
                     
                     Spacer(modifier = Modifier.height(12.dp))
@@ -589,8 +685,30 @@ private fun ParsedResultPreview(
                         emoji = "🎯",
                         label = goal.title,
                         sublabel = "AI Suggestion: \"${goal.reason}\"",
-                        onEditClick = { /* TODO: Goal picker */ }
+                        onEditClick = onGoalEditClick
                     )
+                }
+
+                // Show "Link to Goal" button when no goal is suggested
+                if (result.suggestedGoal == null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(onClick = onGoalEditClick),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "🎯",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Link to a goal",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
@@ -806,6 +924,151 @@ private fun QuadrantOptionRow(
                 contentDescription = "Selected",
                 tint = quadrant.color
             )
+        }
+    }
+}
+
+/**
+ * Goal Picker bottom sheet for Quick Capture (3.1.5.B.5).
+ *
+ * Shows a list of active goals the user can link to the task.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GoalPickerSheet(
+    goals: List<GoalPickerItem>,
+    onSelectGoal: (GoalPickerItem) -> Unit,
+    onClearGoal: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = "Link to Goal",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Linking tasks to goals helps track progress",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // "No Goal" option
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onClearGoal)
+                    .padding(vertical = 12.dp, horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "❌",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Text(
+                    text = "No Goal",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            Divider(modifier = Modifier.padding(vertical = 4.dp))
+
+            if (goals.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "🎯",
+                            style = MaterialTheme.typography.headlineLarge
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "No active goals yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            } else {
+                LazyColumn {
+                    items(goals, key = { it.id }) { goal ->
+                        GoalPickerRow(
+                            goal = goal,
+                            onClick = { onSelectGoal(goal) }
+                        )
+                        if (goal != goals.last()) {
+                            Divider(modifier = Modifier.padding(vertical = 2.dp))
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun GoalPickerRow(
+    goal: GoalPickerItem,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp, horizontal = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = goal.emoji,
+            style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.width(16.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = goal.title,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = goal.category,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "•",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "${goal.progress}%",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }
