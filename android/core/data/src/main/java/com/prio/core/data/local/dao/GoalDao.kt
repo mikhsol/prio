@@ -69,4 +69,12 @@ interface GoalDao {
     
     @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 0")
     fun getActiveGoalCountFlow(): Flow<Int>
+
+    // Suspend list query for dashboard stats calculation (GL-005)
+    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
+    suspend fun getActiveGoalsList(): List<GoalEntity>
+
+    // Completed goals within date range (GL-005)
+    @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 1 AND completed_at >= :since")
+    suspend fun getCompletedGoalCountSince(since: Instant): Int
 }

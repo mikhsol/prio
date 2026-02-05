@@ -18,4 +18,6 @@
 17. iOS/Desktop app.
 18. Completed tasks archived not deleted. Yearly/monthly/weekly summary on achieved tasks/goals, reflections on missed deadlines weekly.
 19. 200 test cases for each topic (work/health/etc..) to classify tasks, educate classifier.
-20. 
+20. Export goals/tasks.
+21. Soft delete/archive tasks/goals.
+22. Task progress.

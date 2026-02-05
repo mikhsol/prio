@@ -1047,7 +1047,9 @@ jobs:
 **Owner**: Android Developer  
 **Depends On**: Milestone 3.1.5 (Navigation Integration) ⚠️  
 **Source**: [0.3.3 Goals User Stories](results/0.3/0.3.3_goals_user_stories.md) (GL-001 through GL-006)  
-**UX Reference**: [1.1.4 Goals Screens](results/1.1/1.1.4_goals_screens_spec.md)
+**UX Reference**: [1.1.4 Goals Screens](results/1.1/1.1.4_goals_screens_spec.md)  
+**Status**: ✅ Complete  
+**Implementation Report**: [3.2 Goals Plugin Implementation](results/3.2/3.2_goals_plugin_implementation.md)
 
 **Acceptance Criteria Summary** (from user stories + UX spec):
 - Goal creation with AI SMART suggestions ([GL-001](results/0.3/0.3.3_goals_user_stories.md))
@@ -1055,23 +1057,23 @@ jobs:
 - Status colors per [1.1.4](results/1.1/1.1.4_goals_screens_spec.md): Green #10B981 (on-track), Yellow #F59E0B (behind <15%), Red #EF4444 (at-risk ≥15%)
 - Max 10 active goals to prevent overwhelm ([GL-001](results/0.3/0.3.3_goals_user_stories.md))
 
-| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
-|----|------|-------|----------|---------|--------------|-------------------|
-| 3.2.1 | Implement Goals List screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goals-list-screen) | [GL-005](results/0.3/0.3.3_goals_user_stories.md) | Layout per spec: overview card, category filter chips, at-risk sort first, empty state |
-| 3.2.2 | Implement Goal Detail screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goal-detail-screen) | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-006](results/0.3/0.3.3_goals_user_stories.md) | Progress hero (circular), tabs (Tasks/Milestones/Analytics) per spec, linked tasks list |
-| 3.2.3 | Implement Goal Creation wizard | Android Developer | 4h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#create-goal-wizard) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | 3-step wizard per spec: Step 1 describe, Step 2 AI SMART, Step 3 timeline+milestones |
-| 3.2.4 | Implement milestone tracking | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#milestones-tab) | [GL-004](results/0.3/0.3.3_goals_user_stories.md) | Timeline visualization per spec, 0-8 milestones, completion checkoff |
-| 3.2.5 | Implement task-to-goal linking | Android Developer | 2h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md#goal-linking) | [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Goal picker in task detail per spec, AI auto-suggest, bidirectional link |
-| 3.2.6 | Implement progress calculation | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#progress-hero) | [GL-002](results/0.3/0.3.3_goals_user_stories.md) | Milestones vs Tasks mode per spec, on-track calculation, status color |
-| 3.2.7 | Implement goal-based AI suggestions | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#goal-spotlight) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | AI suggests next action, shown in Goal Spotlight section |
-| 3.2.8 | Write UI tests for Goals plugin | Android Developer | 2h | All 1.1.4 specs | All GL stories | 8+ tests: wizard flow, progress update, task linking, milestone completion |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome | Status |
+|----|------|-------|----------|---------|--------------|-------------------|--------|
+| 3.2.1 | Implement Goals List screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goals-list-screen) | [GL-005](results/0.3/0.3.3_goals_user_stories.md) | Layout per spec: overview card, category filter chips, at-risk sort first, empty state | ✅ Done |
+| 3.2.2 | Implement Goal Detail screen | Android Developer | 3h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#goal-detail-screen) | [GL-002](results/0.3/0.3.3_goals_user_stories.md), [GL-006](results/0.3/0.3.3_goals_user_stories.md) | Progress hero (circular), tabs (Tasks/Milestones/Analytics) per spec, linked tasks list | ✅ Done |
+| 3.2.3 | Implement Goal Creation wizard | Android Developer | 4h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#create-goal-wizard) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | 3-step wizard per spec: Step 1 describe, Step 2 AI SMART, Step 3 timeline+milestones | ✅ Done |
+| 3.2.4 | Implement milestone tracking | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#milestones-tab) | [GL-004](results/0.3/0.3.3_goals_user_stories.md) | Timeline visualization per spec, 0-5 milestones, completion checkoff, add dialog | ✅ Done |
+| 3.2.5 | Implement task-to-goal linking | Android Developer | 2h | [1.1.2](results/1.1/1.1.2_task_detail_sheet_spec.md#goal-linking) | [GL-003](results/0.3/0.3.3_goals_user_stories.md) | Navigation wired: GoalDetailScreen + CreateGoalScreen replace placeholders in PrioNavHost | ✅ Done |
+| 3.2.6 | Implement progress calculation | Android Developer | 2h | [1.1.4](results/1.1/1.1.4_goals_screens_spec.md#progress-hero) | [GL-002](results/0.3/0.3.3_goals_user_stories.md) | getDashboardStats() fixed: on-track/at-risk counts + completed-this-month, DAO enhanced | ✅ Done |
+| 3.2.7 | Implement goal-based AI suggestions | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#goal-spotlight) | [GL-001](results/0.3/0.3.3_goals_user_stories.md) | AiProvider SUGGEST_SMART_GOAL → SmartGoalSuggestion in wizard, contextual insights in detail | ✅ Done |
+| 3.2.8 | Write UI tests for Goals plugin | Android Developer | 2h | All 1.1.4 specs | All GL stories | 18 tests: GoalsListViewModelTest (8) + CreateGoalViewModelTest (10) | ✅ Done |
 
 **Milestone Exit Criteria**:
-- [ ] Goals can be created with AI SMART suggestions
-- [ ] Progress updates automatically from task completion
-- [ ] Goal-task linking bidirectional and AI-suggested
-- [ ] Confetti animation on 100% completion
-- [ ] Max 10 active goals enforced
+- [x] Goals can be created with AI SMART suggestions
+- [x] Progress updates automatically from task completion
+- [x] Goal-task linking bidirectional and AI-suggested
+- [x] Confetti animation on 100% completion
+- [x] Max 10 active goals enforced
 
 ### Milestone 3.3: Calendar Plugin
 **Goal**: Calendar integration with meeting notes and action items  

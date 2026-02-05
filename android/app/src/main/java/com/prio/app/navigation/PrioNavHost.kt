@@ -18,6 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.prio.app.feature.calendar.CalendarScreen
 import com.prio.app.feature.goals.GoalsListScreen
+import com.prio.app.feature.goals.create.CreateGoalScreen
+import com.prio.app.feature.goals.detail.GoalDetailScreen
 import com.prio.app.feature.more.MoreScreen
 import com.prio.app.feature.tasks.TaskListScreen
 import com.prio.app.feature.tasks.detail.TaskDetailScreen
@@ -220,18 +222,26 @@ fun PrioNavHost(
             arguments = listOf(navArgument("goalId") { type = NavType.LongType })
         ) { backStackEntry ->
             val goalId = backStackEntry.arguments?.getLong("goalId") ?: 0L
-            PlaceholderDetailScreen(
-                title = "Goal Detail",
-                subtitle = "Goal ID: $goalId",
-                onNavigateBack = { navController.popBackStack() }
+            GoalDetailScreen(
+                goalId = goalId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTask = { taskId ->
+                    navController.navigate(NavRoutes.taskDetail(taskId))
+                },
+                onShowQuickCapture = onShowQuickCapture
             )
         }
         
         composable(route = NavRoutes.CREATE_GOAL) {
-            PlaceholderDetailScreen(
-                title = "Create Goal",
-                subtitle = "Define your new goal",
-                onNavigateBack = { navController.popBackStack() }
+            CreateGoalScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToGoalDetail = { goalId ->
+                    navController.popBackStack()
+                    navController.navigate(NavRoutes.goalDetail(goalId))
+                },
+                onNavigateToGoalsList = {
+                    navController.popBackStack(route = NavRoutes.GOALS, inclusive = false)
+                }
             )
         }
         

@@ -14,6 +14,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
@@ -395,16 +396,38 @@ class GoalRepository @Inject constructor(
     /**
      * Get dashboard statistics for goals.
      * Per GL-005: Summary stats for dashboard.
+     *
+     * Calculates on-track/at-risk counts by iterating active goals
+     * and applying [calculateGoalStatus]. Completed-this-month uses
+     * the first day of the current month as the cutoff instant.
      */
     suspend fun getDashboardStats(): GoalDashboardStats {
-        val activeGoals = goalDao.getActiveGoalCount()
-        // For on-track/at-risk counts, we'd need to fetch all goals and calculate
-        // This is a simplified version
+        val activeGoals = goalDao.getActiveGoalsList()
+        val activeCount = activeGoals.size
+
+        var onTrackCount = 0
+        var atRiskCount = 0
+        for (goal in activeGoals) {
+            when (calculateGoalStatus(goal)) {
+                GoalStatus.ON_TRACK -> onTrackCount++
+                GoalStatus.AT_RISK -> atRiskCount++
+                GoalStatus.BEHIND -> { /* not displayed in stats */ }
+                GoalStatus.COMPLETED -> { /* shouldn't appear in active list */ }
+            }
+        }
+
+        // First day of current month at midnight for "completed this month" query
+        val timeZone = TimeZone.currentSystemDefault()
+        val today = clock.now().toLocalDateTime(timeZone).date
+        val firstOfMonth = LocalDate(today.year, today.monthNumber, 1)
+        val firstOfMonthInstant = firstOfMonth.atStartOfDayIn(timeZone)
+        val completedThisMonth = goalDao.getCompletedGoalCountSince(firstOfMonthInstant)
+
         return GoalDashboardStats(
-            activeGoals = activeGoals,
-            onTrackCount = 0, // TODO: Calculate from all goals
-            atRiskCount = 0,  // TODO: Calculate from all goals
-            completedThisMonth = 0 // TODO: Query completed goals this month
+            activeGoals = activeCount,
+            onTrackCount = onTrackCount,
+            atRiskCount = atRiskCount,
+            completedThisMonth = completedThisMonth
         )
     }
 }

@@ -1,6 +1,10 @@
 package com.prio.app.feature.goals
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,109 +16,117 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Flag
-import androidx.compose.material.icons.outlined.EmojiEvents
-import androidx.compose.material.icons.outlined.Rocket
-import androidx.compose.material.icons.outlined.TrendingUp
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.prio.core.common.model.GoalCategory
+import com.prio.core.common.model.GoalStatus
+import com.prio.core.ui.components.GoalCard
+import com.prio.core.ui.components.GoalCardData
 import com.prio.core.ui.theme.PrioTheme
+import com.prio.core.ui.theme.SemanticColors
 
 /**
  * Goals List Screen per 1.1.4 Goals Screens Spec.
- * 
+ *
  * Implements GL-005: "Goals list accessible from main navigation"
- * 
+ *
  * Features:
- * - Active goals with progress cards
- * - Visual progress indicators
- * - Goal categories/tags
- * - Add new goal FAB
- * - Goal quick stats
- * 
- * This is a PLACEHOLDER implementation for Milestone 3.1.5.
- * Full implementation in Milestone 3.2 (Goals Plugin).
- * 
+ * - Overview card with Active/On Track/At Risk stats + average progress ring
+ * - Category filter chips (horizontal scroll, single-select, "All" default)
+ * - Goal cards grouped by status: ⚠️ At Risk → ⏳ Slightly Behind → ✅ On Track
+ * - Empty state with 🎯 emoji + "Create First Goal" CTA
+ * - Max 10 active goals enforcement per GL-001
+ *
  * @param onNavigateToGoalDetail Navigate to goal detail screen
  * @param onNavigateToCreateGoal Navigate to create goal screen
+ * @param viewModel Injected via Hilt
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GoalsListScreen(
     onNavigateToGoalDetail: (Long) -> Unit = {},
     onNavigateToCreateGoal: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: GoalsListViewModel = hiltViewModel()
 ) {
-    // Sample data - will be replaced with real data from ViewModel
-    val goals = remember {
-        listOf(
-            GoalData(
-                id = 1L,
-                title = "Launch Prio MVP",
-                description = "Ship first version to Play Store",
-                progress = 0.75f,
-                linkedTasks = 12,
-                completedTasks = 9,
-                icon = Icons.Outlined.Rocket
-            ),
-            GoalData(
-                id = 2L,
-                title = "Read 12 Books This Year",
-                description = "One book per month",
-                progress = 0.33f,
-                linkedTasks = 12,
-                completedTasks = 4,
-                icon = Icons.Outlined.EmojiEvents
-            ),
-            GoalData(
-                id = 3L,
-                title = "Get Promoted to Senior",
-                description = "Demonstrate leadership and technical growth",
-                progress = 0.5f,
-                linkedTasks = 8,
-                completedTasks = 4,
-                icon = Icons.Outlined.TrendingUp
-            ),
-            GoalData(
-                id = 4L,
-                title = "Exercise 4x per Week",
-                description = "Build consistent workout habit",
-                progress = 0.6f,
-                linkedTasks = 4,
-                completedTasks = 2,
-                icon = Icons.Outlined.EmojiEvents
-            )
-        )
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Handle one-time effects
+    LaunchedEffect(Unit) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is GoalsListEffect.NavigateToGoalDetail -> {
+                    onNavigateToGoalDetail(effect.goalId)
+                }
+                GoalsListEffect.NavigateToCreateGoal -> {
+                    onNavigateToCreateGoal()
+                }
+                is GoalsListEffect.ShowSnackbar -> {
+                    val result = snackbarHostState.showSnackbar(
+                        message = effect.message,
+                        actionLabel = effect.actionLabel
+                    )
+                    if (result == SnackbarResult.ActionPerformed) {
+                        viewModel.onEvent(GoalsListEvent.OnUndoDelete)
+                    }
+                }
+                GoalsListEffect.ShowMaxGoalsWarning -> {
+                    snackbarHostState.showSnackbar(
+                        message = "Maximum 10 active goals reached. Complete or delete a goal first."
+                    )
+                }
+                GoalsListEffect.ShowCompletionConfetti -> {
+                    // TODO: Trigger confetti animation (milestone 3.2.6)
+                    snackbarHostState.showSnackbar(message = "🎉 Goal completed!")
+                }
+            }
+        }
     }
-    
+
     Scaffold(
         modifier = modifier,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = {
@@ -125,84 +137,155 @@ fun GoalsListScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "${goals.size} active goals",
+                            text = "${uiState.activeGoalCount} active goals",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { viewModel.onEvent(GoalsListEvent.OnCreateGoalClick) },
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("New Goal") },
+                modifier = Modifier.semantics {
+                    contentDescription = if (uiState.canCreateNewGoal) {
+                        "Create new goal"
+                    } else {
+                        "Maximum goals reached"
+                    }
+                }
+            )
         }
     ) { paddingValues ->
-        if (goals.isEmpty()) {
-            EmptyGoalsState(
-                onCreateGoal = onNavigateToCreateGoal,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Summary card
-                item {
-                    GoalsSummaryCard(
-                        totalGoals = goals.size,
-                        averageProgress = goals.map { it.progress }.average().toFloat(),
-                        totalTasks = goals.sumOf { it.linkedTasks }
-                    )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
                 }
-                
-                item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Active Goals",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.semantics { heading() }
-                    )
-                }
-                
-                items(goals) { goal ->
-                    GoalCard(
-                        goal = goal,
-                        onClick = { onNavigateToGoalDetail(goal.id) }
-                    )
-                }
-                
-                // Bottom spacing for FAB
-                item {
-                    Spacer(modifier = Modifier.height(80.dp))
-                }
+            }
+            uiState.isEmpty -> {
+                EmptyGoalsState(
+                    onCreateGoal = { viewModel.onEvent(GoalsListEvent.OnCreateGoalClick) },
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
+            }
+            else -> {
+                GoalsListContent(
+                    uiState = uiState,
+                    onEvent = viewModel::onEvent,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                )
             }
         }
     }
 }
 
-data class GoalData(
-    val id: Long,
-    val title: String,
-    val description: String,
-    val progress: Float,
-    val linkedTasks: Int,
-    val completedTasks: Int,
-    val icon: ImageVector = Icons.Default.Flag
-)
-
 @Composable
-private fun GoalsSummaryCard(
-    totalGoals: Int,
-    averageProgress: Float,
-    totalTasks: Int,
+private fun GoalsListContent(
+    uiState: GoalsListUiState,
+    onEvent: (GoalsListEvent) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Overview card per 1.1.4
+        item(key = "overview") {
+            GoalsOverviewCard(stats = uiState.overviewStats)
+        }
+
+        // Category filter chips per 1.1.4
+        item(key = "filters") {
+            CategoryFilterChips(
+                selectedCategory = uiState.selectedCategoryFilter,
+                onCategorySelected = { category ->
+                    onEvent(GoalsListEvent.OnCategoryFilterSelect(category))
+                }
+            )
+        }
+
+        // Sections grouped by status per 1.1.4: At Risk → Behind → On Track
+        uiState.sections.forEach { section ->
+            item(key = "section_header_${section.status.name}") {
+                SectionHeader(
+                    section = section,
+                    onToggle = { onEvent(GoalsListEvent.OnSectionToggle(section.status)) }
+                )
+            }
+
+            if (section.isExpanded) {
+                items(
+                    items = section.goals,
+                    key = { "goal_${it.id}" }
+                ) { goal ->
+                    GoalCard(
+                        goal = GoalCardData(
+                            id = goal.id.toString(),
+                            title = goal.title,
+                            category = com.prio.core.ui.components.GoalCategory.valueOf(goal.category.name),
+                            progress = goal.progress,
+                            status = mapToUiStatus(goal.status),
+                            targetDate = goal.targetDate,
+                            milestonesCompleted = goal.milestonesCompleted,
+                            milestonesTotal = goal.milestonesTotal,
+                            linkedTasksCount = goal.linkedTasksCount
+                        ),
+                        onTap = { onEvent(GoalsListEvent.OnGoalClick(goal.id)) },
+                        onOverflowTap = { /* TODO: Goal overflow menu */ }
+                    )
+                }
+            }
+        }
+
+        // Bottom spacing for FAB
+        item(key = "bottom_spacer") {
+            Spacer(modifier = Modifier.height(80.dp))
+        }
+    }
+}
+
+/**
+ * Map common model GoalStatus to UI component GoalStatus.
+ */
+private fun mapToUiStatus(status: GoalStatus): com.prio.core.ui.components.GoalStatus {
+    return when (status) {
+        GoalStatus.ON_TRACK -> com.prio.core.ui.components.GoalStatus.ON_TRACK
+        GoalStatus.BEHIND -> com.prio.core.ui.components.GoalStatus.SLIGHTLY_BEHIND
+        GoalStatus.AT_RISK -> com.prio.core.ui.components.GoalStatus.AT_RISK
+        GoalStatus.COMPLETED -> com.prio.core.ui.components.GoalStatus.ON_TRACK
+    }
+}
+
+/**
+ * Overview card with summary statistics.
+ * Per 1.1.4: Stats boxes (Active, On Track, At Risk) + average progress ring.
+ */
+@Composable
+private fun GoalsOverviewCard(
+    stats: GoalOverviewStats,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .semantics {
+                contentDescription = "Goals overview: ${stats.activeCount} active, " +
+                    "${stats.onTrackCount} on track, ${stats.atRiskCount} at risk"
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primaryContainer
         ),
@@ -212,19 +295,42 @@ private fun GoalsSummaryCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Average progress ring
+            Box(contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { stats.averageProgress },
+                    modifier = Modifier.size(56.dp),
+                    color = SemanticColors.onTrack,
+                    trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
+                    strokeWidth = 6.dp
+                )
+                Text(
+                    text = "${(stats.averageProgress * 100).toInt()}%",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
             StatItem(
-                value = totalGoals.toString(),
-                label = "Goals"
+                value = stats.activeCount.toString(),
+                label = "Active",
+                color = MaterialTheme.colorScheme.onPrimaryContainer
             )
             StatItem(
-                value = "${(averageProgress * 100).toInt()}%",
-                label = "Avg Progress"
+                value = stats.onTrackCount.toString(),
+                label = "On Track",
+                color = SemanticColors.onTrack
             )
             StatItem(
-                value = totalTasks.toString(),
-                label = "Tasks"
+                value = stats.atRiskCount.toString(),
+                label = "At Risk",
+                color = SemanticColors.atRisk
             )
         }
     }
@@ -234,6 +340,7 @@ private fun GoalsSummaryCard(
 private fun StatItem(
     value: String,
     label: String,
+    color: Color,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -244,90 +351,93 @@ private fun StatItem(
             text = value,
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onPrimaryContainer
+            color = color
         )
         Text(
             text = label,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
         )
     }
 }
 
+/**
+ * Horizontal filter chips for goal categories.
+ * Per 1.1.4: Single-select radio, "All" default.
+ */
 @Composable
-private fun GoalCard(
-    goal: GoalData,
-    onClick: () -> Unit,
+private fun CategoryFilterChips(
+    selectedCategory: GoalCategory?,
+    onCategorySelected: (GoalCategory?) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onClick() }
-            .semantics { contentDescription = "Goal: ${goal.title}, ${(goal.progress * 100).toInt()}% complete" },
-        shape = RoundedCornerShape(12.dp)
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = goal.icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-                
-                Spacer(modifier = Modifier.size(12.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = goal.title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Text(
-                        text = goal.description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-                
-                Text(
-                    text = "${(goal.progress * 100).toInt()}%",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(12.dp))
-            
-            LinearProgressIndicator(
-                progress = { goal.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
+        FilterChip(
+            selected = selectedCategory == null,
+            onClick = { onCategorySelected(null) },
+            label = { Text("All") },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimary
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = "${goal.completedTasks}/${goal.linkedTasks} tasks completed",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        GoalCategory.entries.forEach { category ->
+            FilterChip(
+                selected = selectedCategory == category,
+                onClick = {
+                    onCategorySelected(if (selectedCategory == category) null else category)
+                },
+                label = { Text("${category.emoji} ${category.displayName}") },
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         }
     }
 }
 
+/**
+ * Section header with status title, count, and expand/collapse toggle.
+ */
+@Composable
+private fun SectionHeader(
+    section: GoalSection,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onToggle() }
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "${section.title} (${section.count})",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.semantics { heading() }
+        )
+        IconButton(onClick = onToggle) {
+            Icon(
+                imageVector = if (section.isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                contentDescription = if (section.isExpanded) "Collapse" else "Expand"
+            )
+        }
+    }
+}
+
+/**
+ * Empty state per 1.1.10: 🎯 emoji + explanatory text + "Create First Goal" CTA.
+ */
 @Composable
 private fun EmptyGoalsState(
     onCreateGoal: () -> Unit,
@@ -341,45 +451,36 @@ private fun EmptyGoalsState(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.Outlined.EmojiEvents,
-                contentDescription = null,
-                modifier = Modifier.size(64.dp),
-                tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+            Text(
+                text = "🎯",
+                fontSize = 64.sp
             )
-            
+
             Spacer(modifier = Modifier.height(16.dp))
-            
+
             Text(
                 text = "No Goals Yet",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold
             )
-            
+
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Text(
                 text = "Set goals to connect your daily tasks\nto bigger outcomes",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
             )
-            
+
             Spacer(modifier = Modifier.height(24.dp))
-            
+
             ExtendedFloatingActionButton(
                 onClick = onCreateGoal,
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
                 text = { Text("Create First Goal") }
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun GoalsListScreenPreview() {
-    PrioTheme {
-        GoalsListScreen()
     }
 }
 
