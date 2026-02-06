@@ -9,7 +9,9 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.daysUntil
 import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -286,6 +288,90 @@ class AnalyticsRepository @Inject constructor(
             q4Completed = analytics.q4Completed
         )
     }
+
+    // ==================== Weekly Chart Data (3.5.3) ====================
+
+    /**
+     * Get daily completion data for the past 7 days, suitable for bar chart rendering.
+     * Returns exactly 7 entries, filling in zeros for days with no data.
+     */
+    suspend fun getWeeklyCompletionData(): List<DailyCompletionPoint> {
+        val today = getToday()
+        val weekAgo = today.minus(DatePeriod(days = 6))
+        val records = dailyAnalyticsDao.getInRangeSync(weekAgo, today)
+        val recordMap = records.associateBy { it.date }
+
+        return (0..6).map { offset ->
+            val date = weekAgo.plus(DatePeriod(days = offset))
+            val record = recordMap[date]
+            DailyCompletionPoint(
+                date = date,
+                tasksCompleted = record?.tasksCompleted ?: 0,
+                q1Completed = record?.q1Completed ?: 0,
+                q2Completed = record?.q2Completed ?: 0,
+                q3Completed = record?.q3Completed ?: 0,
+                q4Completed = record?.q4Completed ?: 0
+            )
+        }
+    }
+
+    // ==================== Streak Calculation (3.5.4) ====================
+
+    /**
+     * Calculate the current productivity streak.
+     * A streak is the count of consecutive days (ending today or yesterday)
+     * where at least one task was completed.
+     *
+     * Per Jordan persona: visible streaks drive engagement and habit formation.
+     */
+    suspend fun getCurrentStreak(): Int {
+        val productiveDays = dailyAnalyticsDao.getProductiveDaysDesc()
+        if (productiveDays.isEmpty()) return 0
+
+        val today = getToday()
+        val yesterday = today.minus(DatePeriod(days = 1))
+
+        // Streak must start from today or yesterday
+        val firstDay = productiveDays.first().date
+        if (firstDay != today && firstDay != yesterday) return 0
+
+        var streak = 1
+        for (i in 1 until productiveDays.size) {
+            val prevDate = productiveDays[i - 1].date
+            val currDate = productiveDays[i].date
+            val daysBetween = currDate.daysUntil(prevDate)
+            if (daysBetween == 1) {
+                streak++
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
+    /**
+     * Get the longest productivity streak ever recorded.
+     */
+    suspend fun getLongestStreak(): Int {
+        val productiveDays = dailyAnalyticsDao.getProductiveDaysDesc()
+            .sortedBy { it.date }  // Sort ascending for forward iteration
+        if (productiveDays.isEmpty()) return 0
+
+        var longest = 1
+        var current = 1
+        for (i in 1 until productiveDays.size) {
+            val prevDate = productiveDays[i - 1].date
+            val currDate = productiveDays[i].date
+            val daysBetween = prevDate.daysUntil(currDate)
+            if (daysBetween == 1) {
+                current++
+                if (current > longest) longest = current
+            } else {
+                current = 1
+            }
+        }
+        return longest
+    }
     
     // ==================== Helpers ====================
     
@@ -318,3 +404,15 @@ data class QuadrantBreakdown(
 ) {
     val total: Int get() = q1Completed + q2Completed + q3Completed + q4Completed
 }
+
+/**
+ * Single data point for the 7-day completion bar chart (3.5.3).
+ */
+data class DailyCompletionPoint(
+    val date: LocalDate,
+    val tasksCompleted: Int,
+    val q1Completed: Int = 0,
+    val q2Completed: Int = 0,
+    val q3Completed: Int = 0,
+    val q4Completed: Int = 0
+)

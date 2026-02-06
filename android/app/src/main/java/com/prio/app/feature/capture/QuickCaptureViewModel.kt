@@ -240,6 +240,9 @@ class QuickCaptureViewModel @Inject constructor(
                 confidence = classification.confidence
             )
             
+            // Record AI classification event for analytics (Milestone 3.5.1)
+            try { taskRepository.recordAiClassification() } catch (_: Exception) {}
+            
             _uiState.update { 
                 it.copy(
                     isAiParsing = false,
@@ -306,6 +309,10 @@ class QuickCaptureViewModel @Inject constructor(
                     aiExplanation = "Manually set by user"
                 )
             )
+        }
+        // Record AI override event when user changes AI-suggested quadrant (Milestone 3.5.1)
+        viewModelScope.launch {
+            try { taskRepository.recordAiOverride() } catch (_: Exception) {}
         }
     }
 

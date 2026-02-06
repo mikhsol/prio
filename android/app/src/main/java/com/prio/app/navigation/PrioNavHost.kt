@@ -22,6 +22,7 @@ import com.prio.app.feature.briefing.MorningBriefingScreen
 import com.prio.app.feature.goals.GoalsListScreen
 import com.prio.app.feature.goals.create.CreateGoalScreen
 import com.prio.app.feature.goals.detail.GoalDetailScreen
+import com.prio.app.feature.insights.InsightsScreen
 import com.prio.app.feature.meeting.MeetingDetailScreen
 import com.prio.app.feature.more.MoreScreen
 import com.prio.app.feature.tasks.TaskListScreen
@@ -283,10 +284,11 @@ fun PrioNavHost(
         }
         
         composable(route = NavRoutes.INSIGHTS) {
-            PlaceholderDetailScreen(
-                title = "Insights",
-                subtitle = "Your productivity analytics",
-                onNavigateBack = { navController.popBackStack() }
+            InsightsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToGoal = { goalId ->
+                    navController.navigate(NavRoutes.goalDetail(goalId))
+                }
             )
         }
         

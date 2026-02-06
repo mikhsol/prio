@@ -51,4 +51,17 @@ interface DailyAnalyticsDao {
     
     @Query("SELECT SUM(ai_overrides) FROM daily_analytics WHERE date >= :startDate AND date <= :endDate")
     suspend fun getTotalAiOverridesInRange(startDate: LocalDate, endDate: LocalDate): Int?
+    
+    /**
+     * Get all daily analytics records ordered by date descending.
+     * Used for streak calculation: consecutive days with tasks_completed > 0.
+     */
+    @Query("SELECT * FROM daily_analytics WHERE tasks_completed > 0 ORDER BY date DESC")
+    suspend fun getProductiveDaysDesc(): List<DailyAnalyticsEntity>
+    
+    /**
+     * Get daily analytics for a specific date range, ordered ascending for chart display.
+     */
+    @Query("SELECT * FROM daily_analytics WHERE date >= :startDate AND date <= :endDate ORDER BY date ASC")
+    suspend fun getInRangeSync(startDate: LocalDate, endDate: LocalDate): List<DailyAnalyticsEntity>
 }

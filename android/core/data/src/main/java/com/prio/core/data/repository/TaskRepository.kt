@@ -1,12 +1,15 @@
 package com.prio.core.data.repository
 
 import com.prio.core.common.model.EisenhowerQuadrant
+import com.prio.core.data.local.dao.DailyAnalyticsDao
 import com.prio.core.data.local.dao.TaskDao
+import com.prio.core.data.local.entity.DailyAnalyticsEntity
 import com.prio.core.data.local.entity.TaskEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.daysUntil
 import kotlinx.datetime.toLocalDateTime
@@ -32,6 +35,7 @@ import kotlin.math.min
 @Singleton
 class TaskRepository @Inject constructor(
     private val taskDao: TaskDao,
+    private val dailyAnalyticsDao: DailyAnalyticsDao,
     private val clock: Clock = Clock.System
 ) {
     
@@ -176,7 +180,9 @@ class TaskRepository @Inject constructor(
             position = 0 // Will be updated if needed
         )
         
-        return taskDao.insert(task)
+        val id = taskDao.insert(task)
+        recordAnalyticsEvent { it.copy(tasksCreated = it.tasksCreated + 1) }
+        return id
     }
     
     /**
@@ -210,12 +216,36 @@ class TaskRepository @Inject constructor(
      */
     suspend fun completeTask(taskId: Long) {
         val now = clock.now()
+        val task = taskDao.getById(taskId)
         taskDao.updateCompletionStatus(
             taskId = taskId,
             isCompleted = true,
             completedAt = now,
             updatedAt = now
         )
+        // Record analytics: task completion with quadrant breakdown
+        task?.let { t ->
+            recordAnalyticsEvent { analytics ->
+                when (t.quadrant) {
+                    EisenhowerQuadrant.DO_FIRST -> analytics.copy(
+                        tasksCompleted = analytics.tasksCompleted + 1,
+                        q1Completed = analytics.q1Completed + 1
+                    )
+                    EisenhowerQuadrant.SCHEDULE -> analytics.copy(
+                        tasksCompleted = analytics.tasksCompleted + 1,
+                        q2Completed = analytics.q2Completed + 1
+                    )
+                    EisenhowerQuadrant.DELEGATE -> analytics.copy(
+                        tasksCompleted = analytics.tasksCompleted + 1,
+                        q3Completed = analytics.q3Completed + 1
+                    )
+                    EisenhowerQuadrant.ELIMINATE -> analytics.copy(
+                        tasksCompleted = analytics.tasksCompleted + 1,
+                        q4Completed = analytics.q4Completed + 1
+                    )
+                }
+            }
+        }
     }
     
     /**
@@ -378,4 +408,46 @@ class TaskRepository @Inject constructor(
      */
     suspend fun getTasksCompletedInRange(startMillis: Long, endMillis: Long): List<TaskEntity> =
         taskDao.getCompletedInRange(startMillis, endMillis)
+
+    // ==================== Analytics Recording ====================
+
+    /**
+     * Record an AI classification event.
+     * Called when the Eisenhower Engine classifies a task.
+     * Per 0.3.8 Success Metrics: AI Accuracy tracking.
+     */
+    suspend fun recordAiClassification() {
+        recordAnalyticsEvent { it.copy(aiClassifications = it.aiClassifications + 1) }
+    }
+
+    /**
+     * Record an AI override event (user changes AI-suggested quadrant).
+     * Per 0.3.8 Success Metrics: AI Accuracy = (classifications - overrides) / classifications.
+     */
+    suspend fun recordAiOverride() {
+        recordAnalyticsEvent { it.copy(aiOverrides = it.aiOverrides + 1) }
+    }
+
+    /**
+     * Lightweight analytics event recorder.
+     * Ensures a DailyAnalyticsEntity exists for today, then applies the update.
+     * Uses DailyAnalyticsDao directly to avoid circular dependency with AnalyticsRepository.
+     */
+    private suspend fun recordAnalyticsEvent(
+        update: (DailyAnalyticsEntity) -> DailyAnalyticsEntity
+    ) {
+        try {
+            val timeZone = TimeZone.currentSystemDefault()
+            val today = clock.now().toLocalDateTime(timeZone).date
+            val existing = dailyAnalyticsDao.getByDate(today)
+            val analytics = existing ?: run {
+                val entity = DailyAnalyticsEntity(date = today)
+                val id = dailyAnalyticsDao.insert(entity)
+                entity.copy(id = id)
+            }
+            dailyAnalyticsDao.update(update(analytics))
+        } catch (e: Exception) {
+            // Analytics recording is best-effort; never crash the app
+        }
+    }
 }

@@ -1137,21 +1137,23 @@ jobs:
 
 ### Milestone 3.5: Basic Analytics (Simplified)
 **Goal**: Simple productivity metrics (detailed insights deferred to v1.1)  
-**Owner**: Android Developer
+**Owner**: Android Developer  
+**Status**: ✅ Completed  
+**Results**: [3.5 Implementation Report](results/3.5/3.5_basic_analytics_implementation.md)
 
 *Note: 80/20 insights, complex charts, and missed deadline analysis deferred to v1.1 to accelerate MVP.*
 
-| ID | Task | Owner | Duration | Measurable Outcome |
-|----|------|-------|----------|-------------------|
-| 3.5.1 | Implement analytics data collection | Android Developer | 2h | Track task creation, completion, timing |
-| 3.5.2 | Implement Simple Stats screen | Android Developer | 3h | Weekly view: tasks completed, goals progress, streaks |
-| 3.5.3 | Implement task completion chart | Android Developer | 2h | Simple bar chart of completions over 7 days |
-| 3.5.4 | Implement goal progress trend (Jordan persona) | Android Developer | 2h | Week-over-week goal progress arrow + goal streak counter |
+| ID | Task | Owner | Duration | Status | Measurable Outcome |
+|----|------|-------|----------|--------|-------------------|
+| 3.5.1 | Implement analytics data collection | Android Developer | 2h | ✅ Done | Wired into TaskRepository, GoalRepository, QuickCaptureViewModel, TaskListViewModel |
+| 3.5.2 | Implement Simple Stats screen | Android Developer | 3h | ✅ Done | WeeklyStatsRow: completed, today, rate + AI accuracy card |
+| 3.5.3 | Implement task completion chart | Android Developer | 2h | ✅ Done | 7-day Canvas stacked bar chart with Eisenhower quadrant colors |
+| 3.5.4 | Implement goal progress trend (Jordan persona) | Android Developer | 2h | ✅ Done | Streak counter, goal progress rows sorted at-risk first, goals summary |
 
 **Milestone Exit Criteria**:
-- [ ] Basic metrics displayed (tasks completed, streaks)
-- [ ] Simple chart renders correctly
-- [ ] Data collection working in background
+- [x] Basic metrics displayed (tasks completed, streaks)
+- [x] Simple chart renders correctly
+- [x] Data collection working in background
 
 ---
 

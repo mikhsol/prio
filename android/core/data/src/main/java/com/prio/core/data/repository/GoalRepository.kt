@@ -2,9 +2,11 @@ package com.prio.core.data.repository
 
 import com.prio.core.common.model.GoalCategory
 import com.prio.core.common.model.GoalStatus
+import com.prio.core.data.local.dao.DailyAnalyticsDao
 import com.prio.core.data.local.dao.GoalDao
 import com.prio.core.data.local.dao.MilestoneDao
 import com.prio.core.data.local.dao.TaskDao
+import com.prio.core.data.local.entity.DailyAnalyticsEntity
 import com.prio.core.data.local.entity.GoalEntity
 import com.prio.core.data.local.entity.MilestoneEntity
 import kotlinx.coroutines.flow.Flow
@@ -39,6 +41,7 @@ class GoalRepository @Inject constructor(
     private val goalDao: GoalDao,
     private val milestoneDao: MilestoneDao,
     private val taskDao: TaskDao,
+    private val dailyAnalyticsDao: DailyAnalyticsDao,
     private val clock: Clock = Clock.System
 ) {
     
@@ -227,6 +230,8 @@ class GoalRepository @Inject constructor(
             completedAt = now,
             updatedAt = now
         )
+        // Record analytics: goal progressed/completed
+        recordAnalyticsEvent { it.copy(goalsProgressed = it.goalsProgressed + 1) }
     }
     
     /**
@@ -436,6 +441,39 @@ class GoalRepository @Inject constructor(
             atRiskCount = atRiskCount,
             completedThisMonth = completedThisMonth
         )
+    }
+
+    // ==================== Analytics Recording ====================
+
+    /**
+     * Record a goal progress event.
+     * Called when goal progress is recalculated and has increased.
+     */
+    suspend fun recordGoalProgressed() {
+        recordAnalyticsEvent { it.copy(goalsProgressed = it.goalsProgressed + 1) }
+    }
+
+    /**
+     * Lightweight analytics event recorder.
+     * Ensures a DailyAnalyticsEntity exists for today, then applies the update.
+     * Uses DailyAnalyticsDao directly to avoid circular dependency with AnalyticsRepository.
+     */
+    private suspend fun recordAnalyticsEvent(
+        update: (DailyAnalyticsEntity) -> DailyAnalyticsEntity
+    ) {
+        try {
+            val timeZone = TimeZone.currentSystemDefault()
+            val today = clock.now().toLocalDateTime(timeZone).date
+            val existing = dailyAnalyticsDao.getByDate(today)
+            val analytics = existing ?: run {
+                val entity = DailyAnalyticsEntity(date = today)
+                val id = dailyAnalyticsDao.insert(entity)
+                entity.copy(id = id)
+            }
+            dailyAnalyticsDao.update(update(analytics))
+        } catch (e: Exception) {
+            // Analytics recording is best-effort; never crash the app
+        }
     }
 }
 

@@ -290,4 +290,173 @@ class AnalyticsRepositoryTest {
             assertEquals(6, breakdown.total)
         }
     }
+
+    @Nested
+    @DisplayName("Weekly Completion Data (3.5.3)")
+    inner class WeeklyCompletionDataTests {
+
+        @Test
+        @DisplayName("returns exactly 7 data points")
+        fun returnsExactly7DataPoints() = runTest {
+            coEvery { dailyAnalyticsDao.getInRangeSync(any(), any()) } returns emptyList()
+
+            val data = repository.getWeeklyCompletionData()
+
+            assertEquals(7, data.size)
+        }
+
+        @Test
+        @DisplayName("fills zeros for days with no analytics")
+        fun fillsZerosForMissingDays() = runTest {
+            coEvery { dailyAnalyticsDao.getInRangeSync(any(), any()) } returns emptyList()
+
+            val data = repository.getWeeklyCompletionData()
+
+            assertTrue(data.all { it.tasksCompleted == 0 })
+            assertTrue(data.all { it.q1Completed == 0 })
+        }
+
+        @Test
+        @DisplayName("maps existing records to correct dates")
+        fun mapsExistingRecords() = runTest {
+            val record = DailyAnalyticsEntity(
+                id = 1L,
+                date = today,
+                tasksCompleted = 5,
+                q1Completed = 2,
+                q2Completed = 3,
+                q3Completed = 0,
+                q4Completed = 0
+            )
+            coEvery { dailyAnalyticsDao.getInRangeSync(any(), any()) } returns listOf(record)
+
+            val data = repository.getWeeklyCompletionData()
+
+            val todayPoint = data.last() // today is the last element (most recent)
+            assertEquals(5, todayPoint.tasksCompleted)
+            assertEquals(2, todayPoint.q1Completed)
+            assertEquals(3, todayPoint.q2Completed)
+        }
+
+        @Test
+        @DisplayName("dates span from 6 days ago to today")
+        fun datesSpanCorrectly() = runTest {
+            coEvery { dailyAnalyticsDao.getInRangeSync(any(), any()) } returns emptyList()
+
+            val data = repository.getWeeklyCompletionData()
+
+            assertEquals(today, data.last().date)
+            assertEquals(LocalDate.parse("2026-01-29"), data.first().date)
+        }
+    }
+
+    @Nested
+    @DisplayName("Streak Calculation (3.5.4)")
+    inner class StreakCalculationTests {
+
+        private fun makeProductiveDay(date: LocalDate) = DailyAnalyticsEntity(
+            id = 0L,
+            date = date,
+            tasksCompleted = 1
+        )
+
+        @Test
+        @DisplayName("getCurrentStreak returns 0 when no productive days")
+        fun getCurrentStreak_returnsZeroWhenEmpty() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns emptyList()
+
+            assertEquals(0, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getCurrentStreak returns 1 when only today is productive")
+        fun getCurrentStreak_returns1ForToday() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(today)
+            )
+
+            assertEquals(1, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getCurrentStreak counts consecutive days from today")
+        fun getCurrentStreak_countsConsecutiveDays() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(today),                              // Feb 4
+                makeProductiveDay(LocalDate.parse("2026-02-03")),      // Feb 3
+                makeProductiveDay(LocalDate.parse("2026-02-02"))       // Feb 2
+            )
+
+            assertEquals(3, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getCurrentStreak breaks on gap")
+        fun getCurrentStreak_breaksOnGap() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(today),                              // Feb 4
+                makeProductiveDay(LocalDate.parse("2026-02-03")),      // Feb 3
+                // Gap: Feb 2 missing
+                makeProductiveDay(LocalDate.parse("2026-02-01"))       // Feb 1
+            )
+
+            assertEquals(2, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getCurrentStreak starts from yesterday if today has no data")
+        fun getCurrentStreak_startsFromYesterday() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(LocalDate.parse("2026-02-03")),      // yesterday
+                makeProductiveDay(LocalDate.parse("2026-02-02"))
+            )
+
+            assertEquals(2, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getCurrentStreak returns 0 when first day is not today/yesterday")
+        fun getCurrentStreak_returnsZeroWhenOldData() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(LocalDate.parse("2026-02-01")) // 3 days ago
+            )
+
+            assertEquals(0, repository.getCurrentStreak())
+        }
+
+        @Test
+        @DisplayName("getLongestStreak finds the longest historical streak")
+        fun getLongestStreak_findsLongest() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                // Current streak: 2 (Feb 3-4)
+                makeProductiveDay(today),
+                makeProductiveDay(LocalDate.parse("2026-02-03")),
+                // Gap
+                // Historical streak: 3 (Jan 29-31)
+                makeProductiveDay(LocalDate.parse("2026-01-31")),
+                makeProductiveDay(LocalDate.parse("2026-01-30")),
+                makeProductiveDay(LocalDate.parse("2026-01-29"))
+            )
+
+            assertEquals(3, repository.getLongestStreak())
+        }
+
+        @Test
+        @DisplayName("getLongestStreak returns 1 for single productive day")
+        fun getLongestStreak_returnsSingleDay() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns listOf(
+                makeProductiveDay(today)
+            )
+
+            assertEquals(1, repository.getLongestStreak())
+        }
+
+        @Test
+        @DisplayName("getLongestStreak returns 0 when no productive days")
+        fun getLongestStreak_returnsZeroWhenEmpty() = runTest {
+            coEvery { dailyAnalyticsDao.getProductiveDaysDesc() } returns emptyList()
+
+            assertEquals(0, repository.getLongestStreak())
+        }
+    }
 }

@@ -338,6 +338,8 @@ class TaskListViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 taskRepository.updateQuadrant(taskId, newQuadrant)
+                // Record AI override when user manually changes quadrant (Milestone 3.5.1)
+                try { taskRepository.recordAiOverride() } catch (_: Exception) {}
                 _effect.send(
                     TaskListEffect.ShowSnackbar("Moved to ${newQuadrant.displayName}")
                 )

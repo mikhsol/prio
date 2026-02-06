@@ -3,6 +3,7 @@ package com.prio.core.data.repository
 import app.cash.turbine.test
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.common.model.RecurrencePattern
+import com.prio.core.data.local.dao.DailyAnalyticsDao
 import com.prio.core.data.local.dao.TaskDao
 import com.prio.core.data.local.entity.TaskEntity
 import io.mockk.MockKAnnotations
@@ -42,6 +43,9 @@ class TaskRepositoryTest {
     private lateinit var taskDao: TaskDao
     
     @MockK
+    private lateinit var dailyAnalyticsDao: DailyAnalyticsDao
+    
+    @MockK
     private lateinit var clock: Clock
     
     private lateinit var repository: TaskRepository
@@ -52,7 +56,7 @@ class TaskRepositoryTest {
     fun setup() {
         MockKAnnotations.init(this, relaxUnitFun = true)
         every { clock.now() } returns now
-        repository = TaskRepository(taskDao, clock)
+        repository = TaskRepository(taskDao, dailyAnalyticsDao, clock)
     }
     
     private fun createTestTask(
@@ -179,6 +183,8 @@ class TaskRepositoryTest {
         @Test
         @DisplayName("completeTask updates completion status")
         fun completeTask_updatesStatus() = runTest {
+            coEvery { taskDao.getById(1L) } returns null
+
             repository.completeTask(1L)
             
             coVerify { 

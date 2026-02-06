@@ -3,6 +3,7 @@ package com.prio.core.data.repository
 import app.cash.turbine.test
 import com.prio.core.common.model.GoalCategory
 import com.prio.core.common.model.GoalStatus
+import com.prio.core.data.local.dao.DailyAnalyticsDao
 import com.prio.core.data.local.dao.GoalDao
 import com.prio.core.data.local.dao.MilestoneDao
 import com.prio.core.data.local.dao.TaskDao
@@ -51,6 +52,9 @@ class GoalRepositoryTest {
     private lateinit var taskDao: TaskDao
     
     @MockK
+    private lateinit var dailyAnalyticsDao: DailyAnalyticsDao
+    
+    @MockK
     private lateinit var clock: Clock
     
     private lateinit var repository: GoalRepository
@@ -61,7 +65,7 @@ class GoalRepositoryTest {
     fun setup() {
         MockKAnnotations.init(this, relaxUnitFun = true)
         every { clock.now() } returns now
-        repository = GoalRepository(goalDao, milestoneDao, taskDao, clock)
+        repository = GoalRepository(goalDao, milestoneDao, taskDao, dailyAnalyticsDao, clock)
     }
     
     private fun createTestGoal(
