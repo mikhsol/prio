@@ -75,6 +75,13 @@ class GoalRepository @Inject constructor(
      */
     fun getAllActiveGoals(): Flow<List<GoalEntity>> = 
         goalDao.getAllActiveGoals()
+
+    /**
+     * Get all active goals as a suspend call (non-Flow).
+     * Used by BriefingGenerator and Dashboard for one-shot reads.
+     */
+    suspend fun getAllActiveGoalsSync(): List<GoalEntity> =
+        goalDao.getAllActiveGoalsSync()
     
     /**
      * Get all goals including completed.

@@ -23,3 +23,4 @@
 22. Task progress.
 23. Delegate task to agent.
 24. Email integration, suggest response.
+25. Sync up notes from Notion.

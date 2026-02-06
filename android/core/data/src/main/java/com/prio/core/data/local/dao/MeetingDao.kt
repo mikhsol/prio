@@ -43,6 +43,9 @@ interface MeetingDao {
     
     @Query("SELECT * FROM meetings WHERE start_time >= :startMillis AND start_time < :endMillis ORDER BY start_time ASC")
     fun getMeetingsInRange(startMillis: Long, endMillis: Long): Flow<List<MeetingEntity>>
+
+    @Query("SELECT * FROM meetings WHERE start_time >= :startMillis AND start_time < :endMillis ORDER BY start_time ASC")
+    suspend fun getMeetingsInRangeSync(startMillis: Long, endMillis: Long): List<MeetingEntity>
     
     @Query("SELECT * FROM meetings WHERE date(start_time / 1000, 'unixepoch') = date(:dateMillis / 1000, 'unixepoch') ORDER BY start_time ASC")
     fun getMeetingsForDate(dateMillis: Long): Flow<List<MeetingEntity>>

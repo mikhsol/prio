@@ -74,6 +74,8 @@ import java.util.Locale
  * @param onNavigateToGoal Navigate to goal detail
  * @param onNavigateToMeeting Navigate to meeting detail
  * @param onNavigateToTasks Navigate to full tasks list
+ * @param onNavigateToMorningBriefing Navigate to morning briefing
+ * @param onNavigateToEveningSummary Navigate to evening summary
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +84,8 @@ fun TodayScreen(
     onNavigateToGoal: (Long) -> Unit = {},
     onNavigateToMeeting: (Long) -> Unit = {},
     onNavigateToTasks: () -> Unit = {},
+    onNavigateToMorningBriefing: () -> Unit = {},
+    onNavigateToEveningSummary: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val today = remember { LocalDate.now() }
@@ -122,7 +126,7 @@ fun TodayScreen(
                     title = "Morning Briefing",
                     subtitle = "3 urgent tasks, 2 meetings today",
                     icon = Icons.Default.WbSunny,
-                    onClick = { /* TODO: Navigate to briefing detail */ }
+                    onClick = { onNavigateToMorningBriefing() }
                 )
             }
             

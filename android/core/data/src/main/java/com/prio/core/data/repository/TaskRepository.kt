@@ -43,6 +43,13 @@ class TaskRepository @Inject constructor(
      */
     fun getAllActiveTasks(): Flow<List<TaskEntity>> = 
         taskDao.getAllActiveTasks()
+
+    /**
+     * Get all active tasks as a suspend call (non-Flow).
+     * Used by BriefingGenerator and notification workers for one-shot reads.
+     */
+    suspend fun getAllActiveTasksSync(): List<TaskEntity> =
+        taskDao.getAllActiveTasksSync()
     
     /**
      * Get all tasks including completed.
@@ -250,6 +257,29 @@ class TaskRepository @Inject constructor(
             updatedAt = clock.now()
         )
     }
+
+    /**
+     * Update task due date.
+     * Per CB-005: Close Day flow — move tasks to tomorrow or clear date.
+     *
+     * @param taskId The task ID
+     * @param dueDate New due date, or null to clear
+     */
+    suspend fun updateTaskDueDate(taskId: Long, dueDate: Instant?) {
+        taskDao.updateDueDate(
+            taskId = taskId,
+            dueDate = dueDate,
+            updatedAt = clock.now()
+        )
+    }
+
+    /**
+     * Update task quadrant.
+     * Alias for [updateQuadrant] used by Close Day flow (CB-005).
+     */
+    suspend fun updateTaskQuadrant(taskId: Long, quadrant: EisenhowerQuadrant) {
+        updateQuadrant(taskId, quadrant)
+    }
     
     // ==================== Delete Operations ====================
     
@@ -341,4 +371,11 @@ class TaskRepository @Inject constructor(
         dateMillis: Long, 
         quadrant: EisenhowerQuadrant
     ): Int = taskDao.getTasksCompletedByQuadrantOnDate(dateMillis, quadrant)
+
+    /**
+     * Get completed task entities within a date range.
+     * Used by BriefingGenerator for displaying completed task titles.
+     */
+    suspend fun getTasksCompletedInRange(startMillis: Long, endMillis: Long): List<TaskEntity> =
+        taskDao.getCompletedInRange(startMillis, endMillis)
 }

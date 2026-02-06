@@ -47,6 +47,19 @@ class MeetingRepository @Inject constructor(
      */
     fun getMeetingsInRange(startMillis: Long, endMillis: Long): Flow<List<MeetingEntity>> = 
         meetingDao.getMeetingsInRange(startMillis, endMillis)
+
+    /**
+     * Get meetings within a time range as a suspend call (non-Flow).
+     * Used by BriefingGenerator and Dashboard for one-shot reads.
+     */
+    suspend fun getMeetingsForDateSync(
+        startTime: kotlinx.datetime.Instant,
+        endTime: kotlinx.datetime.Instant
+    ): List<MeetingEntity> =
+        meetingDao.getMeetingsInRangeSync(
+            startMillis = startTime.toEpochMilliseconds(),
+            endMillis = endTime.toEpochMilliseconds()
+        )
     
     /**
      * Get meetings for a specific date.

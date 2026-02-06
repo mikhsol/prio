@@ -1117,21 +1117,23 @@ jobs:
 - Evening: completed list, not-done with "move to tomorrow", goal progress delta, "Close Day" per [1.1.7](results/1.1/1.1.7_evening_summary_spec.md)
 - Push notification at user-configured times ([CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md))
 
-| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome |
-|----|------|-------|----------|---------|--------------|-------------------|
-| 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | — | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Generates briefing from tasks (Q1/Q2), calendar, goals using rule-based + LLM for insight |
-| 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#morning-briefing-card) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Greeting, Top Priorities, Schedule Preview, Goal Spotlight sections per spec layout |
-| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md) | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Accomplishments, Not Done, Goal Progress, Tomorrow Preview, "Close Day" per spec |
-| 3.4.4 | Implement briefing notifications | Android Developer | 2h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md#daily-briefings-settings) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Default 7am/6pm, configurable per spec |
-| 3.4.5 | Implement end-of-day nudge (Maya persona) | Android Developer | 1h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md#mayas-end-of-day-nudge) | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | Work-life boundary reminder per spec |
-| 3.4.6 | Implement Today/Dashboard screen | Android Developer | 4h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#today-dashboard) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Dashboard layout per spec: briefing card + quick stats + upcoming + goals summary |
+| ID | Task | Owner | Duration | UX Spec | Source Story | Measurable Outcome | Status |
+|----|------|-------|----------|---------|--------------|-------------------|--------|
+| 3.4.1 | Implement BriefingGenerator | Android Developer | 3h | — | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Generates briefing from tasks (Q1/Q2), calendar, goals using rule-based + LLM for insight | ✅ Completed |
+| 3.4.2 | Implement Morning Briefing screen | Android Developer | 3h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#morning-briefing-card) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Greeting, Top Priorities, Schedule Preview, Goal Spotlight sections per spec layout | ✅ Completed |
+| 3.4.3 | Implement Evening Summary screen | Android Developer | 2h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md) | [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Accomplishments, Not Done, Goal Progress, Tomorrow Preview, "Close Day" per spec | ✅ Completed |
+| 3.4.4 | Implement briefing notifications | Android Developer | 2h | [1.1.9](results/1.1/1.1.9_settings_screens_spec.md#daily-briefings-settings) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-003](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Default 7am/6pm, configurable per spec | ✅ Completed |
+| 3.4.5 | Implement end-of-day nudge (Maya persona) | Android Developer | 1h | [1.1.7](results/1.1/1.1.7_evening_summary_spec.md#mayas-end-of-day-nudge) | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) | Work-life boundary reminder per spec | ✅ Completed |
+| 3.4.6 | Implement Today/Dashboard screen | Android Developer | 4h | [1.1.5](results/1.1/1.1.5_today_dashboard_briefing_spec.md#today-dashboard) | [CB-001](results/0.3/0.3.4_calendar_briefings_user_stories.md), [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Dashboard layout per spec: briefing card + quick stats + upcoming + goals summary | ✅ Completed |
+
+**Results**: [3.4 Implementation Report](results/3.4/3.4_daily_briefings_implementation.md)
 
 **Milestone Exit Criteria**:
-- [ ] Briefings generate in <3 seconds per spec timing
-- [ ] Briefings are contextual (use actual task/calendar/goal data)
-- [ ] Notifications trigger at configured times
-- [ ] "Move to tomorrow" updates task due date per [1.1.7](results/1.1/1.1.7_evening_summary_spec.md)
-- [ ] End-of-day nudge configurable per Maya persona need
+- [x] Briefings generate in <3 seconds per spec timing
+- [x] Briefings are contextual (use actual task/calendar/goal data)
+- [x] Notifications trigger at configured times
+- [x] "Move to tomorrow" updates task due date per [1.1.7](results/1.1/1.1.7_evening_summary_spec.md)
+- [x] End-of-day nudge configurable per Maya persona need
 
 ### Milestone 3.5: Basic Analytics (Simplified)
 **Goal**: Simple productivity metrics (detailed insights deferred to v1.1)  

@@ -43,6 +43,9 @@ interface GoalDao {
     // Query operations
     @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
     fun getAllActiveGoals(): Flow<List<GoalEntity>>
+
+    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
+    suspend fun getAllActiveGoalsSync(): List<GoalEntity>
     
     @Query("SELECT * FROM goals ORDER BY created_at DESC")
     fun getAllGoals(): Flow<List<GoalEntity>>

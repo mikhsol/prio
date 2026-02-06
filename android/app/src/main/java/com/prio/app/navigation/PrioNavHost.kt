@@ -17,6 +17,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.prio.app.feature.calendar.CalendarScreen
+import com.prio.app.feature.briefing.EveningSummaryScreen
+import com.prio.app.feature.briefing.MorningBriefingScreen
 import com.prio.app.feature.goals.GoalsListScreen
 import com.prio.app.feature.goals.create.CreateGoalScreen
 import com.prio.app.feature.goals.detail.GoalDetailScreen
@@ -124,6 +126,12 @@ fun PrioNavHost(
                 },
                 onNavigateToTasks = {
                     navController.navigate(NavRoutes.TASKS)
+                },
+                onNavigateToMorningBriefing = {
+                    navController.navigate(NavRoutes.MORNING_BRIEFING)
+                },
+                onNavigateToEveningSummary = {
+                    navController.navigate(NavRoutes.EVENING_SUMMARY)
                 }
             )
         }
@@ -300,18 +308,35 @@ fun PrioNavHost(
         
         // Briefing routes
         composable(route = NavRoutes.MORNING_BRIEFING) {
-            PlaceholderDetailScreen(
-                title = "Morning Briefing",
-                subtitle = "Your day ahead",
-                onNavigateBack = { navController.popBackStack() }
+            MorningBriefingScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTask = { taskId ->
+                    navController.navigate(NavRoutes.taskDetail(taskId))
+                },
+                onNavigateToGoal = { goalId ->
+                    navController.navigate(NavRoutes.goalDetail(goalId))
+                },
+                onNavigateToTasks = {
+                    navController.navigate(NavRoutes.TASKS)
+                },
+                onNavigateToCalendar = {
+                    navController.navigate(NavRoutes.CALENDAR)
+                }
             )
         }
         
         composable(route = NavRoutes.EVENING_SUMMARY) {
-            PlaceholderDetailScreen(
-                title = "Evening Summary",
-                subtitle = "Review your day",
-                onNavigateBack = { navController.popBackStack() }
+            EveningSummaryScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTask = { taskId ->
+                    navController.navigate(NavRoutes.taskDetail(taskId))
+                },
+                onNavigateToGoal = { goalId ->
+                    navController.navigate(NavRoutes.goalDetail(goalId))
+                },
+                onNavigateToSettings = {
+                    navController.navigate(NavRoutes.SETTINGS)
+                }
             )
         }
     }

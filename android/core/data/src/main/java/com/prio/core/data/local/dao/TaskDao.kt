@@ -41,6 +41,9 @@ interface TaskDao {
     @Query("UPDATE tasks SET position = :position, updated_at = :updatedAt WHERE id = :taskId")
     suspend fun updatePosition(taskId: Long, position: Int, updatedAt: Instant)
     
+    @Query("UPDATE tasks SET due_date = :dueDate, updated_at = :updatedAt WHERE id = :taskId")
+    suspend fun updateDueDate(taskId: Long, dueDate: Instant?, updatedAt: Instant)
+
     @Query("UPDATE tasks SET urgency_score = :urgencyScore, updated_at = :updatedAt WHERE id = :taskId")
     suspend fun updateUrgencyScore(taskId: Long, urgencyScore: Float, updatedAt: Instant)
     
@@ -106,6 +109,10 @@ interface TaskDao {
     @Query("SELECT COUNT(*) FROM tasks WHERE date(completed_at / 1000, 'unixepoch') = date(:dateMillis / 1000, 'unixepoch') AND quadrant = :quadrant")
     suspend fun getTasksCompletedByQuadrantOnDate(dateMillis: Long, quadrant: EisenhowerQuadrant): Int
     
+    // Completed task entities in date range (for briefing display)
+    @Query("SELECT * FROM tasks WHERE is_completed = 1 AND completed_at >= :startMillis AND completed_at < :endMillis ORDER BY completed_at DESC")
+    suspend fun getCompletedInRange(startMillis: Long, endMillis: Long): List<TaskEntity>
+
     // Recurring tasks
     @Query("SELECT * FROM tasks WHERE is_recurring = 1 AND is_completed = 0")
     fun getRecurringTasks(): Flow<List<TaskEntity>>
