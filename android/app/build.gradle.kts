@@ -103,6 +103,9 @@ android {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
         }
+        unitTests.all {
+            it.useJUnitPlatform()
+        }
     }
 }
 

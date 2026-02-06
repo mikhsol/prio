@@ -21,3 +21,5 @@
 20. Export goals/tasks.
 21. Soft delete/archive tasks/goals.
 22. Task progress.
+23. Delegate task to agent.
+24. Email integration, suggest response.

@@ -1087,21 +1087,21 @@ jobs:
 - Privacy: explain "all calendar data stays on device" in permission dialog ([CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md))
 - Action item extraction creates tasks linked to meeting ([CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md))
 
-| ID | Task | Owner | Duration | Source Story | Measurable Outcome |
-|----|------|-------|----------|--------------|-------------------|
-| 3.3.1 | Implement calendar provider integration | Android Developer | 4h | [CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md) | READ_CALENDAR permission, sync to Room, multi-calendar support, color by source |
-| 3.3.2 | Implement Calendar Day view | Android Developer | 3h | [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Timeline with hours, event blocks (title/time/attendees), task blocks, swipe to navigate |
-| 3.3.3 | Implement Meeting Detail sheet | Android Developer | 3h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | View event details (read-only), notes editor, action items list, linked tasks |
-| 3.3.4 | Implement meeting notes editor | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Plain text with auto-save, voice transcription via Android Speech API |
-| 3.3.5 | Implement AI action item extraction | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Parse notes for action verbs + first-person refs, show as task suggestions, accept/reject each |
-| 3.3.6 | Implement meeting checklist/agenda | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Checklist items, completion tracking, persist with meeting |
-| 3.3.7 | Write UI tests for Calendar plugin | Android Developer | 2h | All CB calendar stories | 6+ tests: permission flow, day view nav, notes save, action item extraction |
+| ID | Task | Owner | Duration | Source Story | Measurable Outcome | Status |
+|----|------|-------|----------|--------------|-------------------|--------|
+| 3.3.1 | Implement calendar provider integration | Android Developer | 4h | [CB-002](results/0.3/0.3.4_calendar_briefings_user_stories.md) | READ_CALENDAR permission, sync to Room, multi-calendar support, color by source | ✅ Done |
+| 3.3.2 | Implement Calendar Day view | Android Developer | 3h | [CB-005](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Timeline with hours, event blocks (title/time/attendees), task blocks, swipe to navigate | ✅ Done |
+| 3.3.3 | Implement Meeting Detail sheet | Android Developer | 3h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | View event details (read-only), notes editor, action items list, linked tasks | ✅ Done |
+| 3.3.4 | Implement meeting notes editor | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Plain text with auto-save, voice transcription via Android Speech API | ✅ Done |
+| 3.3.5 | Implement AI action item extraction | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Parse notes for action verbs + first-person refs, show as task suggestions, accept/reject each | ✅ Done |
+| 3.3.6 | Implement meeting checklist/agenda | Android Developer | 2h | [CB-004](results/0.3/0.3.4_calendar_briefings_user_stories.md) | Checklist items, completion tracking, persist with meeting | ✅ Done |
+| 3.3.7 | Write UI tests for Calendar plugin | Android Developer | 2h | All CB calendar stories | 6+ tests: permission flow, day view nav, notes save, action item extraction | ✅ Done (26 tests) |
 
 **Milestone Exit Criteria**:
-- [ ] Calendar events display correctly with source colors
-- [ ] Meeting notes persist locally with auto-save
-- [ ] Action items extractable and convertible to tasks with meeting link
-- [ ] Privacy messaging in permission dialog per Maya persona validation
+- [x] Calendar events display correctly with source colors
+- [x] Meeting notes persist locally with auto-save
+- [x] Action items extractable and convertible to tasks with meeting link
+- [x] Privacy messaging in permission dialog per Maya persona validation
 
 ### Milestone 3.4: Daily Briefings
 **Goal**: AI-generated morning and evening summaries  

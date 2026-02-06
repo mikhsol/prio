@@ -20,6 +20,7 @@ import com.prio.app.feature.calendar.CalendarScreen
 import com.prio.app.feature.goals.GoalsListScreen
 import com.prio.app.feature.goals.create.CreateGoalScreen
 import com.prio.app.feature.goals.detail.GoalDetailScreen
+import com.prio.app.feature.meeting.MeetingDetailScreen
 import com.prio.app.feature.more.MoreScreen
 import com.prio.app.feature.tasks.TaskListScreen
 import com.prio.app.feature.tasks.detail.TaskDetailScreen
@@ -252,12 +253,12 @@ fun PrioNavHost(
         composable(
             route = NavRoutes.MEETING_DETAIL,
             arguments = listOf(navArgument("meetingId") { type = NavType.LongType })
-        ) { backStackEntry ->
-            val meetingId = backStackEntry.arguments?.getLong("meetingId") ?: 0L
-            PlaceholderDetailScreen(
-                title = "Meeting Detail",
-                subtitle = "Meeting ID: $meetingId",
-                onNavigateBack = { navController.popBackStack() }
+        ) {
+            MeetingDetailScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToTask = { taskId ->
+                    navController.navigate(NavRoutes.taskDetail(taskId))
+                }
             )
         }
         
