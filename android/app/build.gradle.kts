@@ -19,7 +19,7 @@ android {
         versionCode = 1
         versionName = "1.0.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.prio.app.e2e.HiltTestRunner"
 
         vectorDrawables {
             useSupportLibrary = true
@@ -171,6 +171,8 @@ dependencies {
     // Android Instrumented Testing
     androidTestImplementation(libs.bundles.testing.android)
     androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.kotlinx.coroutines.test)
+    kspAndroidTest(libs.hilt.android.compiler)
 }
 
 // Task for running benchmark tests
