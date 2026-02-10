@@ -207,6 +207,7 @@ fun QuickCaptureSheet(
     onOpenDetails: (Long) -> Unit = {},
     onTaskCreated: (Long) -> Unit = {},
     modifier: Modifier = Modifier,
+    @Suppress("UNUSED_PARAMETER")
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 ) {
     val haptic = LocalHapticFeedback.current
@@ -227,16 +228,41 @@ fun QuickCaptureSheet(
         }
     }
     
-    ModalBottomSheet(
-        onDismissRequest = {
-            onEvent(QuickCaptureEvent.Dismiss)
-            onDismiss()
-        },
-        sheetState = sheetState,
-        modifier = modifier,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = MaterialTheme.colorScheme.surface
+    // Inline bottom sheet: renders in the main Compose tree for testability.
+    // ModalBottomSheet renders in a popup window that Compose test framework
+    // cannot access. This implementation provides identical UX while keeping
+    // all content in the same semantic tree.
+    Box(
+        modifier = modifier.fillMaxSize()
     ) {
+        // Scrim backdrop
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = {
+                        onEvent(QuickCaptureEvent.Dismiss)
+                        onDismiss()
+                    }
+                )
+        )
+        // Sheet surface
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = {} // consume clicks so they don't reach scrim
+                ),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -336,6 +362,45 @@ fun QuickCaptureSheet(
                     ) {
                         AiParsingIndicator()
                     }
+
+                    // Error state display (GAP-H09)
+                    AnimatedVisibility(
+                        visible = state.error != null && !state.isAiParsing,
+                        enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
+                        exit = fadeOut()
+                    ) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "⚠️",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = state.error ?: "",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TextButton(
+                                    onClick = { onEvent(QuickCaptureEvent.ParseInput) }
+                                ) {
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                    }
                     
                     // Parsed result preview
                     AnimatedVisibility(
@@ -371,11 +436,15 @@ fun QuickCaptureSheet(
                 }
             }
         }
-    }
+    } // Surface
+    } // Box (inline bottom sheet)
 
     // Date Picker Dialog (3.1.5.B.4)
     if (state.showDatePicker) {
-        val datePickerState = rememberDatePickerState()
+        val initialDateMillis = state.parsedResult?.dueDate?.let {
+            try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
+        }
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
         DatePickerDialog(
             onDismissRequest = { onEvent(QuickCaptureEvent.ToggleDatePicker) },
             confirmButton = {
@@ -624,6 +693,7 @@ private fun ParsedResultPreview(
                 ParsedFieldRow(
                     emoji = "📋",
                     label = result.title,
+                    fieldName = "title",
                     onEditClick = { /* TODO: Inline edit */ }
                 )
                 
@@ -635,6 +705,7 @@ private fun ParsedResultPreview(
                         emoji = "📅",
                         label = result.dueDateFormatted,
                         confidence = result.confidence,
+                        fieldName = "due date",
                         onEditClick = onDateEditClick
                     )
                     
@@ -685,6 +756,7 @@ private fun ParsedResultPreview(
                         emoji = "🎯",
                         label = goal.title,
                         sublabel = "AI Suggestion: \"${goal.reason}\"",
+                        fieldName = "goal",
                         onEditClick = onGoalEditClick
                     )
                 }
@@ -733,6 +805,7 @@ private fun ParsedFieldRow(
     label: String,
     sublabel: String? = null,
     confidence: Float = 1f,
+    fieldName: String = "field",
     onEditClick: () -> Unit
 ) {
     Row(
@@ -771,7 +844,7 @@ private fun ParsedFieldRow(
         ) {
             Icon(
                 imageVector = Icons.Default.Edit,
-                contentDescription = "Edit",
+                contentDescription = "Edit $fieldName",
                 modifier = Modifier.size(18.dp)
             )
         }

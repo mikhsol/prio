@@ -40,10 +40,10 @@ class TaskListE2ETest : BaseE2ETest() {
         taskList.assertScreenVisible()
 
         // Verify Eisenhower sections are visible
-        taskList.assertSectionVisible("Do First")
-        taskList.assertSectionVisible("Schedule")
-        taskList.assertSectionVisible("Delegate")
-        taskList.assertSectionVisible("Eliminate")
+        taskList.assertSectionVisible("DO FIRST")
+        taskList.assertSectionVisible("SCHEDULE")
+        taskList.assertSectionVisible("DELEGATE")
+        taskList.assertSectionVisible("MAYBE LATER")
     }
 
     // =========================================================================

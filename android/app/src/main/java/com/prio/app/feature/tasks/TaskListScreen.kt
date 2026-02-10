@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
@@ -170,6 +171,15 @@ fun TaskListScreen(
                 state.isLoading -> {
                     LoadingState()
                 }
+                state.error != null -> {
+                    ErrorState(
+                        message = state.error ?: "Something went wrong",
+                        onRetry = { viewModel.onEvent(TaskListEvent.OnRefresh) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                    )
+                }
                 state.isEmpty -> {
                     EmptyState(
                         filter = state.selectedFilter,
@@ -293,7 +303,7 @@ private fun FilterChipsRow(
                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ),
                 modifier = Modifier.semantics {
-                    contentDescription = "${filter.name} filter" + 
+                    contentDescription = "${filter.displayName} filter" + 
                         if (filter == currentFilter) ", selected" else ""
                 }
             )
@@ -481,6 +491,12 @@ private fun SwipeBackground(
         SwipeToDismissBoxValue.Settled -> null
     }
     
+    val iconDescription = when (targetValue) {
+        SwipeToDismissBoxValue.EndToStart -> "Delete task"
+        SwipeToDismissBoxValue.StartToEnd -> "Complete task"
+        SwipeToDismissBoxValue.Settled -> null
+    }
+    
     val alignment = when (targetValue) {
         SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
         SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
@@ -498,7 +514,7 @@ private fun SwipeBackground(
         icon?.let {
             Icon(
                 imageVector = it,
-                contentDescription = null,
+                contentDescription = iconDescription,
                 tint = Color.White
             )
         }
@@ -516,6 +532,37 @@ private fun LoadingState() {
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
+    }
+}
+
+@Composable
+private fun ErrorState(
+    message: String,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "⚠️",
+            style = MaterialTheme.typography.displayMedium
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = message,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(onClick = onRetry) {
+            Text("Retry")
+        }
     }
 }
 

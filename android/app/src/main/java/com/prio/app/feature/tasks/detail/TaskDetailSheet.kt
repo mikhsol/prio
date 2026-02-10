@@ -180,34 +180,59 @@ fun TaskDetailSheet(
     onEvent: (TaskDetailEvent) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    @Suppress("UNUSED_PARAMETER")
     sheetState: SheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
 ) {
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showQuadrantSelector by remember { mutableStateOf(false) }
+    var showAddSubtaskDialog by remember { mutableStateOf(false) }
     
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        modifier = modifier,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
-        containerColor = MaterialTheme.colorScheme.surface,
-        dragHandle = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .width(32.dp)
-                        .height(4.dp),
-                    shape = RoundedCornerShape(2.dp),
-                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                ) {}
-            }
-        }
+    // Inline bottom sheet: renders in the main Compose tree for testability.
+    // See QuickCaptureSheet.kt for rationale.
+    Box(
+        modifier = modifier.fillMaxSize()
     ) {
+        // Scrim backdrop
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss
+                )
+        )
+        // Sheet surface
+        Surface(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                    indication = null,
+                    onClick = {} // consume clicks so they don't reach scrim
+                ),
+            shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
+            Column {
+                // Drag handle
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Surface(
+                        modifier = Modifier
+                            .width(32.dp)
+                            .height(4.dp),
+                        shape = RoundedCornerShape(2.dp),
+                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                    ) {}
+                }
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth()
@@ -301,7 +326,7 @@ fun TaskDetailSheet(
                     SubtasksHeader(
                         completedCount = state.subtasks.count { it.isCompleted },
                         totalCount = state.subtasks.size,
-                        onAddClick = { /* Show add subtask dialog */ }
+                        onAddClick = { showAddSubtaskDialog = true }
                     )
                 }
                 
@@ -335,7 +360,9 @@ fun TaskDetailSheet(
                 )
             }
         }
-    }
+    } // Column
+    } // Surface
+    } // Box (inline bottom sheet)
     
     // Delete confirmation dialog
     if (showDeleteDialog) {
@@ -365,6 +392,56 @@ fun TaskDetailSheet(
             onDismiss = { showQuadrantSelector = false }
         )
     }
+
+    // Add subtask dialog (GAP-H03)
+    if (showAddSubtaskDialog) {
+        AddSubtaskDialog(
+            onConfirm = { title ->
+                showAddSubtaskDialog = false
+                onEvent(TaskDetailEvent.AddSubtask(title))
+            },
+            onDismiss = { showAddSubtaskDialog = false }
+        )
+    }
+}
+
+/**
+ * Dialog for adding a new subtask.
+ * Per GAP-H03: The "Add subtask" button was previously a no-op.
+ */
+@Composable
+private fun AddSubtaskDialog(
+    onConfirm: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var subtaskTitle by remember { mutableStateOf("") }
+
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add Subtask") },
+        text = {
+            OutlinedTextField(
+                value = subtaskTitle,
+                onValueChange = { subtaskTitle = it },
+                placeholder = { Text("Subtask title") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { onConfirm(subtaskTitle.trim()) },
+                enabled = subtaskTitle.isNotBlank()
+            ) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable

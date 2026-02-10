@@ -441,7 +441,8 @@ class QuickCaptureViewModel @Inject constructor(
                 _effect.send(QuickCaptureEffect.TaskCreated(taskId))
                 _effect.send(QuickCaptureEffect.ShowSnackbar(
                     message = "Task created",
-                    actionLabel = "View"
+                    actionLabel = "View",
+                    taskId = taskId
                 ))
             } catch (e: Exception) {
                 _uiState.update { 
@@ -518,7 +519,7 @@ class QuickCaptureViewModel @Inject constructor(
 sealed interface QuickCaptureEffect {
     data class TaskCreated(val taskId: Long) : QuickCaptureEffect
     data class OpenTaskDetail(val taskId: Long) : QuickCaptureEffect
-    data class ShowSnackbar(val message: String, val actionLabel: String? = null) : QuickCaptureEffect
+    data class ShowSnackbar(val message: String, val actionLabel: String? = null, val taskId: Long? = null) : QuickCaptureEffect
     data class ShowError(val message: String) : QuickCaptureEffect
     object StartVoiceRecognition : QuickCaptureEffect
     object Dismiss : QuickCaptureEffect

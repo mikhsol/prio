@@ -1,5 +1,6 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.onNodeWithText
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.GoalCategory
@@ -159,12 +160,14 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     @Test
     fun goalWithMilestones_showsMilestoneProgress() = runTest {
         val goalId = goalRepository.insertGoal(
-            TestDataFactory.goal(title = "Learn Kotlin", category = GoalCategory.LEARNING)
+            TestDataFactory.goal(title = "Learn Kotlin", category = GoalCategory.LEARNING, progress = 40)
         )
 
-        // Add milestones via create screen would be ideal, but for data setup:
-        // The detail screen should show milestone section
         nav.goToGoals()
+        goals.assertGoalDisplayed("Learn Kotlin")
         goals.tapGoal("Learn Kotlin")
+
+        // Goal detail should show progress
+        goals.assertProgressRing("40 percent")
     }
 }

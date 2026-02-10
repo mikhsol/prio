@@ -213,7 +213,8 @@ fun PrioNavHost(
             route = NavRoutes.TASK_DETAIL,
             arguments = listOf(navArgument("taskId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getLong("taskId") ?: 0L
+            val taskId = backStackEntry.arguments?.getLong("taskId")
+                ?: error("taskId argument is required for TaskDetail route")
             TaskDetailScreen(
                 taskId = taskId,
                 onNavigateBack = { navController.popBackStack() },
@@ -231,7 +232,8 @@ fun PrioNavHost(
             route = NavRoutes.GOAL_DETAIL,
             arguments = listOf(navArgument("goalId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val goalId = backStackEntry.arguments?.getLong("goalId") ?: 0L
+            val goalId = backStackEntry.arguments?.getLong("goalId")
+                ?: error("goalId argument is required for GoalDetail route")
             GoalDetailScreen(
                 goalId = goalId,
                 onNavigateBack = { navController.popBackStack() },
@@ -303,7 +305,7 @@ fun PrioNavHost(
         composable(route = NavRoutes.ABOUT) {
             PlaceholderDetailScreen(
                 title = "About Prio",
-                subtitle = "Version 1.0.0",
+                subtitle = "Version ${com.prio.app.BuildConfig.VERSION_NAME}",
                 onNavigateBack = { navController.popBackStack() }
             )
         }

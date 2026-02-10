@@ -57,8 +57,11 @@ class BriefingFlowE2ETest : BaseE2ETest() {
             TestDataFactory.task(title = "Still pending", quadrant = EisenhowerQuadrant.DO_FIRST)
         )
 
-        // Navigate to Evening Summary
-        // (would need direct route navigation since TodayScreen is hardcoded)
+        // LIMITATION: Same as eveningSummary_incompleteTaskActions — no UI path
+        // to navigate to EveningSummary route in Compose NavHost.
+        // Verify Today screen works with mixed data (no crash).
+        nav.goToToday()
+        waitForIdle()
     }
 
     // =========================================================================
@@ -71,8 +74,20 @@ class BriefingFlowE2ETest : BaseE2ETest() {
         taskRepository.insertTask(
             TestDataFactory.task(title = "Unfinished work", quadrant = EisenhowerQuadrant.DO_FIRST)
         )
+        taskRepository.insertTask(
+            TestDataFactory.completedTask(title = "Done work")
+        )
 
-        // In Evening Summary, incomplete tasks should show:
-        // "Move to tomorrow", "Reschedule", "Drop" actions
+        // LIMITATION: EveningSummary route ("evening_summary") is only reachable
+        // via onNavigateToEveningSummary callback from TodayScreen, which is not
+        // wired to a visible button yet. Compose Navigation doesn't support
+        // programmatic findNavController from the Activity.
+        //
+        // Verify the data layer works and Today screen doesn't crash with
+        // mixed completed/incomplete tasks — the UI for evening summary
+        // actions (Move to tomorrow, Reschedule, Drop) is covered in
+        // EveningSummaryScreen unit tests.
+        nav.goToToday()
+        waitForIdle()
     }
 }

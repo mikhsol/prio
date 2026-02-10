@@ -12,6 +12,7 @@ import com.prio.core.common.model.EisenhowerQuadrant
  */
 data class CalendarUiState(
     val isLoading: Boolean = true,
+    val error: String? = null,
     val hasCalendarPermission: Boolean = false,
     val showPermissionPrompt: Boolean = false,
     val selectedDate: java.time.LocalDate = java.time.LocalDate.now(),

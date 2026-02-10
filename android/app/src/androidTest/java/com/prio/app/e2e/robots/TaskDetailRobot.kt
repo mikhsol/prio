@@ -85,6 +85,23 @@ class TaskDetailRobot(
         rule.waitForIdle()
     }
 
+    /**
+     * Confirm deletion in the PrioConfirmDialog.
+     * Called after [tapDelete] which opens the dialog.
+     */
+    fun confirmDelete() {
+        // PrioConfirmDialog has a "Delete" confirm button
+        // Wait for dialog to appear, then tap the confirm button
+        rule.waitUntil(timeoutMillis = 3_000) {
+            rule.onAllNodesWithText("Delete")
+                .fetchSemanticsNodes().size >= 1
+        }
+        rule.onAllNodesWithText("Delete")
+            .onFirst()
+            .performClick()
+        rule.waitForIdle()
+    }
+
     fun editTitle(newTitle: String) {
         rule.onNodeWithText("Task title", substring = true)
             .performTextClearance()

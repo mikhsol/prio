@@ -123,7 +123,11 @@ class TaskListRobot(
     }
 
     fun assertSectionVisible(sectionTitle: String) {
-        rule.onNodeWithText(sectionTitle, substring = true)
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(sectionTitle, substring = true, ignoreCase = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(sectionTitle, substring = true, ignoreCase = true)
             .assertIsDisplayed()
     }
 

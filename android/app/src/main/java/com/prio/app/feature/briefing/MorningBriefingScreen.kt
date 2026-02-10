@@ -44,7 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +59,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.ui.theme.QuadrantColors
+import com.prio.core.ui.theme.SemanticColors
 
 /**
  * Morning Briefing Screen per 1.1.5 Today Dashboard & Morning Briefing spec.
@@ -84,7 +85,7 @@ fun MorningBriefingScreen(
     onNavigateToCalendar: () -> Unit = {},
     viewModel: MorningBriefingViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -139,8 +140,9 @@ fun MorningBriefingScreen(
                 }
             }
             uiState.briefing != null -> {
+                val briefing = uiState.briefing ?: return@Scaffold
                 MorningBriefingContent(
-                    briefing = uiState.briefing!!,
+                    briefing = briefing,
                     isRead = uiState.isRead,
                     onStartMyDay = { viewModel.onEvent(MorningBriefingEvent.OnStartMyDay) },
                     onTaskTap = { taskId -> viewModel.onEvent(MorningBriefingEvent.OnTaskTap(taskId)) },
@@ -166,8 +168,8 @@ private fun MorningBriefingContent(
     modifier: Modifier = Modifier
 ) {
     val morningGradient = listOf(
-        Color(0xFFFEF3C7), // Amber-100
-        Color(0xFFFDE68A)  // Amber-200
+        MaterialTheme.colorScheme.tertiaryContainer,
+        MaterialTheme.colorScheme.tertiary
     )
 
     LazyColumn(
@@ -216,7 +218,7 @@ private fun MorningBriefingContent(
                                     text = "YOUR MORNING BRIEFING",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color(0xFF1F2937)
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Row(
@@ -231,12 +233,12 @@ private fun MorningBriefingContent(
                                     imageVector = Icons.Default.Lock,
                                     contentDescription = null,
                                     modifier = Modifier.size(12.dp),
-                                    tint = Color(0xFF4B5563)
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
                                     text = "Private",
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = Color(0xFF4B5563)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
@@ -244,7 +246,7 @@ private fun MorningBriefingContent(
                         Text(
                             text = briefing.date,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF4B5563)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
 
                         Spacer(modifier = Modifier.height(12.dp))
@@ -256,7 +258,7 @@ private fun MorningBriefingContent(
                             text = "📊 Today's Focus",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1F2937)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
 
@@ -273,7 +275,7 @@ private fun MorningBriefingContent(
                         Text(
                             text = focusSummary,
                             style = MaterialTheme.typography.bodyLarge,
-                            color = Color(0xFF1F2937)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -340,12 +342,12 @@ private fun MorningBriefingContent(
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(text = "░░░", color = Color(0xFF10B981))
+                        Text(text = "░░░", color = SemanticColors.success)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "${"%.0f".format(briefing.focusHoursAvailable)} hours focus time available",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF10B981),
+                            color = SemanticColors.success,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -371,7 +373,7 @@ private fun MorningBriefingContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF0F9FF) // Light blue
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -382,7 +384,7 @@ private fun MorningBriefingContent(
                     Icon(
                         imageVector = Icons.Default.Lightbulb,
                         contentDescription = null,
-                        tint = Color(0xFF0D9488),
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Column {
@@ -390,13 +392,13 @@ private fun MorningBriefingContent(
                             text = "💡 AI Insight",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF1F2937)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = briefing.insight,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF374151)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -414,7 +416,7 @@ private fun MorningBriefingContent(
                         .semantics { contentDescription = "Start my day. Double tap to dismiss briefing." },
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF0D9488) // Prio teal
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     Text(
@@ -470,7 +472,7 @@ private fun SectionHeader(
             Text(
                 text = actionLabel,
                 style = MaterialTheme.typography.labelMedium,
-                color = Color(0xFF0D9488),
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.clickable { onAction() }
             )
@@ -599,7 +601,7 @@ private fun GoalSpotlightCard(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val statusColor = if (goal.isAtRisk) Color(0xFFEF4444) else Color(0xFF10B981)
+                val statusColor = if (goal.isAtRisk) SemanticColors.error else SemanticColors.success
                 val statusText = if (goal.isAtRisk) "🔴 At risk" else "🟢 On track"
                 Text(
                     text = statusText,

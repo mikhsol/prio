@@ -43,14 +43,17 @@ class PrioApplication : Application(), Configuration.Provider {
     
     /**
      * Production logging tree that reports to Firebase Crashlytics.
+     * Per GAP-C01: Crash reporting must be active in production builds.
      */
     private class CrashReportingTree : Timber.Tree() {
         override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-            // Log errors to Crashlytics
             if (priority == android.util.Log.ERROR || priority == android.util.Log.WARN) {
-                // Firebase Crashlytics logging will be added when configured
-                // FirebaseCrashlytics.getInstance().log("$tag: $message")
-                // t?.let { FirebaseCrashlytics.getInstance().recordException(it) }
+                com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
+                    .log("${tag ?: "Prio"}: $message")
+                t?.let {
+                    com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance()
+                        .recordException(it)
+                }
             }
         }
     }

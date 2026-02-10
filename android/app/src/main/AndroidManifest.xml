@@ -46,6 +46,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Boot receiver to reschedule reminders after device reboot (GAP-C02) -->
+        <receiver
+            android:name=".worker.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
         <!-- Disable default WorkManager initializer since we use on-demand initialization -->
         <provider
             android:name="androidx.startup.InitializationProvider"

@@ -45,7 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +61,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.prio.core.ui.theme.SemanticColors
 
 /**
  * Evening Summary Screen per 1.1.7 Evening Summary spec.
@@ -83,8 +84,16 @@ fun EveningSummaryScreen(
     onNavigateToSettings: () -> Unit = {},
     viewModel: EveningSummaryViewModel = hiltViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showClosedAnimation by remember { mutableStateOf(false) }
+
+    // Auto-navigate back after close day animation (fallback exit path)
+    LaunchedEffect(showClosedAnimation) {
+        if (showClosedAnimation) {
+            kotlinx.coroutines.delay(4000)
+            onNavigateBack()
+        }
+    }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
@@ -138,7 +147,7 @@ fun EveningSummaryScreen(
                         Icon(
                             imageVector = Icons.Default.Check,
                             contentDescription = null,
-                            tint = Color(0xFF10B981),
+                            tint = SemanticColors.success,
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -153,6 +162,15 @@ fun EveningSummaryScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onNavigateBack,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = SemanticColors.success
+                            )
+                        ) {
+                            Text("Done")
+                        }
                     }
                 }
             }
@@ -185,8 +203,9 @@ fun EveningSummaryScreen(
                 }
             }
             uiState.summary != null -> {
+                val summary = uiState.summary ?: return@Scaffold
                 EveningSummaryContent(
-                    summary = uiState.summary!!,
+                    summary = summary,
                     isClosingDay = uiState.isClosingDay,
                     onCloseDay = { viewModel.onEvent(EveningSummaryEvent.OnCloseDay) },
                     onTaskActionChanged = { taskId, action ->
@@ -214,8 +233,8 @@ private fun EveningSummaryContent(
     modifier: Modifier = Modifier
 ) {
     val eveningGradient = listOf(
-        Color(0xFFE0E7FF), // Indigo-100
-        Color(0xFFC7D2FE)  // Indigo-200
+        MaterialTheme.colorScheme.primaryContainer,
+        MaterialTheme.colorScheme.primary
     )
 
     LazyColumn(
@@ -250,12 +269,12 @@ private fun EveningSummaryContent(
                             text = "DAY COMPLETE",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1F2937)
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = summary.date,
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color(0xFF4B5563)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -286,7 +305,7 @@ private fun EveningSummaryContent(
                             Text(
                                 text = "✓ ${task.title}",
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF10B981),
+                                color = SemanticColors.success,
                                 modifier = Modifier
                                     .padding(vertical = 2.dp)
                                     .clickable { onTaskTap(task.id) }
@@ -360,7 +379,7 @@ private fun EveningSummaryContent(
                             text = "${summary.goalSpotlight.progress}%",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF10B981)
+                            color = SemanticColors.success
                         )
                     }
                 }
@@ -404,7 +423,7 @@ private fun EveningSummaryContent(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFF0F9FF)
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
                 ),
                 shape = RoundedCornerShape(12.dp)
             ) {
@@ -413,13 +432,13 @@ private fun EveningSummaryContent(
                         text = "💭 AI REFLECTION",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1F2937)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = summary.reflection,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF374151)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -442,7 +461,7 @@ private fun EveningSummaryContent(
                         .semantics { contentDescription = "Close day and plan tomorrow. Double tap to confirm." },
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4F46E5) // Indigo
+                        containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
                     if (isClosingDay) {
@@ -566,7 +585,7 @@ private fun EndOfDayNudge(
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFEF3C7).copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
         ),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -584,7 +603,7 @@ private fun EndOfDayNudge(
                 Icon(
                     imageVector = Icons.Default.Home,
                     contentDescription = null,
-                    tint = Color(0xFF92400E),
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.size(20.dp)
                 )
                 Column {
@@ -592,12 +611,12 @@ private fun EndOfDayNudge(
                         text = "🏠 Time to disconnect! You've earned your rest.",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF92400E)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                     Text(
                         text = "End-of-day set for $endOfDayTime",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFFB45309)
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
                     )
                 }
             }
@@ -605,7 +624,7 @@ private fun EndOfDayNudge(
                 Icon(
                     imageVector = Icons.Default.Settings,
                     contentDescription = "Settings",
-                    tint = Color(0xFFB45309),
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
                     modifier = Modifier.size(20.dp)
                 )
             }

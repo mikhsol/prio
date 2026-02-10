@@ -53,11 +53,11 @@ This action plan outlines the complete development roadmap for Prio MVP, from re
 | Lifetime | $99.99 | All Pro features forever | Maya (Privacy) - no subscription aversion |
 
 **Key Differentiators** (validated in 0.3.1 80/20 analysis, **updated with 0.2 findings**):
-1. **On-device AI** — **75-80% accuracy** target with **hybrid rule-based (primary) + LLM (refinement)** approach
+1. **On-device AI** — **75-80% accuracy** target with **hybrid rule-based (primary) + LLM (refinement)** approach; **Gemini Nano via Android AI Core (3.6)** as preferred LLM on supported devices, llama.cpp fallback
 2. **Privacy-first** — zero cloud dependency; "data never leaves device" (95% confidence in persona validation)
 3. **Goal-task integration** — unique value proposition (1.95 value score); creates switching cost
 4. **Daily AI briefings** — highest retention driver (2.18 value score); habit formation engine
-5. **Pluggable AI architecture** — swap models or add cloud backend without code changes
+5. **Pluggable AI architecture** — swap models or add cloud backend without code changes; **Gemini Nano (3.6), llama.cpp, Cloud Gateway** all behind unified `AiProvider` interface
 
 > ⚠️ **Critical 0.2 Finding**: Pure LLM (Phi-3-mini) achieves only 40% accuracy. MVP relies on rule-based classifier (75%) with optional LLM enhancement. See [Milestone 0.2.6](#milestone-026-llm-accuracy-improvement--alternative-exploration-new) for improvement roadmap.
 
@@ -1155,6 +1155,179 @@ jobs:
 - [x] Simple chart renders correctly
 - [x] Data collection working in background
 
+### Milestone 3.6: Android AI Core Integration — Gemini Nano (NEW)
+**Goal**: Leverage Android's built-in AI Core system service (Gemini Nano) as a zero-cost, zero-bundle-size, privacy-preserving AI provider with automatic fallback to existing llama.cpp engine on unsupported devices  
+**Owner**: Android Developer + Backend Engineer  
+**Status**: 📋 Planned  
+**Priority**: P1 — High-value enhancement, non-blocking for MVP  
+**Depends On**: Milestone 3.1 (Tasks Plugin) ✅, Milestone 3.4 (Daily Briefings) ✅  
+**Source**: [Android AI Core Research (Feb 2026)](https://developer.android.com/ai/aicore), [ML Kit GenAI APIs](https://developers.google.com/ml-kit/genai)
+
+#### Strategic Context
+
+> **Android AI Core** is a system-level service pre-installed on flagship Android devices (Pixel 6+, Samsung Galaxy S24+, etc.) that hosts **Gemini Nano** — Google's on-device foundation model. Third-party apps access it via **ML Kit GenAI APIs** (Beta). The model is managed, updated, and downloaded by Google Play Services — apps don't bundle it.
+
+**Why This Matters for Prio:**
+
+| Prio Principle | AI Core Alignment | Impact |
+|----------------|-------------------|--------|
+| **Privacy-first** | ✅ All inference on-device, data never leaves phone | Strengthens core differentiator |
+| **Offline-first** | ✅ Works without internet after initial model download | Maintains offline guarantee |
+| **Zero cloud cost** | ✅ No API fees — runs on device hardware (GPU/NPU) | Reduces operational cost to $0 |
+| **Low maintenance** | ✅ Google manages model updates via Play Services | Eliminates model bundling/updating burden |
+| **APK size** | ✅ Zero model weight in APK (vs 2.3GB for Phi-3) | Dramatically reduces download size |
+
+**Competitive Advantage**: Prio would be among the first productivity apps to integrate Android AI Core, reinforcing the "Your Private Productivity AI" positioning while eliminating the 2.3GB model download that currently hurts onboarding conversion.
+
+#### Architecture: Hybrid Provider Strategy
+
+The existing `AiProvider` abstraction (interface in `core:ai`, router in `core:ai-provider`) is designed for exactly this kind of extension. Gemini Nano becomes a new **Tier 1** provider in the routing hierarchy:
+
+```
+┌───────────────────────────────────────────────────────────────────┐
+│                        Task Input                                 │
+└──────────────────────────────┬────────────────────────────────────┘
+                               │
+                               ▼
+                 ┌───────────────────────┐
+                 │  STEP 1: Rule-Based   │  <50ms, 75% accuracy
+                 │  (always runs first)  │  EisenhowerEngine
+                 └───────────┬───────────┘
+                             │
+              ┌──────────────┼──────────────┐
+              │                             │
+       Confidence ≥0.65              Confidence <0.65
+              │                             │
+              ▼                             ▼
+       ┌─────────────┐          ┌───────────────────────┐
+       │  Use Result  │          │  STEP 2: LLM Escalate │
+       │  (instant)   │          └───────────┬───────────┘
+       └─────────────┘                       │
+                                ┌────────────┼────────────┐
+                                │                         │
+                         AI Core Available?          AI Core Unavailable
+                                │                         │
+                                ▼                         ▼
+                    ┌──────────────────┐     ┌──────────────────┐
+                    │  Gemini Nano     │     │  llama.cpp       │
+                    │  (ML Kit Prompt) │     │  (OnDeviceAi)    │
+                    │  ~1-2s, 0 MB APK │     │  ~2-3s, 2.3GB    │
+                    └──────────────────┘     └──────────────────┘
+```
+
+**Routing Priority** (updated `AiProviderRouter`):
+1. **Rule-based** (always first, <50ms) → if confident, done
+2. **Gemini Nano** via AI Core (if available on device) → preferred LLM, zero cost
+3. **llama.cpp** on-device (if downloaded) → fallback LLM
+4. **Cloud Gateway** (future, if enabled) → last resort
+
+#### Available ML Kit GenAI APIs
+
+| API | ML Kit Dependency | Prio Use Case | Priority |
+|-----|------------------|---------------|----------|
+| **Prompt API** | `com.google.mlkit:genai-prompt:1.0.0-beta1` | Eisenhower classification, task parsing, entity extraction | P0 — Core |
+| **Summarization** | `com.google.mlkit:genai-summarization:1.0.0-beta1` | Daily briefing generation, task list summaries | P0 — Core |
+| **Proofreading** | `com.google.mlkit:genai-proofreading:*` | Task description improvement (future) | P2 — Deferred |
+| **Rewriting** | `com.google.mlkit:genai-rewriting:*` | Task rephrasing (future) | P2 — Deferred |
+| **Image Description** | `com.google.mlkit:genai-image-description:*` | Receipt/note scanning (future) | P2 — Deferred |
+
+#### Technical Constraints
+
+| Constraint | Value | Mitigation |
+|------------|-------|------------|
+| **Input token limit** | 4,000 tokens (~3,000 English words) | Sufficient for task text + context |
+| **Output quality** | Best under 256 tokens | Eisenhower classification needs ~50 tokens — well within limit |
+| **Device support** | Flagship only (Pixel 6+, Galaxy S24+, etc.) | Graceful fallback to llama.cpp via `checkFeatureStatus()` |
+| **Unlocked bootloaders** | Not supported | Developer devices excluded — detect and fall back |
+| **Languages validated** | English, Korean (Prompt API); +Japanese (Summarization) | English covers MVP target market |
+| **API stability** | Beta — may break | Abstract behind `AiProvider` interface; fallback always available |
+| **Per-app quota** | AICore enforces inference quota | Monitor via analytics; rule-based handles overflow |
+| **Initial setup** | AICore needs time after device setup/reset | `checkFeatureStatus()` before any UI; graceful degradation |
+
+#### Implementation Tasks
+
+| ID | Task | Owner | Duration | Measurable Outcome | Status |
+|----|------|-------|----------|-------------------|--------|
+| 3.6.1 | Add ML Kit GenAI dependencies and feature detection utility | Android Developer | 2h | `genai-prompt` + `genai-summarization` in `core:ai-provider/build.gradle.kts`; `GeminiNanoAvailability` utility class that wraps `checkFeatureStatus()` / `checkStatus()` for both Prompt and Summarization APIs; returns sealed class `Available` / `Downloadable` / `Unavailable` | ⬜ |
+| 3.6.2 | Implement `GeminiNanoProvider` (`AiProvider` implementation) | Android Developer | 4h | New class in `core:ai-provider` implementing `AiProvider` interface; `providerId = "gemini-nano"`; capabilities = `{CLASSIFICATION, EXTRACTION, GENERATION, STREAMING}`; `complete()` routes to Prompt API for classification/parsing and Summarization API for briefings; `stream()` uses `generateContentStream()`; `initialize()` calls `warmup()` + triggers download if `DOWNLOADABLE`; `release()` calls `close()` on ML Kit clients; `isAvailable` StateFlow updated from `GeminiNanoAvailability` | ⬜ |
+| 3.6.3 | Implement Eisenhower classification via Prompt API | Android Developer | 3h | Prompt template for `CLASSIFY_EISENHOWER` request type: structured prompt instructing Gemini Nano to classify task into Q1-Q4 with confidence score and explanation; parse response into `EisenhowerClassification` result; validate against 20 test cases from existing EisenhowerEngine test suite; target ≥80% accuracy with <2s latency | ⬜ |
+| 3.6.4 | Implement task parsing via Prompt API | Android Developer | 2h | Prompt template for `PARSE_TASK` request type: extract title, due date, urgency signals, keywords from natural language input; parse response into `ParsedTask`; validate against `RuleBasedNaturalLanguageParser` test cases; entity extraction use case per ML Kit docs | ⬜ |
+| 3.6.5 | Implement briefing generation via Summarization API | Android Developer | 3h | Use `SummarizerOptions.InputType.ARTICLE` for task summaries and `InputType.CONVERSATION` for activity logs; generate morning briefing (top priorities, AI insight) and evening summary (accomplishments, incomplete); integrate with `BriefingGenerator`; validate output quality against 5 representative briefing scenarios | ⬜ |
+| 3.6.6 | Update `AiProviderRouter` with Gemini Nano tier | Android Developer | 3h | Add `GeminiNanoProvider` to routing hierarchy as preferred LLM (before `OnDeviceAiProvider`); new `RoutingMode.HYBRID_NANO` that prefers Gemini Nano over llama.cpp; update confidence-based escalation: rule-based → Gemini Nano → llama.cpp; add `@GeminiNanoProvider` Hilt qualifier; update `AiProviderModule` DI wiring; add `Set<AiProvider>` registration | ⬜ |
+| 3.6.7 | Implement download management and progress UI | Android Developer | 3h | Observe `DownloadCallback` / `DownloadStatus` for model download progress; surface in Settings > AI Model section; show "Gemini Nano available — tap to enable" when `DOWNLOADABLE`; show download progress bar; handle `DOWNLOADING` → `AVAILABLE` transitions; error handling for `CONNECTION_ERROR`, `FEATURE_NOT_FOUND`, `DOWNLOAD_ERROR` per ML Kit docs | ⬜ |
+| 3.6.8 | Update Onboarding model setup screen for AI Core | Android Developer | 2h | Modify onboarding Screen 4 (AI Model Setup) to detect Gemini Nano first; if available, skip 2.3GB Phi-3 download entirely — "Your device has built-in AI capabilities. No download needed!"; if unavailable, fall back to existing Phi-3/rule-based flow; reduces onboarding friction dramatically for flagship devices | ⬜ |
+| 3.6.9 | Implement accuracy benchmark suite | Backend Engineer | 3h | Benchmark harness comparing all 3 providers (rule-based, Gemini Nano, llama.cpp) against 50 labeled test cases; measure accuracy, latency (p50/p95/p99), token usage; output results to analytics for production monitoring; create `AiProviderBenchmark` instrumented test | ⬜ |
+| 3.6.10 | Write unit + integration tests for Gemini Nano provider | Android Developer | 3h | Unit tests: mock ML Kit APIs, verify request/response mapping, test all `FeatureStatus` branches, error handling; Integration test: verify `GeminiNanoProvider` registers in router, routing priority correct, fallback works when `UNAVAILABLE`; 15+ test cases | ⬜ |
+
+**Total**: 10 tasks, ~28 hours
+
+#### Prompt Engineering Notes
+
+**Eisenhower Classification Prompt** (for Prompt API):
+```
+Classify this task into an Eisenhower Matrix quadrant.
+
+Task: "{task_text}"
+Due date: {due_date_or_none}
+Context: {optional_goal_context}
+
+Respond in exactly this JSON format:
+{"quadrant": "Q1"|"Q2"|"Q3"|"Q4", "confidence": 0.0-1.0, "explanation": "one sentence"}
+
+Rules:
+- Q1 (Do First): Urgent AND important — deadlines within 48h, critical outcomes
+- Q2 (Schedule): Important but NOT urgent — long-term goals, planning, growth
+- Q3 (Delegate): Urgent but NOT important — interruptions, most emails, some meetings
+- Q4 (Eliminate): Neither urgent NOR important — time wasters, trivial tasks
+```
+
+**Task Parsing Prompt** (for Prompt API):
+```
+Extract structured information from this task input.
+
+Input: "{natural_language_input}"
+
+Respond in exactly this JSON format:
+{"title": "clean task title", "due_date": "YYYY-MM-DD or null", "due_time": "HH:MM or null", "is_urgent": true|false, "keywords": ["keyword1", "keyword2"]}
+```
+
+> **Note**: Prompt engineering and quality evaluation should follow the [ML Kit Prompt Design Guide](https://developers.google.com/ml-kit/genai/prompt/android/prompt-design) and [Evaluate Prompt Quality](https://developers.google.com/ml-kit/genai/prompt/android/evaluate-prompt) guidelines. Output is best under 256 tokens — both prompts above are well within this limit.
+
+#### Device Compatibility Impact
+
+| Device Tier | Current AI Support | With Milestone 3.6 |
+|-------------|-------------------|---------------------|
+| **Tier 1** — Flagship (Pixel 8+, Galaxy S24+) | llama.cpp (2.3GB download) | ✅ **Gemini Nano** (0 MB, pre-installed) + llama.cpp backup |
+| **Tier 2** — Upper-mid (Pixel 6-7, Galaxy S23) | llama.cpp (2.3GB download) | ✅ **Gemini Nano** (0 MB, via AICore update) + llama.cpp backup |
+| **Tier 3** — Mid-range (4-6 GB RAM) | llama.cpp (limited) | llama.cpp (unchanged) — AI Core not available |
+| **Tier 4** — Budget (<4 GB RAM) | Rule-based only | Rule-based only (unchanged) |
+
+**Net Impact**: Tier 1-2 devices (~65% of target market) get **instant AI with zero download**, dramatically improving onboarding conversion and reducing app size.
+
+#### Milestone Exit Criteria
+
+- [ ] `GeminiNanoProvider` implements `AiProvider` interface and is registered in Hilt DI
+- [ ] Runtime feature detection correctly identifies AI Core availability on device
+- [ ] Eisenhower classification via Prompt API achieves ≥80% accuracy on 50-case benchmark
+- [ ] Task parsing via Prompt API extracts dates, urgency, and keywords correctly for ≥15/20 test cases
+- [ ] Briefing generation via Summarization API produces coherent 1-3 bullet summaries
+- [ ] `AiProviderRouter` correctly routes: rule-based → Gemini Nano → llama.cpp → cloud (future)
+- [ ] Fallback to llama.cpp works seamlessly when AI Core is `UNAVAILABLE`
+- [ ] Onboarding skips 2.3GB model download on Gemini Nano-capable devices
+- [ ] Download progress UI works for Gemini Nano model fetch when status is `DOWNLOADABLE`
+- [ ] All 15+ unit/integration tests pass
+- [ ] No regression in existing rule-based or llama.cpp provider functionality
+
+#### Risk Assessment
+
+| Risk | Likelihood | Impact | Mitigation |
+|------|-----------|--------|------------|
+| ML Kit GenAI APIs breaking change (Beta) | Medium | Medium | Abstracted behind `AiProvider` interface; fallback always available |
+| Gemini Nano accuracy below expectations | Low | Medium | Benchmark suite validates before rollout; confidence-based routing falls back to llama.cpp |
+| AI Core not yet rolled out to enough devices | Medium | Low | Feature is additive — existing llama.cpp path unaffected |
+| AICore quota throttling under heavy use | Low | Low | Rule-based handles majority of requests; LLM only for low-confidence cases |
+| Prompt API output format inconsistency | Medium | Medium | Defensive JSON parsing with fallback to rule-based result |
+
 ---
 
 ## Phase 4: Polish & Integration (Weeks 10-12)
@@ -1363,7 +1536,7 @@ jobs:
 | 0: Research | 1-2 (+parallel) | Market analysis, LLM selection, MVP PRD, **LLM accuracy exploration** | [0.1](results/0.1/), [0.2](results/0.2/), [0.3](results/0.3/) |
 | 1: Design & Setup | 2-3 | UX specs, project architecture | [0.3.2-0.3.4 User Stories](results/0.3/), [UX_DESIGN_SYSTEM.md](UX_DESIGN_SYSTEM.md) |
 | 2: Core | 3-5 | Data layer, AI engine, design system | [0.2.5 LLM Rec](results/0.2/0.2.5_llm_selection_recommendation.md), [0.3.8 Metrics](results/0.3/0.3.8_success_metrics.md) |
-| 3: Features | 5-10 | Tasks, **Navigation Integration**, Goals, Calendar, Briefings, Analytics | [0.3.2](results/0.3/0.3.2_task_management_user_stories.md), [0.3.3](results/0.3/0.3.3_goals_user_stories.md), [0.3.4](results/0.3/0.3.4_calendar_briefings_user_stories.md) |
+| 3: Features | 5-10 | Tasks, **Navigation Integration**, Goals, Calendar, Briefings, Analytics, **AI Core (Gemini Nano)** | [0.3.2](results/0.3/0.3.2_task_management_user_stories.md), [0.3.3](results/0.3/0.3.3_goals_user_stories.md), [0.3.4](results/0.3/0.3.4_calendar_briefings_user_stories.md), [ML Kit GenAI](https://developers.google.com/ml-kit/genai) |
 | 4: Polish | 10-12 | Onboarding, notifications, testing | [0.3.7 Persona Validation](results/0.3/0.3.7_persona_validation.md) |
 | 5: Launch | 12-14 | Beta testing, Play Store launch | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
 | 6: Post-Launch | 14-16 | Stabilization, iteration | [0.3.8 Success Metrics](results/0.3/0.3.8_success_metrics.md) |
@@ -1371,6 +1544,8 @@ jobs:
 *Milestone 0.2.6 (LLM Accuracy Improvement) runs parallel to Phase 1-2. See [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md) for v1.1 features.*
 
 > ⚠️ **New Milestone Added**: Milestone 3.1.5 (Navigation Integration) was identified as a critical gap and added to Phase 3. It is **BLOCKING** for Milestones 3.2, 3.3, 3.4, and 4.1. See [3.1.12 Navigation Integration Analysis](results/3.1/3.1.12_navigation_integration_analysis.md) for details.
+>
+> 🚀 **New Milestone Added**: Milestone 3.6 (Android AI Core / Gemini Nano) leverages Android's built-in on-device AI service as a zero-cost, zero-bundle-size AI provider. Non-blocking enhancement — all existing AI paths remain functional. See [ML Kit GenAI APIs](https://developers.google.com/ml-kit/genai) for reference.
 
 ### Key Reference Documents
 
@@ -1388,6 +1563,7 @@ jobs:
 | **[Mistral Comparison](results/0.2/mistral_7b_benchmark_comparison.md)** | **Model comparison** | **80% accuracy but 45-60s too slow** |
 | **[0.2.4 Device Matrix](results/0.2/0.2.4_device_compatibility_matrix.md)** | **Device support** | **4-tier: 65% market gets full LLM** |
 | **[3.1.12 Navigation Analysis](results/3.1/3.1.12_navigation_integration_analysis.md)** | **Navigation gap** | **Critical: NavHost + App Shell needed** |
+| **[ML Kit GenAI APIs](https://developers.google.com/ml-kit/genai)** | **AI Core integration (3.6)** | **Gemini Nano: Prompt API + Summarization API** |
 
 ### Critical Technical Findings (from Milestone 0.2)
 
@@ -1398,6 +1574,7 @@ jobs:
 | Phi-3-mini achieves only 40% accuracy | Cannot rely on LLM alone | Rule-based primary classifier |
 | Mistral 7B achieves 80% but takes 45-60s | Too slow for real-time UX | Background processing option |
 | Rule-based achieves 75% in <50ms | Viable for MVP | Invest in keyword expansion |
+| **Gemini Nano via AI Core (3.6)** | **0 MB APK, ~1-2s, managed by Google** | **Preferred LLM on supported devices** |
 | ARM64 optimization = 2.5x speedup | Critical for performance | Always use optimized builds |
 | 3.5GB RAM for Phi-3 | Limits to Tier 1-2 devices (65%) | Rule-based fallback for Tier 3-4 |
 | Model load = 1.5s (Phi-3) vs 45s (Mistral) | Phi-3 viable for on-demand | Preload in background |
@@ -1422,14 +1599,18 @@ jobs:
            ▼                         ▼
     ┌─────────────┐       ┌─────────────────────┐
     │  Use Result  │       │  STEP 2: LLM Queue   │
-    │  (instant)   │       │  (background, 2-60s) │
-    └─────────────┘       └─────────┴───────────┘
-                                    │
-                                    ▼
-                          ┌─────────────────────┐
-                          │ Update if different  │
-                          │ (notify user)        │
-                          └─────────────────────┘
+    │  (instant)   │       └─────────┬───────────┘
+    └─────────────┘                  │
+                        ┌────────────┼────────────┐
+                        │                         │
+                 AI Core Available?         AI Core Unavailable
+                        │                         │
+                        ▼                         ▼
+              ┌──────────────────┐     ┌──────────────────┐
+              │  Gemini Nano     │     │  llama.cpp       │
+              │  (ML Kit GenAI)  │     │  (Phi-3/Mistral) │
+              │  ~1-2s, 0 MB APK │     │  ~2-60s, 2.3GB+  │
+              └──────────────────┘     └──────────────────┘
 ```
 
 ### Resource Allocation (MVP)
@@ -1452,15 +1633,17 @@ jobs:
 | Phase 0: Research | 18 + **20 (0.2.6)** | ~37h + **~45h** |
 | Phase 1: Design & Setup | 28 | ~55h |
 | Phase 2: Core | 33 | ~68h |
-| Phase 3: Features | 35 + **8 (3.1.5 Navigation)** | ~105h + **~16h** |
+| Phase 3: Features | 35 + **8 (3.1.5 Navigation)** + **10 (3.6 AI Core)** | ~105h + **~16h** + **~28h** |
 | Phase 4: Polish | 17 | ~40h |
 | Phase 5: Launch | 16 | ~35h |
 | Phase 6: Post-Launch | 9 | ~20h |
-| **Total MVP** | **~184** | **~421h** |
+| **Total MVP** | **~194** | **~449h** |
 
 *Note: Milestone 0.2.6 (LLM Accuracy Improvement) is optional/parallel work. Core MVP can proceed with rule-based classifier (75% accuracy) while exploration continues.*
 
 *Note: Milestone 3.1.5 (Navigation Integration) adds 8 tasks (~16h) but is essential for app usability and enables parallel development of Milestones 3.2-3.4.*
+
+*Note: Milestone 3.6 (Android AI Core / Gemini Nano) adds 10 tasks (~28h). This is a high-value, non-blocking enhancement — existing AI providers remain fully functional. Gemini Nano eliminates the 2.3GB model download for ~65% of target devices, dramatically improving onboarding conversion.*
 
 *MVP scope includes AI Provider abstraction layer for easy model replacement and cloud integration readiness. Post-MVP tasks moved to [POST_MVP_ROADMAP.md](POST_MVP_ROADMAP.md).*
 

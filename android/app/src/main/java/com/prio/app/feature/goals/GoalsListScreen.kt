@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -171,6 +172,32 @@ fun GoalsListScreen(
                     CircularProgressIndicator()
                 }
             }
+            uiState.error != null -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "⚠️",
+                        style = MaterialTheme.typography.displayMedium
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = uiState.error ?: "Something went wrong",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(onClick = { viewModel.onEvent(GoalsListEvent.OnRefresh) }) {
+                        Text("Retry")
+                    }
+                }
+            }
             uiState.isEmpty -> {
                 EmptyGoalsState(
                     onCreateGoal = { viewModel.onEvent(GoalsListEvent.OnCreateGoalClick) },
@@ -266,7 +293,7 @@ private fun mapToUiStatus(status: GoalStatus): com.prio.core.ui.components.GoalS
         GoalStatus.ON_TRACK -> com.prio.core.ui.components.GoalStatus.ON_TRACK
         GoalStatus.BEHIND -> com.prio.core.ui.components.GoalStatus.SLIGHTLY_BEHIND
         GoalStatus.AT_RISK -> com.prio.core.ui.components.GoalStatus.AT_RISK
-        GoalStatus.COMPLETED -> com.prio.core.ui.components.GoalStatus.ON_TRACK
+        GoalStatus.COMPLETED -> com.prio.core.ui.components.GoalStatus.COMPLETED
     }
 }
 
@@ -301,14 +328,14 @@ private fun GoalsOverviewCard(
             // Average progress ring
             Box(contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(
-                    progress = { stats.averageProgress },
+                    progress = { stats.averageProgress.takeIf { it.isFinite() } ?: 0f },
                     modifier = Modifier.size(56.dp),
                     color = SemanticColors.onTrack,
                     trackColor = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.2f),
                     strokeWidth = 6.dp
                 )
                 Text(
-                    text = "${(stats.averageProgress * 100).toInt()}%",
+                    text = "${(stats.averageProgress.takeIf { it.isFinite() }?.times(100)?.toInt() ?: 0)}%",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer

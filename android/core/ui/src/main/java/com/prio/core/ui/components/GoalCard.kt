@@ -68,7 +68,8 @@ enum class GoalStatus(
 ) {
     ON_TRACK("On Track", SemanticColors.onTrack, "🟢"),
     SLIGHTLY_BEHIND("Slightly Behind", SemanticColors.behind, "🟡"),
-    AT_RISK("At Risk", SemanticColors.atRisk, "🔴")
+    AT_RISK("At Risk", SemanticColors.atRisk, "🔴"),
+    COMPLETED("Completed", SemanticColors.success, "✅")
 }
 
 /**

@@ -168,6 +168,34 @@ fun CalendarScreen(
 
             // Main content area
             when {
+                // Error state
+                uiState.error != null -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)
+                            .padding(32.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = "⚠️",
+                            style = MaterialTheme.typography.displayMedium
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = uiState.error ?: "Something went wrong",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { viewModel.onEvent(CalendarEvent.OnRefresh) }) {
+                            Text("Retry")
+                        }
+                    }
+                }
+
                 // First-time permission prompt
                 uiState.showPermissionPrompt -> {
                     CalendarPermissionPrompt(

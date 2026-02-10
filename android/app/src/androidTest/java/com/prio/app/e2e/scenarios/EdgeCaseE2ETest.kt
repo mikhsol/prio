@@ -37,15 +37,19 @@ class EdgeCaseE2ETest : BaseE2ETest() {
             TestDataFactory.task(title = "Go running", goalId = goalId)
         )
 
+        // Verify task is linked to goal
         nav.goToTasks()
         taskList.assertTaskDisplayed("Go running")
 
-        // Delete the goal
+        // Verify goal exists
         nav.goToGoals()
-        goals.tapGoal("Fitness goal")
-        // (Would need delete action on goal detail)
+        goals.assertGoalDisplayed("Fitness goal")
 
-        // Task should still exist but with goalId=null (FK SET_NULL)
+        // Delete goal directly via repository (goal detail delete not yet implemented)
+        goalRepository.deleteGoalById(goalId)
+        waitForIdle()
+
+        // Task should still exist (FK SET NULL cascading)
         nav.goToTasks()
         taskList.assertTaskDisplayed("Go running")
     }
@@ -161,6 +165,15 @@ class EdgeCaseE2ETest : BaseE2ETest() {
         goalRepository.insertGoal(TestDataFactory.goal(title = "Full Goal", progress = 100))
 
         nav.goToGoals()
+        waitForIdle()
+
+        // Wait for data to load (async from Room)
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Zero Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
         goals.assertGoalDisplayed("Zero Goal")
         goals.assertGoalDisplayed("Full Goal")
         // No NaN/crash in the overview card averageProgress calculation
@@ -187,6 +200,13 @@ class EdgeCaseE2ETest : BaseE2ETest() {
         nav.goToTasks()
         taskList.assertTaskDisplayed("Bare minimum")
         taskList.tapTask("Bare minimum")
+
+        // Wait for task detail to load
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("More options")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         taskDetail.assertSheetVisible()
     }
 }

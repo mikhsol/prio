@@ -87,8 +87,10 @@ class TaskDetailE2ETest : BaseE2ETest() {
 
         taskDetail.openOverflowMenu()
         taskDetail.tapDelete()
+        taskDetail.confirmDelete()
 
         // Back to task list, task should be gone
+        nav.goToTasks()
         taskList.assertTaskNotDisplayed("Delete me")
     }
 

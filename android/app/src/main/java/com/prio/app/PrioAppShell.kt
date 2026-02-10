@@ -66,6 +66,7 @@ import timber.log.Timber
 fun PrioAppShell(
     modifier: Modifier = Modifier,
     showOnboarding: Boolean = false,
+    deepLinkRoute: String? = null,
     onFirstLaunchComplete: () -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -74,6 +75,16 @@ fun PrioAppShell(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    
+    // Handle deep link navigation on first composition
+    LaunchedEffect(deepLinkRoute) {
+        deepLinkRoute?.let { route ->
+            Timber.d("Navigating to deep link route: $route")
+            navController.navigate(route) {
+                launchSingleTop = true
+            }
+        }
+    }
     
     // Track quick capture state
     var showQuickCapture by rememberSaveable { mutableStateOf(false) }
@@ -141,6 +152,23 @@ fun PrioAppShell(
                         // Check permission before starting
                         if (audioPermissionState.status.isGranted) {
                             startVoiceRecognition(voiceInputManager, viewModel)
+                        } else if (!audioPermissionState.status.shouldShowRationale) {
+                            // Permanently denied — direct user to app settings
+                            Timber.d("RECORD_AUDIO permanently denied, directing to settings")
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = "Microphone access required for voice input. Enable in Settings.",
+                                    actionLabel = "Settings"
+                                ).let { result ->
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        val intent = android.content.Intent(
+                                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            android.net.Uri.fromParts("package", context.packageName, null)
+                                        )
+                                        context.startActivity(intent)
+                                    }
+                                }
+                            }
                         } else {
                             Timber.d("RECORD_AUDIO permission not granted, requesting")
                             audioPermissionState.launchPermissionRequest()
@@ -156,7 +184,10 @@ fun PrioAppShell(
                                 actionLabel = effect.actionLabel
                             )
                             if (result == SnackbarResult.ActionPerformed) {
-                                // "View" action tapped → navigate to task detail
+                                // Navigate to the created task detail
+                                effect.taskId?.let { id ->
+                                    navController.navigate(NavRoutes.taskDetail(id))
+                                }
                             }
                         }
                     }
@@ -246,7 +277,7 @@ private fun getNavItemRoute(route: String?): String {
         NavRoutes.TASKS -> NavRoutes.TASKS
         NavRoutes.GOALS -> NavRoutes.GOALS
         NavRoutes.CALENDAR -> NavRoutes.CALENDAR
-        NavRoutes.MORE -> NavRoutes.TODAY // More doesn't have its own tab
+        NavRoutes.MORE -> NavRoutes.MORE
         else -> NavRoutes.TODAY
     }
 }

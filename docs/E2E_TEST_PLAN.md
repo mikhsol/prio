@@ -5,9 +5,10 @@
 | Field | Value |
 |-------|-------|
 | **Created** | February 6, 2026 |
+| **Last Updated** | February 10, 2026 |
 | **Phase** | Phase 3 Gap Analysis + E2E Test Planning |
 | **Authors** | Product Manager, UX Designer, Android Developer |
-| **Status** | Ready for Execution |
+| **Status** | Gap Remediation Complete — Ready for E2E Execution |
 | **Target** | Local emulator (primary), Physical device (on demand) |
 
 ---
@@ -23,6 +24,8 @@ This document is the result of a cross-functional analysis of **Phase 3: Feature
 
 **Key Finding**: Phase 3 feature code is ~95% complete but has significant **test coverage gaps**, **dead UI paths**, and **unhandled edge cases** that must be validated before Phase 4/5.
 
+> **📋 Update (Feb 10, 2026)**: All **5 Critical** and **10 High** gaps have been fixed. Additionally **5 Medium** and **3 Low** gaps were resolved. The ModalBottomSheet test-framework blocker was eliminated by migrating to inline bottom sheets. E2E test robots and scenarios were updated to match corrected selectors. See §2.2 for per-gap status.
+
 ---
 
 ## 2. Phase 3 Gap Analysis
@@ -32,79 +35,79 @@ This document is the result of a cross-functional analysis of **Phase 3: Feature
 | User Story | Priority | Implemented | Gaps / Issues |
 |------------|----------|-------------|---------------|
 | **TM-001** Quick Task Capture | P0 | ✅ | Voice input works; FAB visible on all tabs ✅ |
-| **TM-002** NL Task Parsing | P0 | ✅ | `error` state defined but **never displayed** in QuickCaptureSheet UI |
+| **TM-002** NL Task Parsing | P0 | ✅ | ~~`error` state defined but **never displayed**~~ → ✅ FIXED (GAP-H09): error Card + Retry in QuickCaptureSheet |
 | **TM-003** AI Eisenhower Classification | P0 | ✅ | AI explanation shows in TaskDetail ✅ |
-| **TM-004** Task List with Priority | P0 | ✅ | No explicit **error state** (failed data load = blank screen) |
+| **TM-004** Task List with Priority | P0 | ✅ | ~~No explicit **error state**~~ → ✅ FIXED (GAP-M01): error state + Retry on TaskList, Goals, Calendar |
 | **TM-005** Deadline Urgency Scoring | P0 | ✅ | Urgency auto-updates ✅; notification at 1d/3d ✅ |
-| **TM-006** Complete/Edit/Delete | P0 | ✅ | Snackbar "View" action **does nothing** (PEND); Undo works ✅ |
-| **TM-007** Subtasks/Checklist | P1 | ⚠️ Partial | "Add subtask" button in TaskDetail **does nothing** (TODO) |
+| **TM-006** Complete/Edit/Delete | P0 | ✅ | ~~Snackbar "View" action **does nothing**~~ → ✅ FIXED (GAP-H02): navigates to task detail |
+| **TM-007** Subtasks/Checklist | P1 | ✅ | ~~"Add subtask" button **does nothing**~~ → ✅ FIXED (GAP-H03): AddSubtaskDialog wired |
 | **TM-008** Recurring Tasks | P1 | ✅ | WorkManager auto-creation ✅; date calculation tested ✅ |
-| **TM-009** Smart Reminders | P1 | ✅ | 3 channels, snooze, quiet hours ✅; No `BOOT_COMPLETED` receiver ⚠️ |
+| **TM-009** Smart Reminders | P1 | ✅ | 3 channels, snooze, quiet hours ✅; ~~No `BOOT_COMPLETED` receiver~~ → ✅ FIXED (GAP-C02): BootReceiver added |
 | **TM-010** Override AI Classification | P0 | ✅ | Quadrant selector in TaskDetail ✅; override tracking TODO (P3) |
 | **GL-001** Create Goal + AI | P0 | ✅ | 3-step wizard, SMART suggestions, max 10 goals ✅ |
-| **GL-002** Goal Progress Viz | P0 | ✅ | Progress ring, color status ✅; `COMPLETED` maps to `ON_TRACK` ⚠️ |
+| **GL-002** Goal Progress Viz | P0 | ✅ | Progress ring, color status ✅; ~~`COMPLETED` maps to `ON_TRACK`~~ → ✅ FIXED (GAP-C03): COMPLETED enum added |
 | **GL-003** Link Tasks to Goals | P0 | ✅ | GoalPicker in QuickCapture + TaskDetail ✅ |
 | **GL-004** Goal Milestones | P1 | ✅ | Timeline, 0-5 milestones, check-off ✅ |
 | **GL-005** Goal Dashboard | P0 | ✅ | Stats, category filters, at-risk sorting ✅ |
 | **GL-006** Goal Analytics | P1 | ⚠️ Partial | Analytics tab exists; no export functionality |
 | **CB-001** Morning Briefing | P0 | ✅ | Greeting, top 3, schedule, goal spotlight, AI insight ✅ |
 | **CB-002** Calendar Read Integration | P0 | ✅ | ContentProvider, multi-calendar, color-coded ✅ |
-| **CB-003** Evening Summary | P1 | ✅ | `ShowError` effect **silently dropped** (TODO); "Close Day" animation has **no exit path** |
+| **CB-003** Evening Summary | P1 | ✅ | ~~`ShowError` effect **silently dropped**; "Close Day" animation has **no exit path**~~ → ✅ FIXED (GAP-H04): Done button + 4s auto-dismiss |
 | **CB-004** Meeting Notes + AI | P1 | ✅ | Notes, action items, accept/reject ✅ |
 | **CB-005** Calendar Day View | P0 | ✅ | Timeline, events, tasks, NOW indicator ✅ |
 | **CB-006** Smart Briefing Insights | P1 | ✅ | Rule-based insights, no-repeat 7d dedup ✅ |
 
 ### 2.2 Critical Gaps Identified
 
-#### 🔴 Critical (Crash / Data Loss Risk)
+#### 🔴 Critical (Crash / Data Loss Risk) — ✅ ALL 5 FIXED
 
-| ID | Gap | Source | Impact |
-|----|-----|--------|--------|
-| GAP-C01 | **CrashReportingTree is a no-op** — zero crash reporting in production | `PrioApplication.kt` | Crashes in production are invisible |
-| GAP-C02 | **`RECEIVE_BOOT_COMPLETED`** permission declared, **no BootReceiver registered** | `AndroidManifest.xml` | Reminders/alarms lost after device reboot |
-| GAP-C03 | **`GoalStatus.COMPLETED` maps to `ON_TRACK`** in GoalsList UI | `GoalsListScreen.kt` | Completed goals show wrong status indicator |
-| GAP-C04 | **`averageProgress` can be `NaN`** (0/0 division) → crash in `CircularProgressIndicator` | `GoalsListScreen.kt` | App crash with 0 active goals |
-| GAP-C05 | **Navigation ID fallback to `0L`** for missing arguments | `PrioNavHost.kt` | Silent bad state — detail screens show wrong/empty data |
+| ID | Gap | Source | Impact | Status |
+|----|-----|--------|--------|--------|
+| GAP-C01 | **CrashReportingTree is a no-op** — zero crash reporting in production | `PrioApplication.kt` | Crashes in production are invisible | ✅ FIXED — Uncommented FirebaseCrashlytics calls |
+| GAP-C02 | **`RECEIVE_BOOT_COMPLETED`** permission declared, **no BootReceiver registered** | `AndroidManifest.xml` | Reminders/alarms lost after device reboot | ✅ FIXED — Created `BootReceiver.kt` + manifest entry |
+| GAP-C03 | **`GoalStatus.COMPLETED` maps to `ON_TRACK`** in GoalsList UI | `GoalsListScreen.kt` | Completed goals show wrong status indicator | ✅ FIXED — Added `COMPLETED` to UI GoalStatus enum |
+| GAP-C04 | **`averageProgress` can be `NaN`** (0/0 division) → crash in `CircularProgressIndicator` | `GoalsListScreen.kt` | App crash with 0 active goals | ✅ FIXED — Guarded with `.takeIf { it.isFinite() } ?: 0f` |
+| GAP-C05 | **Navigation ID fallback to `0L`** for missing arguments | `PrioNavHost.kt` | Silent bad state — detail screens show wrong/empty data | ✅ FIXED — Changed to `?: error("...required")` |
 
-#### 🟠 High (Broken UX / Lost Functionality)
+#### 🟠 High (Broken UX / Lost Functionality) — ✅ ALL 10 FIXED
 
-| ID | Gap | Source | Impact |
-|----|-----|--------|--------|
-| GAP-H01 | **TodayScreen is entirely hardcoded placeholder** | `TodayScreen.kt` | Home tab shows fake data — all click handlers are empty TODOs |
-| GAP-H02 | **Snackbar "View" action does nothing** after task creation | `PrioAppShell.kt` | User taps "View" → nothing happens |
-| GAP-H03 | **"Add subtask" button does nothing** in TaskDetail | `TaskDetailSheet.kt` | Feature appears available but is non-functional |
-| GAP-H04 | **Evening Summary "Close Day" animation has no exit** | `EveningSummaryScreen.kt` | User stuck on "Day Closed!" overlay forever |
-| GAP-H05 | **"More" tab maps to "Today"** in bottom navigation | `PrioAppShell.kt` | "More" tab can never appear selected |
-| GAP-H06 | **No deep link handling** — notification taps cannot route to screens | `MainActivity.kt` | Briefing/reminder notifications open the default screen |
-| GAP-H07 | **Onboarding hardcoded to `false`** — first launch goes straight to app | `MainActivity.kt` | New users skip onboarding entirely |
-| GAP-H08 | **`collectAsState()` instead of `collectAsStateWithLifecycle()`** | Briefing screens | Unnecessary data collection when app is backgrounded |
-| GAP-H09 | **QuickCapture `error` state is never displayed** | `QuickCaptureSheet.kt` | If AI parsing fails, user sees no feedback |
-| GAP-H10 | **`RECORD_AUDIO` permanent denial** — no settings redirect | `PrioAppShell.kt` | User permanently denied mic with no way to fix |
+| ID | Gap | Source | Impact | Status |
+|----|-----|--------|--------|--------|
+| GAP-H01 | **TodayScreen is entirely hardcoded placeholder** | `TodayScreen.kt` | Home tab shows fake data — all click handlers are empty TODOs | ✅ FIXED — Rewrote with `TodayViewModel` + live data |
+| GAP-H02 | **Snackbar "View" action does nothing** after task creation | `PrioAppShell.kt` | User taps "View" → nothing happens | ✅ FIXED — Navigates to `NavRoutes.taskDetail(id)` |
+| GAP-H03 | **"Add subtask" button does nothing** in TaskDetail | `TaskDetailSheet.kt` | Feature appears available but is non-functional | ✅ FIXED — Added `AddSubtaskDialog` composable |
+| GAP-H04 | **Evening Summary "Close Day" animation has no exit** | `EveningSummaryScreen.kt` | User stuck on "Day Closed!" overlay forever | ✅ FIXED — "Done" button + 4s auto-dismiss |
+| GAP-H05 | **"More" tab maps to "Today"** in bottom navigation | `PrioAppShell.kt` | "More" tab can never appear selected | ✅ FIXED — Routes to `NavRoutes.MORE` |
+| GAP-H06 | **No deep link handling** — notification taps cannot route to screens | `MainActivity.kt` | Briefing/reminder notifications open the default screen | ✅ FIXED — `parseDeepLink()` + `deepLinkRoute` param |
+| GAP-H07 | **Onboarding hardcoded to `false`** — first launch goes straight to app | `MainActivity.kt` | New users skip onboarding entirely | ✅ FIXED — Reads `UserPreferencesRepository` |
+| GAP-H08 | **`collectAsState()` instead of `collectAsStateWithLifecycle()`** | Briefing screens | Unnecessary data collection when app is backgrounded | ✅ FIXED — Both briefing screens updated |
+| GAP-H09 | **QuickCapture `error` state is never displayed** | `QuickCaptureSheet.kt` | If AI parsing fails, user sees no feedback | ✅ FIXED — Error Card + "Retry" button |
+| GAP-H10 | **`RECORD_AUDIO` permanent denial** — no settings redirect | `PrioAppShell.kt` | User permanently denied mic with no way to fix | ✅ FIXED — Settings redirect snackbar |
 
-#### 🟡 Medium (Polish / Edge Cases)
+#### 🟡 Medium (Polish / Edge Cases) — 5 FIXED, 5 DEFERRED
 
-| ID | Gap | Source | Impact |
-|----|-----|--------|--------|
-| GAP-M01 | **No error state** in TaskListScreen, GoalsListScreen, CalendarScreen | Multiple | Failed data load = blank screen, no retry |
-| GAP-M02 | **Hardcoded colors** in Briefing screens don't respect dark mode | Briefing screens | Dark mode shows light-colored cards |
-| GAP-M03 | **All UI strings hardcoded** — not in string resources | All screens | No i18n/l10n support possible |
-| GAP-M04 | **Nested scroll conflicts** — LazyColumn inside ModalBottomSheet | TaskDetail, QuickCapture | Gesture collision between sheet drag and list scroll |
-| GAP-M05 | **Calendar timeline RTL breaks** — hardcoded pixel offsets | `CalendarScreen.kt` | RTL languages have broken layout |
-| GAP-M06 | **DatePicker not pre-populated** with existing due date | `QuickCaptureSheet.kt` | User loses previous date when editing |
-| GAP-M07 | **Force-unwrap `!!`** on nullable state in Briefing screens | Briefing screens | Potential NPE under race conditions |
-| GAP-M08 | **Dual navigation systems** (PrioRoute + NavRoutes) — dead code drift | `PrioNavigation.kt` | Maintenance burden, potential sync bugs |
-| GAP-M09 | **Version "1.0.0" hardcoded** in About screen | `PrioNavHost.kt` | Will become stale |
-| GAP-M10 | **No confetti animation** on task/goal completion | Multiple | TODO markers — visual celebration missing |
+| ID | Gap | Source | Impact | Status |
+|----|-----|--------|--------|--------|
+| GAP-M01 | **No error state** in TaskListScreen, GoalsListScreen, CalendarScreen | Multiple | Failed data load = blank screen, no retry | ✅ FIXED — Error state + Retry on all 3 screens |
+| GAP-M02 | **Hardcoded colors** in Briefing screens don't respect dark mode | Briefing screens | Dark mode shows light-colored cards | ✅ FIXED — All `Color(0xFF...)` → theme tokens (0 remaining) |
+| GAP-M03 | **All UI strings hardcoded** — not in string resources | All screens | No i18n/l10n support possible | ⏭ DEFERRED — Massive refactor, no functional impact for MVP |
+| GAP-M04 | **Nested scroll conflicts** — LazyColumn inside ModalBottomSheet | TaskDetail, QuickCapture | Gesture collision between sheet drag and list scroll | ⏭ DEFERRED — Mitigated by inline bottom sheet migration |
+| GAP-M05 | **Calendar timeline RTL breaks** — hardcoded pixel offsets | `CalendarScreen.kt` | RTL languages have broken layout | ⏭ DEFERRED — Low priority for MVP market |
+| GAP-M06 | **DatePicker not pre-populated** with existing due date | `QuickCaptureSheet.kt` | User loses previous date when editing | ✅ FIXED — `initialSelectedDateMillis` from parsed Instant |
+| GAP-M07 | **Force-unwrap `!!`** on nullable state in Briefing screens | Briefing screens | Potential NPE under race conditions | ✅ FIXED — `?: return@Scaffold` safe pattern |
+| GAP-M08 | **Dual navigation systems** (PrioRoute + NavRoutes) — dead code drift | `PrioNavigation.kt` | Maintenance burden, potential sync bugs | ⏭ DEFERRED — Cosmetic, existing approach works |
+| GAP-M09 | **Version "1.0.0" hardcoded** in About screen | `PrioNavHost.kt` | Will become stale | ✅ FIXED — Uses `BuildConfig.VERSION_NAME` |
+| GAP-M10 | **No confetti animation** on task/goal completion | Multiple | TODO markers — visual celebration missing | ⏭ DEFERRED — Post-MVP feature (see TODO.md #15) |
 
 #### 🔵 Low (Accessibility / Best Practice)
 
-| ID | Gap | Source | Impact |
-|----|-----|--------|--------|
-| GAP-L01 | **Missing content descriptions** on many interactive elements | All screens | Screen reader users cannot use key features |
-| GAP-L02 | **Swipe background icons** have `contentDescription = null` | `TaskListScreen.kt` | No TalkBack feedback on swipe |
-| GAP-L03 | **Filter chip** uses enum name instead of `displayName` | `TaskListScreen.kt` | TalkBack reads "HasGoal" not "Has Goal" |
-| GAP-L04 | **"Edit" content description** is identical for all ParsedFieldRow buttons | `QuickCaptureSheet.kt` | Ambiguous — should be "Edit title", "Edit date" |
-| GAP-L05 | **Touch targets < 48dp** on some "See All" / "Full View" text buttons | Briefing screens | WCAG touch target failure |
+| ID | Gap | Source | Impact | Status |
+|----|-----|--------|--------|--------|
+| GAP-L01 | **Missing content descriptions** on many interactive elements | All screens | Screen reader users cannot use key features | ⏭ DEFERRED — Incremental improvement, not blocking |
+| GAP-L02 | **Swipe background icons** have `contentDescription = null` | `TaskListScreen.kt` | No TalkBack feedback on swipe | ✅ FIXED — "Delete task" / "Complete task" descriptions |
+| GAP-L03 | **Filter chip** uses enum name instead of `displayName` | `TaskListScreen.kt` | TalkBack reads "HasGoal" not "Has Goal" | ✅ FIXED — Uses `filter.displayName` |
+| GAP-L04 | **"Edit" content description** is identical for all ParsedFieldRow buttons | `QuickCaptureSheet.kt` | Ambiguous — should be "Edit title", "Edit date" | ✅ FIXED — "Edit title", "Edit due date", "Edit goal" |
+| GAP-L05 | **Touch targets < 48dp** on some "See All" / "Full View" text buttons | Briefing screens | WCAG touch target failure | ⏭ DEFERRED — Requires design system audit |
 
 ### 2.3 Missing Test Coverage
 
@@ -673,26 +676,26 @@ adb devices
 
 These defects were identified during code review and should be fixed prior to or alongside E2E test execution.
 
-| ID | Severity | Description | File | Fix |
-|----|----------|-------------|------|-----|
-| DEF-001 | 🔴 Critical | `CrashReportingTree` is no-op — no production crash reporting | `PrioApplication.kt` | Enable Firebase Crashlytics logging |
-| DEF-002 | 🔴 Critical | `RECEIVE_BOOT_COMPLETED` declared but no `BootReceiver` | `AndroidManifest.xml` | Add `BootReceiver` to reschedule reminders |
-| DEF-003 | 🔴 Critical | `averageProgress` division by zero → NaN → crash | `GoalsListScreen.kt` | Guard `/ 0` with `coerceIn()` |
-| DEF-004 | 🟠 High | "Close Day" animation has no exit path | `EveningSummaryScreen.kt` | Add auto-dismiss or navigation after animation |
-| DEF-005 | 🟠 High | Snackbar "View" action does nothing | `PrioAppShell.kt` | Navigate to task detail on "View" tap |
-| DEF-006 | 🟠 High | `ShowError` effect silently dropped | `EveningSummaryScreen.kt` | Show snackbar with error message |
-| DEF-007 | 🟠 High | TodayScreen entirely hardcoded | `TodayScreen.kt` | Wire to `TodayViewModel` |
-| DEF-008 | 🟡 Medium | `GoalStatus.COMPLETED` → `ON_TRACK` mapping | `GoalsListScreen.kt` | Add COMPLETED status to UI enum |
-| DEF-009 | 🟡 Medium | `collectAsState` instead of `collectAsStateWithLifecycle` | Briefing screens | Replace imports |
-| DEF-010 | 🟡 Medium | "More" tab maps to "Today" route | `PrioAppShell.kt` | Add proper More route |
-| DEF-011 | 🟡 Medium | No error state in TaskList/Goals/Calendar | Multiple | Add error UI with retry |
-| DEF-012 | 🟡 Medium | QuickCapture `error` never displayed | `QuickCaptureSheet.kt` | Show error banner/snackbar |
-| DEF-013 | 🟡 Medium | Permanent mic denial — no settings redirect | `PrioAppShell.kt` | Show "Go to Settings" option |
-| DEF-014 | 🔵 Low | Hardcoded colors break dark mode in Briefings | Briefing screens | Use MaterialTheme colors |
-| DEF-015 | 🔵 Low | All UI strings hardcoded (not in resources) | All screens | Extract to strings.xml |
-| DEF-016 | 🔵 Low | Missing content descriptions on swipe backgrounds | `TaskListScreen.kt` | Add contentDescription |
-| DEF-017 | 🔵 Low | "Add subtask" button does nothing | `TaskDetailSheet.kt` | Implement or hide button |
-| DEF-018 | 🔵 Low | Version "1.0.0" hardcoded | `PrioNavHost.kt` | Use `BuildConfig.VERSION_NAME` |
+| ID | Severity | Description | File | Fix | Status |
+|----|----------|-------------|------|-----|--------|
+| DEF-001 | 🔴 Critical | `CrashReportingTree` is no-op — no production crash reporting | `PrioApplication.kt` | Enable Firebase Crashlytics logging | ✅ FIXED (GAP-C01) |
+| DEF-002 | 🔴 Critical | `RECEIVE_BOOT_COMPLETED` declared but no `BootReceiver` | `AndroidManifest.xml` | Add `BootReceiver` to reschedule reminders | ✅ FIXED (GAP-C02) |
+| DEF-003 | 🔴 Critical | `averageProgress` division by zero → NaN → crash | `GoalsListScreen.kt` | Guard `/ 0` with `coerceIn()` | ✅ FIXED (GAP-C04) |
+| DEF-004 | 🟠 High | "Close Day" animation has no exit path | `EveningSummaryScreen.kt` | Add auto-dismiss or navigation after animation | ✅ FIXED (GAP-H04) |
+| DEF-005 | 🟠 High | Snackbar "View" action does nothing | `PrioAppShell.kt` | Navigate to task detail on "View" tap | ✅ FIXED (GAP-H02) |
+| DEF-006 | 🟠 High | `ShowError` effect silently dropped | `EveningSummaryScreen.kt` | Show snackbar with error message | ✅ FIXED (GAP-H04) |
+| DEF-007 | 🟠 High | TodayScreen entirely hardcoded | `TodayScreen.kt` | Wire to `TodayViewModel` | ✅ FIXED (GAP-H01) |
+| DEF-008 | 🟡 Medium | `GoalStatus.COMPLETED` → `ON_TRACK` mapping | `GoalsListScreen.kt` | Add COMPLETED status to UI enum | ✅ FIXED (GAP-C03) |
+| DEF-009 | 🟡 Medium | `collectAsState` instead of `collectAsStateWithLifecycle` | Briefing screens | Replace imports | ✅ FIXED (GAP-H08) |
+| DEF-010 | 🟡 Medium | "More" tab maps to "Today" route | `PrioAppShell.kt` | Add proper More route | ✅ FIXED (GAP-H05) |
+| DEF-011 | 🟡 Medium | No error state in TaskList/Goals/Calendar | Multiple | Add error UI with retry | ✅ FIXED (GAP-M01) |
+| DEF-012 | 🟡 Medium | QuickCapture `error` never displayed | `QuickCaptureSheet.kt` | Show error banner/snackbar | ✅ FIXED (GAP-H09) |
+| DEF-013 | 🟡 Medium | Permanent mic denial — no settings redirect | `PrioAppShell.kt` | Show "Go to Settings" option | ✅ FIXED (GAP-H10) |
+| DEF-014 | 🔵 Low | Hardcoded colors break dark mode in Briefings | Briefing screens | Use MaterialTheme colors | ✅ FIXED (GAP-M02) |
+| DEF-015 | 🔵 Low | All UI strings hardcoded (not in resources) | All screens | Extract to strings.xml | ⏭ DEFERRED (GAP-M03) |
+| DEF-016 | 🔵 Low | Missing content descriptions on swipe backgrounds | `TaskListScreen.kt` | Add contentDescription | ✅ FIXED (GAP-L02) |
+| DEF-017 | 🔵 Low | "Add subtask" button does nothing | `TaskDetailSheet.kt` | Implement or hide button | ✅ FIXED (GAP-H03) |
+| DEF-018 | 🔵 Low | Version "1.0.0" hardcoded | `PrioNavHost.kt` | Use `BuildConfig.VERSION_NAME` | ✅ FIXED (GAP-M09) |
 
 ---
 
@@ -713,12 +716,12 @@ These defects were identified during code review and should be fixed prior to or
 ### For Phase 3 Sign-off
 - [ ] Phase 1 (Smoke): **100% pass** (12 tests)
 - [ ] Phase 2 (Core): **≥95% pass** (42 P0 tests)
-- [ ] All 🔴 Critical defects (DEF-001 through DEF-003) fixed
-- [ ] All 🟠 High defects triaged (fixed or accepted with workaround)
+- [x] All 🔴 Critical defects (DEF-001 through DEF-003) fixed — ✅ All 5 Critical gaps resolved (Feb 10)
+- [x] All 🟠 High defects triaged (fixed or accepted with workaround) — ✅ All 10 High gaps resolved (Feb 10)
 
 ### For Phase 4 Entry
 - [ ] Phase 1-3 tests: **≥90% pass** (71 tests)
-- [ ] No known crash-causing defects
+- [x] No known crash-causing defects — ✅ NaN crash (C04), nav crash (C05) fixed; !! NPE (M07) fixed
 - [ ] E2E test infrastructure committed and CI-ready
 
 ### For Phase 5 (Launch) Entry
@@ -758,5 +761,6 @@ These defects were identified during code review and should be fixed prior to or
 ---
 
 *Document Owner: Product Manager + Android Developer + UX Designer*  
-*Status: Ready for Execution*  
-*Next Step: Implement test infrastructure (BaseE2ETest, Robots, TestDataFactory) → Phase 1 Smoke tests*
+*Status: Gap Remediation Complete — Ready for E2E Execution*  
+*Last Updated: February 10, 2026*  
+*Next Step: Run E2E tests — all Critical/High defects resolved, test infrastructure + robots committed*

@@ -24,3 +24,5 @@
 23. Delegate task to agent.
 24. Email integration, suggest response.
 25. Sync up notes from Notion.
+26. Telegram/WhatsApp mini app/bot -> Send message to todo.
+27. Separate personal to work spaces/user profies?

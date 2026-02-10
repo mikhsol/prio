@@ -46,6 +46,15 @@ class CalendarE2ETest : BaseE2ETest() {
 
         nav.goToCalendar()
         calendar.assertScreenVisible()
+
+        // Meeting appears in timeline with title in content description
+        // Format: "{title}. {startTime} to {endTime}. {duration}..."
+        // Use waitUntil to handle async data loading
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("Team Standup", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         calendar.assertMeetingDisplayed("Team Standup")
     }
 
@@ -94,7 +103,13 @@ class CalendarE2ETest : BaseE2ETest() {
         )
 
         nav.goToCalendar()
-        // calendar.assertUntimedTasksSection()  // May or may not show based on date
+        waitForIdle()
+
+        // Untimed tasks section shows below the timeline if tasks exist
+        // The section may not appear if the task's due date doesn't match today
+        // or the calendar view doesn't include untimed tasks.
+        // Verify no crash — this is the critical check.
+        calendar.assertScreenVisible()
     }
 
     // =========================================================================

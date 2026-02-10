@@ -26,9 +26,11 @@ import androidx.compose.material.icons.automirrored.filled.TrendingUp
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -38,7 +40,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,6 +51,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.prio.core.ui.theme.PrioTheme
 import com.prio.core.ui.theme.QuadrantColors
 import java.time.LocalDate
@@ -60,15 +65,14 @@ import java.util.Locale
  * 
  * Entry point for CB-001: Morning Daily Briefing.
  * 
- * Features:
+ * Features (connected to [TodayViewModel]):
  * - Morning/Evening Briefing Card (prominent at top)
- * - Eisenhower Quick View (2x2 task counts)
- * - Today's Top 3 Priorities
+ * - Eisenhower Quick View (live quadrant counts)
+ * - Today's Top 3 Priorities (Q1/Q2 tasks)
  * - Calendar Timeline (upcoming events)
  * - Goal Progress Highlights
  * 
- * This is a PLACEHOLDER implementation for Milestone 3.1.5.
- * Full implementation in Milestone 3.4 (Daily Briefings).
+ * GAP-H01: Replaced hardcoded placeholder with ViewModel-backed live data.
  * 
  * @param onNavigateToTask Navigate to task detail
  * @param onNavigateToGoal Navigate to goal detail
@@ -86,12 +90,28 @@ fun TodayScreen(
     onNavigateToTasks: () -> Unit = {},
     onNavigateToMorningBriefing: () -> Unit = {},
     onNavigateToEveningSummary: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: TodayViewModel = hiltViewModel()
 ) {
-    val today = remember { LocalDate.now() }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val today = LocalDate.now()
     val dayOfWeek = today.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.getDefault())
     val formattedDate = today.format(DateTimeFormatter.ofPattern("MMMM d"))
-    
+
+    // Consume navigation effects
+    LaunchedEffect(viewModel) {
+        viewModel.effect.collect { effect ->
+            when (effect) {
+                is TodayEffect.NavigateToTask -> onNavigateToTask(effect.taskId)
+                is TodayEffect.NavigateToGoal -> onNavigateToGoal(effect.goalId)
+                is TodayEffect.NavigateToMeeting -> onNavigateToMeeting(effect.meetingId)
+                TodayEffect.NavigateToTasks -> onNavigateToTasks()
+                TodayEffect.NavigateToMorningBriefing -> onNavigateToMorningBriefing()
+                TodayEffect.NavigateToEveningSummary -> onNavigateToEveningSummary()
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         topBar = {
@@ -99,7 +119,7 @@ fun TodayScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Good morning",
+                            text = uiState.greeting,
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -113,105 +133,171 @@ fun TodayScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Morning Briefing Card
-            item {
-                BriefingCard(
-                    title = "Morning Briefing",
-                    subtitle = "3 urgent tasks, 2 meetings today",
-                    icon = Icons.Default.WbSunny,
-                    onClick = { onNavigateToMorningBriefing() }
-                )
+        when {
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
-            
-            // Eisenhower Quick View
-            item {
-                Text(
-                    text = "Task Overview",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
+            uiState.error != null -> {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.error ?: "Something went wrong",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Pull down to retry",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
-            
-            item {
-                EisenhowerQuickView(
-                    doCount = 3,
-                    scheduleCount = 7,
-                    delegateCount = 2,
-                    eliminateCount = 5,
-                    onQuadrantClick = { onNavigateToTasks() }
-                )
-            }
-            
-            // Today's Top Priorities
-            item {
-                Text(
-                    text = "Today's Focus",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            
-            item {
-                TopPrioritiesCard(
-                    priorities = listOf(
-                        "Submit quarterly report (Due 5pm)",
-                        "Call client about project update",
-                        "Review team's pull requests"
-                    ),
-                    onTaskClick = { /* TODO: Navigate to task */ }
-                )
-            }
-            
-            // Goal Progress
-            item {
-                Text(
-                    text = "Goal Progress",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            
-            item {
-                GoalProgressRow(
-                    goals = listOf(
-                        GoalSummary("Launch MVP", 0.75f),
-                        GoalSummary("Read 12 books", 0.33f),
-                        GoalSummary("Exercise 4x/week", 0.5f)
-                    ),
-                    onGoalClick = { /* TODO: Navigate to goal */ }
-                )
-            }
-            
-            // Upcoming Events
-            item {
-                Text(
-                    text = "Upcoming",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-            
-            item {
-                UpcomingEventsCard(
-                    events = listOf(
-                        UpcomingEvent("Team standup", "10:00 AM", EventType.MEETING),
-                        UpcomingEvent("Lunch break", "12:00 PM", EventType.BREAK),
-                        UpcomingEvent("Client call", "2:30 PM", EventType.MEETING)
-                    ),
-                    onEventClick = { /* TODO: Navigate to event */ }
-                )
-            }
-            
-            // Bottom spacing
-            item {
-                Spacer(modifier = Modifier.height(80.dp))
+            else -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Briefing Card — morning or evening
+                    item {
+                        BriefingCard(
+                            title = if (uiState.isMorning) "Morning Briefing" else "Evening Summary",
+                            subtitle = uiState.briefingSubtitle.ifEmpty { "Tap to view your briefing" },
+                            icon = if (uiState.isMorning) Icons.Default.WbSunny else Icons.Default.Nightlight,
+                            onClick = { viewModel.onEvent(TodayEvent.OnBriefingCardTap) }
+                        )
+                    }
+
+                    // Eisenhower Quick View — live quadrant counts
+                    item {
+                        Text(
+                            text = "Task Overview",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    item {
+                        EisenhowerQuickView(
+                            doCount = uiState.quadrantCounts.doFirst,
+                            scheduleCount = uiState.quadrantCounts.schedule,
+                            delegateCount = uiState.quadrantCounts.delegate,
+                            eliminateCount = uiState.quadrantCounts.eliminate,
+                            onQuadrantClick = { viewModel.onEvent(TodayEvent.OnQuadrantTap) }
+                        )
+                    }
+
+                    // Today's Top Priorities — real tasks
+                    if (uiState.topPriorities.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Today's Focus",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        item {
+                            TopPrioritiesCard(
+                                priorities = uiState.topPriorities,
+                                onTaskClick = { taskId ->
+                                    viewModel.onEvent(TodayEvent.OnTaskTap(taskId))
+                                }
+                            )
+                        }
+                    }
+
+                    // Goal Progress — real goals
+                    if (uiState.goalSummaries.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Goal Progress",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        item {
+                            GoalProgressRow(
+                                goals = uiState.goalSummaries,
+                                onGoalClick = { goalId ->
+                                    viewModel.onEvent(TodayEvent.OnGoalTap(goalId))
+                                }
+                            )
+                        }
+                    }
+
+                    // Upcoming Events — real meetings
+                    if (uiState.upcomingEvents.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Upcoming",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+
+                        item {
+                            UpcomingEventsCard(
+                                events = uiState.upcomingEvents,
+                                onEventClick = { meetingId ->
+                                    viewModel.onEvent(TodayEvent.OnMeetingTap(meetingId))
+                                }
+                            )
+                        }
+                    }
+
+                    // Empty state when no data at all
+                    if (uiState.topPriorities.isEmpty() && uiState.goalSummaries.isEmpty() && uiState.upcomingEvents.isEmpty()) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 32.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    Text(
+                                        text = "🎯",
+                                        style = MaterialTheme.typography.headlineLarge
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Your day is clear!",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        text = "Create tasks or goals to get started",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom spacing for FAB
+                    item {
+                        Spacer(modifier = Modifier.height(80.dp))
+                    }
+                }
             }
         }
     }
@@ -356,8 +442,8 @@ private fun QuadrantCard(
 
 @Composable
 private fun TopPrioritiesCard(
-    priorities: List<String>,
-    onTaskClick: () -> Unit,
+    priorities: List<TopPriorityUi>,
+    onTaskClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -373,7 +459,7 @@ private fun TopPrioritiesCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onTaskClick() }
+                        .clickable { onTaskClick(priority.id) }
                 ) {
                     Box(
                         modifier = Modifier
@@ -392,22 +478,29 @@ private fun TopPrioritiesCard(
                     
                     Spacer(modifier = Modifier.width(12.dp))
                     
-                    Text(
-                        text = priority,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = priority.title,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        priority.dueTime?.let { time ->
+                            Text(
+                                text = "Due $time",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-data class GoalSummary(val name: String, val progress: Float)
-
 @Composable
 private fun GoalProgressRow(
-    goals: List<GoalSummary>,
-    onGoalClick: () -> Unit,
+    goals: List<GoalSummaryUi>,
+    onGoalClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyRow(
@@ -417,9 +510,9 @@ private fun GoalProgressRow(
         items(goals.size) { index ->
             val goal = goals[index]
             GoalProgressCard(
-                name = goal.name,
+                name = goal.title,
                 progress = goal.progress,
-                onClick = onGoalClick
+                onClick = { onGoalClick(goal.id) }
             )
         }
     }
@@ -482,12 +575,10 @@ enum class EventType {
     MEETING, TASK, BREAK
 }
 
-data class UpcomingEvent(val title: String, val time: String, val type: EventType)
-
 @Composable
 private fun UpcomingEventsCard(
-    events: List<UpcomingEvent>,
-    onEventClick: () -> Unit,
+    events: List<UpcomingEventUi>,
+    onEventClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -503,16 +594,10 @@ private fun UpcomingEventsCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onEventClick() }
+                        .clickable { onEventClick(event.id) }
                 ) {
-                    val icon = when (event.type) {
-                        EventType.MEETING -> Icons.Default.CalendarToday
-                        EventType.TASK -> Icons.Default.CheckCircle
-                        EventType.BREAK -> Icons.Default.WbSunny
-                    }
-                    
                     Icon(
-                        imageVector = icon,
+                        imageVector = Icons.Default.CalendarToday,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
