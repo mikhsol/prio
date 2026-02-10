@@ -442,7 +442,17 @@ private fun SwipeableTaskCard(
             }
         }
     )
-    
+
+    // Reset dismiss state when card re-enters composition (e.g. after undo).
+    // rememberSwipeToDismissBoxState uses rememberSaveable, so LazyList's
+    // SaveableStateHolder may restore a dismissed position when the same key
+    // reappears. Snap back to Settled to show the task card properly.
+    LaunchedEffect(Unit) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        }
+    }
+
     SwipeToDismissBox(
         state = dismissState,
         backgroundContent = {
