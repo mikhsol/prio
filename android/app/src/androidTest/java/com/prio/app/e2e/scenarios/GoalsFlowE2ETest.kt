@@ -5,7 +5,7 @@ import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.GoalCategory
 import dagger.hilt.android.testing.HiltAndroidTest
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import org.junit.Test
 
 /**
@@ -47,13 +47,47 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     @Test
     fun createGoal_showsInList() {
         nav.goToGoals()
-        goals.tapCreateGoalFab()
 
+        // Use the empty state "Create First Goal" button to start
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
         goals.assertCreateScreenVisible()
+
+        // Type the goal on Step 1
         goals.typeGoalTitle("Run a marathon")
-        goals.tapSkipAi() // Skip AI for faster test
+        Thread.sleep(500)
+
+        // Tap "Refine with AI" to advance to Step 2
+        goals.tapRefineWithAi()
+
+        // Wait for AI processing to finish (AI should fail fast and fallback).
+        // After fallback, the "✨ SMART Goal" heading and form fields appear.
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("SMART Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
         goals.tapNextTimeline()
         goals.tapCreateGoalButton()
+
+        // Wait for celebration overlay to appear
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Goal Created!")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.assertCelebrationVisible()
+
+        // Tap "Back to Goals" to navigate to the list
+        goals.tapBackToGoals()
+
+        // Wait for navigation back to goals list
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("Create new goal")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Should return to list with new goal
         goals.assertListScreenVisible()
@@ -67,18 +101,21 @@ class GoalsFlowE2ETest : BaseE2ETest() {
 
     @Test
     fun createGoal_withAiRefinement() {
+        // AI refinement requires a real or fake AI provider.
+        // On test device, AI fails and fallback sets refinedGoal = input.
+        // This test validates the full flow works with AI fallback.
         nav.goToGoals()
         goals.tapCreateGoalFab()
 
         goals.typeGoalTitle("Get healthier")
+        Thread.sleep(500)
         goals.tapRefineWithAi()
 
-        // Wait for AI refinement to complete — the "Next: Timeline" button
-        // becomes enabled after AI finishes processing.
-        // FakeAiProvider returns deterministic results within ~100ms.
-        composeRule.waitUntil(timeoutMillis = 30_000) {
+        // Wait for AI processing to finish (success or fallback).
+        // After processing, "✨ SMART Goal" heading appears.
+        composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(
-                androidx.compose.ui.test.hasText("Next: Timeline")
+                androidx.compose.ui.test.hasText("SMART Goal", substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
 
@@ -92,13 +129,23 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun goalsOverviewCard_showsActiveCount() = runTest {
-        goalRepository.insertGoal(TestDataFactory.onTrackGoal(title = "Career Goal"))
-        goalRepository.insertGoal(TestDataFactory.atRiskGoal(title = "Health Goal"))
-        goalRepository.insertGoal(TestDataFactory.completedGoal(title = "Done Goal"))
+    fun goalsOverviewCard_showsActiveCount() {
+        runBlocking {
+            goalRepository.insertGoal(TestDataFactory.onTrackGoal(title = "Career Goal"))
+            goalRepository.insertGoal(TestDataFactory.atRiskGoal(title = "Health Goal"))
+            goalRepository.insertGoal(TestDataFactory.completedGoal(title = "Done Goal"))
+        }
+        Thread.sleep(2_000)
 
         nav.goToGoals()
-        goals.assertListScreenVisible()
+
+        // Wait for goals to load from Room → Flow → ViewModel → Compose
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Career Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
         goals.assertOverviewCard()
         goals.assertGoalDisplayed("Career Goal")
         goals.assertGoalDisplayed("Health Goal")
@@ -110,12 +157,22 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun goalDetail_showsProgressRing() = runTest {
-        goalRepository.insertGoal(
-            TestDataFactory.goal(title = "Learning Goal", progress = 60, category = GoalCategory.LEARNING)
-        )
+    fun goalDetail_showsProgressRing() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Learning Goal", progress = 60, category = GoalCategory.LEARNING)
+            )
+        }
+        Thread.sleep(2_000)
 
         nav.goToGoals()
+
+        // Wait for goal to load from Room → Flow → ViewModel → Compose
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Learning Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         goals.tapGoal("Learning Goal")
 
         goals.assertProgressRing("60 percent")
@@ -140,18 +197,29 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun maxGoalsReached_fabDisabledOrWarning() = runTest {
+    fun maxGoalsReached_fabDisabledOrWarning() {
         // Create maximum number of goals (typically 10)
-        repeat(10) { i ->
-            goalRepository.insertGoal(
-                TestDataFactory.goal(
-                    title = "Goal $i",
-                    category = GoalCategory.entries[i % GoalCategory.entries.size]
+        runBlocking {
+            repeat(10) { i ->
+                goalRepository.insertGoal(
+                    TestDataFactory.goal(
+                        title = "Goal $i",
+                        category = GoalCategory.entries[i % GoalCategory.entries.size]
+                    )
                 )
-            )
+            }
         }
+        Thread.sleep(2_000)
 
         nav.goToGoals()
+
+        // Wait for goals to load — look for any goal card
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Goal 0", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
         goals.assertMaxGoalsReached()
     }
 
@@ -161,14 +229,23 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun goalWithMilestones_showsMilestoneProgress() = runTest {
-        val goalId = goalRepository.insertGoal(
-            TestDataFactory.goal(title = "Learn Kotlin", category = GoalCategory.LEARNING, progress = 40)
-        )
+    fun goalWithMilestones_showsMilestoneProgress() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Learn Kotlin", category = GoalCategory.LEARNING, progress = 40)
+            )
+        }
+        Thread.sleep(2_000)
 
         nav.goToGoals()
-        waitForIdle()
-        goals.assertGoalDisplayed("Learn Kotlin")
+
+        // Wait for goal to load from Room → Flow → ViewModel → Compose
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Learn Kotlin", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
         goals.tapGoal("Learn Kotlin")
 
         // Wait for GoalDetailScreen to load (async from Room)

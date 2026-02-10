@@ -1,5 +1,12 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasScrollToNodeAction
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToNode
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.EisenhowerQuadrant
@@ -31,24 +38,37 @@ class TaskListE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun taskListShowsEisenhowerSections() = runTest {
+    fun taskListShowsEisenhowerSections() {
         // Pre-populate tasks across all 4 quadrants
-        val tasks = TestDataFactory.mixedTaskSet()
-        tasks.forEach { taskRepository.insertTask(it) }
+        // Use runBlocking (not runTest) so Room's real dispatchers work normally
+        kotlinx.coroutines.runBlocking {
+            val tasks = TestDataFactory.mixedTaskSet()
+            tasks.forEach { taskRepository.insertTask(it) }
+        }
 
         nav.goToTasks()
         taskList.assertScreenVisible()
 
-        // Wait for Room data to propagate through Flow → ViewModel → UI
+        // Give Room → Flow → ViewModel → Compose pipeline time to settle
+        Thread.sleep(3_000)
         waitForIdle()
 
-        // Verify Eisenhower sections are visible
-        // Section headers render as "🔴 DO FIRST", "🟡 SCHEDULE", etc.
-        // assertSectionVisible uses substring matching + waitUntil(10s)
-        taskList.assertSectionVisible("DO FIRST")
-        taskList.assertSectionVisible("SCHEDULE")
-        taskList.assertSectionVisible("DELEGATE")
-        taskList.assertSectionVisible("MAYBE LATER")
+        // Verify Eisenhower sections by testTag (more reliable than text matching)
+        // Section headers have testTag("section_header_{quadrant.name}")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithTag("section_header_DO_FIRST")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.onNodeWithTag("section_header_DO_FIRST").assertIsDisplayed()
+        composeRule.onNodeWithTag("section_header_SCHEDULE").assertIsDisplayed()
+        composeRule.onNodeWithTag("section_header_DELEGATE").assertIsDisplayed()
+        // ELIMINATE section is off-screen in the LazyColumn; scroll to it
+        // Two scrollable containers exist (filter chips LazyRow + task LazyColumn)
+        // The task LazyColumn is the second (last) one
+        composeRule.onAllNodes(hasScrollToNodeAction())
+            .onLast()
+            .performScrollToNode(hasTestTag("section_header_ELIMINATE"))
+        composeRule.onNodeWithTag("section_header_ELIMINATE").assertIsDisplayed()
     }
 
     // =========================================================================
@@ -79,6 +99,11 @@ class TaskListE2ETest : BaseE2ETest() {
 
         // Complete it
         taskList.completeTask("Task to complete")
+
+        // Wait for Room → Flow → ViewModel → Compose pipeline to propagate
+        // the completion state and hide the task from active list
+        Thread.sleep(1_000)
+        waitForIdle()
 
         // Should be hidden (completed tasks hidden by default)
         taskList.assertTaskNotDisplayed("Task to complete")
@@ -116,17 +141,26 @@ class TaskListE2ETest : BaseE2ETest() {
 
     @Test
     fun filterByQuadrant_showsOnlyMatchingTasks() = runTest {
+        // Insert a task due today and one due far in the future
         taskRepository.insertTask(
-            TestDataFactory.task(title = "Urgent deadline", quadrant = EisenhowerQuadrant.DO_FIRST)
+            TestDataFactory.urgentTask(title = "Urgent deadline")
         )
         taskRepository.insertTask(
-            TestDataFactory.task(title = "Plan vacation", quadrant = EisenhowerQuadrant.SCHEDULE)
+            TestDataFactory.task(
+                title = "Plan vacation",
+                quadrant = EisenhowerQuadrant.SCHEDULE,
+                dueDate = TestDataFactory.daysFromNow(30)
+            )
         )
 
         nav.goToTasks()
+        Thread.sleep(1_000)
+        waitForIdle()
 
-        // Filter to Do First only
-        taskList.selectFilter("Do First")
+        // Filter to Today only (available filters: All/Today/Upcoming/Has Goal/Recurring)
+        taskList.selectFilter("Today")
+        Thread.sleep(500)
+        waitForIdle()
 
         taskList.assertTaskDisplayed("Urgent deadline")
         taskList.assertTaskNotDisplayed("Plan vacation")

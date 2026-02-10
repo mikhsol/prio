@@ -142,7 +142,8 @@ class TaskDetailE2ETest : BaseE2ETest() {
         taskDetail.openOverflowMenu()
         taskDetail.tapEdit()
 
-        taskDetail.editTitle("New title")
+        taskDetail.editTitle("New title", currentTitle = "Old title")
+        taskDetail.openOverflowMenu()
         taskDetail.tapDoneEditing()
 
         // Navigate back, verify updated

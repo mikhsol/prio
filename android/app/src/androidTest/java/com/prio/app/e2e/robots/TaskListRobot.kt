@@ -132,11 +132,12 @@ class TaskListRobot(
     }
 
     fun assertOverdueIndicator(title: String) {
-        rule.onNodeWithContentDescription("$title", substring = true)
-            .assertIsDisplayed()
-        // Overdue should appear in the card's content description
+        // TaskCard contentDescription pattern: "{title}. Priority: {label}. Overdue. Due: ..."
+        // Use combined matcher to match the specific overdue TaskCard node,
+        // avoiding ambiguity when multiple nodes contain the task title.
         rule.onNode(
-            hasContentDescription("Overdue", substring = true)
+            hasContentDescription(title, substring = true) and
+                hasContentDescription("Overdue", substring = true)
         ).assertIsDisplayed()
     }
 

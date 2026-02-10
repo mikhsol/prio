@@ -68,7 +68,7 @@ class GoalsRobot(
     }
 
     fun tapCreateFirstGoal() {
-        rule.onNodeWithText("Create First Goal")
+        rule.onNodeWithText("Create First Goal", useUnmergedTree = true)
             .performClick()
         rule.waitForIdle()
     }
@@ -85,18 +85,21 @@ class GoalsRobot(
 
     fun tapRefineWithAi() {
         rule.onNodeWithText("Refine with AI")
+            .performScrollTo()
             .performClick()
         rule.waitForIdle()
     }
 
     fun tapSkipAi() {
         rule.onNodeWithText("Skip AI", substring = true)
+            .performScrollTo()
             .performClick()
         rule.waitForIdle()
     }
 
     fun tapNextTimeline() {
         rule.onNodeWithText("Next: Timeline")
+            .performScrollTo()
             .performClick()
         rule.waitForIdle()
     }
@@ -109,6 +112,7 @@ class GoalsRobot(
 
     fun tapCreateGoalButton() {
         rule.onNodeWithText("Create Goal \uD83C\uDFAF")
+            .performScrollTo()
             .performClick()
         rule.waitForIdle()
     }
@@ -116,6 +120,33 @@ class GoalsRobot(
     fun tapAddMilestone() {
         rule.onNodeWithContentDescription("Add milestone")
             .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    // =========================================================================
+    // Celebration Overlay (post-creation)
+    // =========================================================================
+
+    fun assertCelebrationVisible() {
+        rule.onNodeWithText("Goal Created!")
+            .assertIsDisplayed()
+    }
+
+    fun tapBackToGoals() {
+        rule.onNodeWithText("Back to Goals")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun tapAddFirstTask() {
+        rule.onNodeWithText("Add First Task", substring = true)
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun tapViewGoalDetails() {
+        rule.onNodeWithText("View Goal Details")
             .performClick()
         rule.waitForIdle()
     }

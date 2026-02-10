@@ -2,6 +2,7 @@ package com.prio.app.e2e.robots
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -103,10 +104,27 @@ class TaskDetailRobot(
         rule.waitForIdle()
     }
 
-    fun editTitle(newTitle: String) {
-        rule.onNodeWithText("Task title", substring = true)
-            .performTextClearance()
-        rule.onNodeWithText("Task title", substring = true)
+    fun editTitle(newTitle: String, currentTitle: String? = null) {
+        // In edit mode, the OutlinedTextField shows current title (not placeholder).
+        // Match on current title text within an editable field.
+        if (currentTitle != null) {
+            rule.onNode(
+                hasText(currentTitle, substring = true) and hasSetTextAction()
+            )
+                .performScrollTo()
+                .performTextClearance()
+        } else {
+            rule.onNodeWithText("Task title", substring = true)
+                .performScrollTo()
+                .performTextClearance()
+        }
+        rule.waitForIdle()
+        // After clearing, the same node (OutlinedTextField) still has SetTextAction.
+        // The placeholder "Task title" becomes visible.
+        rule.onNode(
+            hasText("Task title", substring = true) and hasSetTextAction()
+        )
+            .performScrollTo()
             .performTextInput(newTitle)
         rule.waitForIdle()
     }

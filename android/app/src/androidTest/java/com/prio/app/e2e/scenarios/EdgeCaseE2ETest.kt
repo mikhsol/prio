@@ -1,5 +1,7 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithContentDescription
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.EisenhowerQuadrant
@@ -29,24 +31,29 @@ class EdgeCaseE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun deleteGoal_linkedTasksUpdateGracefully() = runTest {
-        val goalId = goalRepository.insertGoal(
-            TestDataFactory.goal(title = "Fitness goal")
-        )
-        taskRepository.insertTask(
-            TestDataFactory.task(title = "Go running", goalId = goalId)
-        )
+    fun deleteGoal_linkedTasksUpdateGracefully() {
+        var goalId: Long = 0
+        kotlinx.coroutines.runBlocking {
+            goalId = goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Fitness goal")
+            )
+            taskRepository.insertTask(
+                TestDataFactory.task(title = "Go running", goalId = goalId)
+            )
+        }
+        Thread.sleep(2_000)
 
         // Verify task is linked to goal
         nav.goToTasks()
-        waitForIdle()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Go running", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         taskList.assertTaskDisplayed("Go running")
 
         // Verify goal exists
         nav.goToGoals()
-        waitForIdle()
-
-        // Wait for goals to load from Room before asserting
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodes(
                 androidx.compose.ui.test.hasText("Fitness goal", substring = true)
@@ -55,12 +62,18 @@ class EdgeCaseE2ETest : BaseE2ETest() {
         goals.assertGoalDisplayed("Fitness goal")
 
         // Delete goal directly via repository
-        goalRepository.deleteGoalById(goalId)
-        waitForIdle()
+        kotlinx.coroutines.runBlocking {
+            goalRepository.deleteGoalById(goalId)
+        }
+        Thread.sleep(2_000)
 
         // Task should still exist (FK SET NULL cascading)
         nav.goToTasks()
-        waitForIdle()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Go running", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         taskList.assertTaskDisplayed("Go running")
     }
 
@@ -118,13 +131,20 @@ class EdgeCaseE2ETest : BaseE2ETest() {
     // =========================================================================
 
     @Test
-    fun searchWithNoResults_showsEmptyMessage() = runTest {
-        taskRepository.insertTask(TestDataFactory.task(title = "Real task"))
+    fun searchWithNoResults_showsEmptyMessage() {
+        kotlinx.coroutines.runBlocking {
+            taskRepository.insertTask(TestDataFactory.task(title = "Real task"))
+        }
+        Thread.sleep(2_000)
 
         nav.goToTasks()
         taskList.openSearch()
-        // Would need to type search query — robot doesn't have search text input yet
-        // This tests the search empty state
+        composeRule.waitForIdle()
+        // Verify search opened without crash
+        // After opening search, the "Search tasks" icon is replaced by a search bar,
+        // so we verify the close button is visible instead.
+        composeRule.onNodeWithContentDescription("Close search")
+            .assertIsDisplayed()
     }
 
     // =========================================================================

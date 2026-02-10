@@ -2,6 +2,7 @@ package com.prio.app.e2e.robots
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
@@ -41,9 +42,11 @@ class QuickCaptureRobot(
     // =========================================================================
 
     fun typeTaskText(text: String) {
-        rule.onNodeWithContentDescription("Task input", substring = true)
+        // The TextField has placeholder "Type or speak (on-device)" but no contentDescription.
+        // Match by hasSetTextAction() which finds the text input field.
+        rule.onNode(hasSetTextAction())
             .performTextClearance()
-        rule.onNodeWithContentDescription("Task input", substring = true)
+        rule.onNode(hasSetTextAction())
             .performTextInput(text)
         rule.waitForIdle()
     }
@@ -97,18 +100,19 @@ class QuickCaptureRobot(
     // =========================================================================
 
     fun assertSheetVisible() {
-        // Wait for sheet animation to complete before asserting
+        // Wait for sheet animation to complete before asserting.
+        // Match by hasSetTextAction which finds the text input field.
         rule.waitUntil(timeoutMillis = 5_000) {
-            rule.onAllNodesWithContentDescription("Task input", substring = true)
+            rule.onAllNodes(hasSetTextAction())
                 .fetchSemanticsNodes()
                 .isNotEmpty()
         }
-        rule.onNodeWithContentDescription("Task input", substring = true)
+        rule.onNode(hasSetTextAction())
             .assertIsDisplayed()
     }
 
     fun assertSheetDismissed() {
-        rule.onNodeWithContentDescription("Task input", substring = true)
+        rule.onNode(hasSetTextAction())
             .assertDoesNotExist()
     }
 
