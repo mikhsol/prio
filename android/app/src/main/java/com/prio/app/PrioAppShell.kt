@@ -135,6 +135,14 @@ fun PrioAppShell(
     if (showQuickCapture) {
         val viewModel: QuickCaptureViewModel = hiltViewModel()
         val state by viewModel.uiState.collectAsStateWithLifecycle()
+
+        // Reset ViewModel state every time the sheet opens.
+        // hiltViewModel() returns the same activity-scoped instance, so stale
+        // data from a previous capture (title, priority, etc.) would show if
+        // we don't clear it on each open.
+        LaunchedEffect(Unit) {
+            viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
+        }
         
         // Create VoiceInputManager when QuickCapture is visible
         DisposableEffect(Unit) {
