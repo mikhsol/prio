@@ -69,6 +69,20 @@ class GoalRepository @Inject constructor(
          * Per GL-002: Yellow = within 15%.
          */
         const val SLIGHTLY_BEHIND_THRESHOLD = 0.15f
+
+        /**
+         * Weight for milestone contribution to overall goal progress.
+         * PM recommendation: milestones represent strategic checkpoints (60%).
+         * Applied only when both milestones and tasks exist on a goal.
+         */
+        const val MILESTONE_WEIGHT = 0.6f
+
+        /**
+         * Weight for task contribution to overall goal progress.
+         * PM recommendation: tasks represent tactical execution (40%).
+         * Applied only when both milestones and tasks exist on a goal.
+         */
+        const val TASK_WEIGHT = 0.4f
     }
     
     // ==================== Goal Query Operations ====================
@@ -197,18 +211,46 @@ class GoalRepository @Inject constructor(
     }
     
     /**
-     * Update goal progress based on linked tasks.
-     * Per GL-002: Progress = completed linked tasks / total linked tasks.
+     * Update goal progress using a weighted formula for milestones and tasks.
+     *
+     * Per PM recommendation (60/40 weighted blend):
+     * - When both milestones AND tasks exist:
+     *   progress = MILESTONE_WEIGHT × (completedMilestones/totalMilestones)
+     *            + TASK_WEIGHT     × (completedTasks/totalTasks)
+     * - When only milestones exist: progress = completedMilestones / totalMilestones
+     * - When only tasks exist:      progress = completedTasks / totalTasks
+     *
+     * Milestones are strategic checkpoints (60% weight) while tasks are
+     * tactical execution items (40% weight). Single-type goals use the
+     * natural ratio so that progress stays intuitive.
      */
     suspend fun recalculateProgress(goalId: Long) {
         val activeTasks = taskDao.getActiveByGoalId(goalId)
         val completedTasks = taskDao.getCompletedByGoalId(goalId)
-        
+
+        val totalMilestones = milestoneDao.getMilestoneCountForGoal(goalId)
+        val completedMilestones = milestoneDao.getCompletedMilestoneCountForGoal(goalId)
+
         val totalTasks = activeTasks.size + completedTasks.size
-        val progress = if (totalTasks > 0) {
-            ((completedTasks.size.toFloat() / totalTasks) * 100).toInt()
-        } else {
-            0
+        val hasTasks = totalTasks > 0
+        val hasMilestones = totalMilestones > 0
+
+        val progress = when {
+            hasMilestones && hasTasks -> {
+                // Weighted blend: milestones 60%, tasks 40%
+                val milestoneRatio = completedMilestones.toFloat() / totalMilestones
+                val taskRatio = completedTasks.size.toFloat() / totalTasks
+                ((MILESTONE_WEIGHT * milestoneRatio + TASK_WEIGHT * taskRatio) * 100).toInt()
+            }
+            hasMilestones -> {
+                // Milestone-only: natural ratio
+                ((completedMilestones.toFloat() / totalMilestones) * 100).toInt()
+            }
+            hasTasks -> {
+                // Task-only: natural ratio
+                ((completedTasks.size.toFloat() / totalTasks) * 100).toInt()
+            }
+            else -> 0
         }
         
         goalDao.updateProgress(

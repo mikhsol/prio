@@ -189,10 +189,12 @@ class GoalRepositoryTest {
             
             coEvery { taskDao.getActiveByGoalId(goalId) } returns activeTasks
             coEvery { taskDao.getCompletedByGoalId(goalId) } returns completedTasks
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
             
             repository.recalculateProgress(goalId)
             
-            // 1 completed / 3 total = 33%
+            // Task-only: 1 completed / 3 total = 33%
             coVerify {
                 goalDao.updateProgress(goalId, 33, now)
             }
@@ -204,6 +206,8 @@ class GoalRepositoryTest {
             val goalId = 1L
             coEvery { taskDao.getActiveByGoalId(goalId) } returns emptyList()
             coEvery { taskDao.getCompletedByGoalId(goalId) } returns emptyList()
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
             
             repository.recalculateProgress(goalId)
             
@@ -223,6 +227,8 @@ class GoalRepositoryTest {
             
             coEvery { taskDao.getActiveByGoalId(goalId) } returns emptyList()
             coEvery { taskDao.getCompletedByGoalId(goalId) } returns completedTasks
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
             
             repository.recalculateProgress(goalId)
             

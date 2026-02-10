@@ -33,6 +33,8 @@ data class GoalDetailUiState(
     val milestones: List<MilestoneUiModel> = emptyList(),
     val milestonesCompleted: Int = 0,
     val milestonesTotal: Int = 0,
+    val milestoneContribution: Float = 0f,  // 0.0-1.0 portion of progress from milestones
+    val taskContribution: Float = 0f,       // 0.0-1.0 portion of progress from tasks
     val showCompletedTasks: Boolean = false,
     val aiInsight: String? = null,
     val isCompleted: Boolean = false,

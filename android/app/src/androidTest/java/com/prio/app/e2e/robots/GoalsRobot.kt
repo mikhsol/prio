@@ -1,15 +1,22 @@
 package com.prio.app.e2e.robots
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
+import androidx.test.espresso.Espresso
 
 /**
  * Robot for the Goals screens: GoalsListScreen, CreateGoalScreen, GoalDetailScreen.
@@ -204,12 +211,104 @@ class GoalsRobot(
     }
 
     fun assertProgressRing(percentText: String) {
-        rule.onNodeWithContentDescription(percentText, substring = true)
+        // Match "N percent complete" to target only the progress ring,
+        // not the breakdown row ("Progress breakdown: milestones X percent, tasks Y percent").
+        rule.onNodeWithContentDescription("$percentText complete", substring = true)
             .assertIsDisplayed()
     }
 
     fun assertGoalCount(expectedActive: Int) {
         rule.onNodeWithContentDescription("$expectedActive active", substring = true)
             .assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // Create Goal — Milestone Input helpers
+    // =========================================================================
+
+    /**
+     * Type a milestone title into the milestone input field and tap the Add button.
+     * Used on the CreateGoalScreen Step 3 (Timeline & Milestones).
+     */
+    fun typeMilestoneAndAdd(title: String) {
+        // Wait for the input field to be available (may recompose after previous add)
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodes(hasTestTag("milestone_input"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        Thread.sleep(300) // allow recomposition to settle
+        val field = rule.onNodeWithTag("milestone_input")
+        field.performScrollTo()
+        field.performTextReplacement(title)
+        rule.waitForIdle()
+        // Close the software keyboard so it doesn't obstruct the Add button
+        Espresso.closeSoftKeyboard()
+        rule.waitForIdle()
+        Thread.sleep(300)
+        rule.onNodeWithContentDescription("Add milestone")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert a milestone chip with the given title is displayed on the CreateGoalScreen.
+     */
+    fun assertMilestoneChip(title: String) {
+        rule.onNodeWithText(title, substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Remove all existing milestone chips (e.g. AI-suggested ones) on the CreateGoalScreen.
+     * Taps the "Remove" icon on each chip until none remain.
+     */
+    fun clearAllMilestoneChips() {
+        var chips = rule.onAllNodesWithContentDescription("Remove").fetchSemanticsNodes()
+        while (chips.isNotEmpty()) {
+            rule.onAllNodesWithContentDescription("Remove")[0]
+                .performScrollTo()
+                .performClick()
+            rule.waitForIdle()
+            Thread.sleep(200)
+            chips = rule.onAllNodesWithContentDescription("Remove").fetchSemanticsNodes()
+        }
+    }
+
+    // =========================================================================
+    // Goal Detail — Tab and Milestone helpers
+    // =========================================================================
+
+    /**
+     * Select a tab on the GoalDetailScreen (e.g. "📋 Tasks", "🏁 Milestones", "📊 Analytics").
+     */
+    fun tapDetailTab(tabLabel: String) {
+        rule.onNodeWithText(tabLabel, substring = true)
+            .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert that a milestone with the given title is visible in the detail Milestones tab.
+     * Uses hasClickAction() to disambiguate from the AI insight card which may
+     * also contain the milestone title in its suggestion text.
+     */
+    fun assertMilestoneDisplayed(title: String) {
+        rule.onNode(hasText(title, substring = true) and hasClickAction())
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Toggle (complete/uncomplete) a milestone in the detail Milestones tab by clicking its row.
+     * Uses hasClickAction() to disambiguate from the AI insight card which may
+     * also contain the milestone title in its suggestion text.
+     */
+    fun tapMilestoneToggle(title: String) {
+        rule.onNode(hasText(title, substring = true) and hasClickAction())
+            .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
     }
 }

@@ -36,6 +36,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -176,7 +177,9 @@ fun GoalDetailScreen(
                         targetDate = uiState.targetDate,
                         milestonesCompleted = uiState.milestonesCompleted,
                         milestonesTotal = uiState.milestonesTotal,
-                        linkedTasksCount = uiState.linkedTasks.size + uiState.completedTasks.size
+                        linkedTasksCount = uiState.linkedTasks.size + uiState.completedTasks.size,
+                        milestoneContribution = uiState.milestoneContribution,
+                        taskContribution = uiState.taskContribution
                     )
                 }
 
@@ -316,7 +319,9 @@ fun GoalDetailScreen(
                                 linkedTasksCount = uiState.linkedTasks.size + uiState.completedTasks.size,
                                 completedTasksCount = uiState.completedTasks.size,
                                 milestonesCompleted = uiState.milestonesCompleted,
-                                milestonesTotal = uiState.milestonesTotal
+                                milestonesTotal = uiState.milestonesTotal,
+                                milestoneContribution = uiState.milestoneContribution,
+                                taskContribution = uiState.taskContribution
                             )
                         }
                     }
@@ -405,6 +410,8 @@ private fun ProgressHero(
     milestonesCompleted: Int,
     milestonesTotal: Int,
     linkedTasksCount: Int,
+    milestoneContribution: Float = 0f,
+    taskContribution: Float = 0f,
     modifier: Modifier = Modifier
 ) {
     val animatedProgress by animateFloatAsState(
@@ -526,6 +533,46 @@ private fun ProgressHero(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+
+            // Weighted progress breakdown (only when both milestones and tasks exist)
+            if (milestonesTotal > 0 && linkedTasksCount > 0) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .semantics {
+                            contentDescription = "Progress breakdown: " +
+                                "milestones ${(milestoneContribution * 100).toInt()} percent, " +
+                                "tasks ${(taskContribution * 100).toInt()} percent"
+                        },
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "🏁 ${(milestoneContribution * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = " + ",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "📋 ${(taskContribution * 100).toInt()}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = " = ${progressPercent}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
             }
         }
     }
@@ -744,6 +791,8 @@ private fun AnalyticsContent(
     completedTasksCount: Int,
     milestonesCompleted: Int,
     milestonesTotal: Int,
+    milestoneContribution: Float = 0f,
+    taskContribution: Float = 0f,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -770,6 +819,21 @@ private fun AnalyticsContent(
                 AnalyticRow("Tasks Completed", "$completedTasksCount / $linkedTasksCount")
                 if (milestonesTotal > 0) {
                     AnalyticRow("Milestones", "$milestonesCompleted / $milestonesTotal")
+                }
+                // Weighted breakdown (only when both milestones and tasks exist)
+                if (milestonesTotal > 0 && linkedTasksCount > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 4.dp),
+                        color = MaterialTheme.colorScheme.outlineVariant
+                    )
+                    AnalyticRow(
+                        "🏁 Milestone Contribution",
+                        "${(milestoneContribution * 100).toInt()}% (×60% weight)"
+                    )
+                    AnalyticRow(
+                        "📋 Task Contribution",
+                        "${(taskContribution * 100).toInt()}% (×40% weight)"
+                    )
                 }
                 val completionRate = if (linkedTasksCount > 0) {
                     (completedTasksCount.toFloat() / linkedTasksCount * 100).toInt()

@@ -273,8 +273,10 @@ class CreateGoalViewModel @Inject constructor(
         val trimmed = title.trim()
         if (trimmed.isBlank()) return
 
-        val current = _uiState.value.milestones
-        if (current.size >= GoalRepository.MAX_MILESTONES_PER_GOAL) {
+        // Read-then-check outside `update` only for the snackbar side-effect;
+        // the actual mutation uses `state.milestones` inside the lambda to
+        // avoid stale-capture when milestones are added in quick succession.
+        if (_uiState.value.milestones.size >= GoalRepository.MAX_MILESTONES_PER_GOAL) {
             viewModelScope.launch {
                 _effect.send(CreateGoalEffect.ShowSnackbar(
                     "Maximum ${GoalRepository.MAX_MILESTONES_PER_GOAL} milestones per goal"
@@ -283,16 +285,21 @@ class CreateGoalViewModel @Inject constructor(
             return
         }
 
-        _uiState.update {
-            it.copy(milestones = current + MilestoneInput(title = trimmed))
+        _uiState.update { state ->
+            if (state.milestones.size >= GoalRepository.MAX_MILESTONES_PER_GOAL) {
+                state
+            } else {
+                state.copy(milestones = state.milestones + MilestoneInput(title = trimmed))
+            }
         }
     }
 
     private fun removeMilestone(index: Int) {
-        val current = _uiState.value.milestones
-        if (index in current.indices) {
-            _uiState.update {
-                it.copy(milestones = current.toMutableList().apply { removeAt(index) })
+        _uiState.update { state ->
+            if (index in state.milestones.indices) {
+                state.copy(milestones = state.milestones.toMutableList().apply { removeAt(index) })
+            } else {
+                state
             }
         }
     }

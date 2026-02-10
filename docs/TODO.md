@@ -19,7 +19,6 @@
 19. 200 test cases for each topic (work/health/etc..) to classify tasks, educate classifier.
 20. Export goals/tasks.
 21. Soft delete/archive tasks/goals.
-22. Task progress.
 23. Delegate task to agent.
 24. Email integration, suggest response.
 25. Sync up notes from Notion.
@@ -27,22 +26,28 @@
 27. Separate personal to work spaces/user profies?
 28. Integration with other apps.
 29. Spell checker and auto formatting of the text fields.
-
+30. Just random notes which can be imported to task. Or creation task from clipboard.
+31. T-shape task size & [RETHINK] progress update accordingly. Goal -> Milestone -> Task
+                                                          -> Task
+    Progress for goal -> Progress for each milestones.
 
 ## Bugs:
 * [GOAL] Close milestone -> no task progress (how milestone related to tasks?).
 * [GOAL] How milstones related to tasks? Shoul it be relation?
 * [GOAL] Create goal -> Add multiple milestones -> Last edded milestone not saved.
-* [TASK] No time picker when choose date.
 
-* [APP] Swipe left twice -> leaving app.
+
+* [TASK] No time picker when choose date.
 * [CALENDAR] Month/Week/Day view missing.
+
+* [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
 * [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
-* [GOAL] Wrong category for SMART goal chosen on creation.
+
 * [GOAL] Adding milestone, new milestone hidden under keyboard and you don't see what are you typing.
 * [TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
 
 * [GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
+* [GOAL] Ugly UI to change goal for task.
 
 * [TASK] Recurrent tasks not implemented.
 * [TASK] Reminder not implemented.

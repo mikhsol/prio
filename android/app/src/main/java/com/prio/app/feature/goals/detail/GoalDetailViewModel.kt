@@ -166,6 +166,35 @@ class GoalDetailViewModel @Inject constructor(
         // Check for 100% completion (confetti trigger)
         val justCompleted = goal.progress >= 100 && !_uiState.value.isCompleted
 
+        // Calculate progress breakdown for UX display (mirrors GoalRepository formula)
+        val totalTasks = activeTasks.size + completedTasks.size
+        val hasTasks = totalTasks > 0
+        val hasMilestones = milestones.isNotEmpty()
+        val milestonesCompletedCount = milestones.count { it.isCompleted }
+
+        val milestoneContrib: Float
+        val taskContrib: Float
+        when {
+            hasMilestones && hasTasks -> {
+                val milestoneRatio = milestonesCompletedCount.toFloat() / milestones.size
+                val taskRatio = completedTasks.size.toFloat() / totalTasks
+                milestoneContrib = GoalRepository.MILESTONE_WEIGHT * milestoneRatio
+                taskContrib = GoalRepository.TASK_WEIGHT * taskRatio
+            }
+            hasMilestones -> {
+                milestoneContrib = milestonesCompletedCount.toFloat() / milestones.size
+                taskContrib = 0f
+            }
+            hasTasks -> {
+                milestoneContrib = 0f
+                taskContrib = completedTasks.size.toFloat() / totalTasks
+            }
+            else -> {
+                milestoneContrib = 0f
+                taskContrib = 0f
+            }
+        }
+
         _uiState.update { current ->
             current.copy(
                 isLoading = false,
@@ -180,8 +209,10 @@ class GoalDetailViewModel @Inject constructor(
                 linkedTasks = linkedTaskModels,
                 completedTasks = completedTaskModels,
                 milestones = milestoneModels,
-                milestonesCompleted = milestones.count { it.isCompleted },
+                milestonesCompleted = milestonesCompletedCount,
                 milestonesTotal = milestones.size,
+                milestoneContribution = milestoneContrib,
+                taskContribution = taskContrib,
                 aiInsight = aiInsight,
                 isCompleted = goal.isCompleted,
                 showConfetti = justCompleted

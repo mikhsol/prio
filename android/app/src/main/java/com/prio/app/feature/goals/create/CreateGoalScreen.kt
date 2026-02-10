@@ -75,6 +75,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -716,7 +718,9 @@ private fun TimelineStepContent(
                 OutlinedTextField(
                     value = milestoneInput,
                     onValueChange = { milestoneInput = it },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .semantics { testTag = "milestone_input" },
                     placeholder = { Text("Add a milestone…") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)
