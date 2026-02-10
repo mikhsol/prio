@@ -23,13 +23,14 @@
 24. Email integration, suggest response.
 25. Sync up notes from Notion.
 26. Telegram/WhatsApp mini app/bot -> Send message to todo.
-27. Separate personal to work spaces/user profies?
+27. Separate (isolated) personal to work spaces/user profies?
 28. Integration with other apps.
 29. Spell checker and auto formatting of the text fields.
 30. Just random notes which can be imported to task. Or creation task from clipboard.
 31. T-shape task size & [RETHINK] progress update accordingly. Goal -> Milestone -> Task
                                                           -> Task
     Progress for goal -> Progress for each milestones.
+32. Design MONETISATION model!!!
 
 ## Bugs:
 * [GOAL] Close milestone -> no task progress (how milestone related to tasks?).

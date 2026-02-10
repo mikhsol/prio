@@ -9,6 +9,7 @@ import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 
@@ -48,6 +49,18 @@ class QuickCaptureRobot(
             .performTextClearance()
         rule.onNode(hasSetTextAction())
             .performTextInput(text)
+        rule.waitForIdle()
+    }
+
+    /**
+     * Trigger the IME Done action on the text field.
+     * This fires QuickCaptureEvent.ParseInput in the ViewModel,
+     * which sets showPreview = true so the "Create Task" button appears.
+     * Must be called after typeTaskText() and before waitForAiClassification().
+     */
+    fun submitInput() {
+        rule.onNode(hasSetTextAction())
+            .performImeAction()
         rule.waitForIdle()
     }
 

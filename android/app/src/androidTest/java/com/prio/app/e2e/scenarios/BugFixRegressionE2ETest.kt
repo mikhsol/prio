@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.EisenhowerQuadrant
@@ -487,7 +488,15 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
 
         // Tap Undo
         taskList.tapSnackbarUndo()
-        Thread.sleep(2_000) // Wait for Room insert + Flow pipeline
+
+        // Wait for task to reappear (undo → Room insert → Flow → recomposition)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Delete undo test task", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        Thread.sleep(1_000) // Allow SwipeToDismiss snap-back animation
+        waitForIdle()
 
         // Task should reappear in the list
         taskList.assertTaskDisplayed("Delete undo test task")
@@ -563,9 +572,11 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
 
         goals.assertEmptyState()
 
-        // The empty-state "Create First Goal" button should be visible
-        composeRule.onNodeWithText("Create First Goal")
-            .assertIsDisplayed()
+        // The empty-state "Create First Goal" button should be visible.
+        // Use useUnmergedTree because ExtendedFloatingActionButton merges
+        // children semantics, so the text only exists in the unmerged tree.
+        composeRule.onNodeWithText("Create First Goal", useUnmergedTree = true)
+            .assertExists()
 
         // The FAB ("Create new goal") should NOT be visible
         goals.assertFabNotVisible()
@@ -629,8 +640,8 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         Thread.sleep(3_000)
         try {
             goals.tapSkipAi()
-        } catch (_: Exception) {
-            // AI may have already completed
+        } catch (_: Throwable) {
+            // AI may have already completed — AssertionError extends Error, not Exception
         }
         waitForIdle()
 
@@ -668,7 +679,9 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         Thread.sleep(3_000)
         try {
             goals.tapSkipAi()
-        } catch (_: Exception) {}
+        } catch (_: Throwable) {
+            // AI may have already completed — AssertionError extends Error, not Exception
+        }
         waitForIdle()
         goals.tapNextTimeline()
         waitForIdle()
@@ -679,7 +692,13 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
 
         // Tap "View Goal Details" — should navigate to goal detail
         goals.tapViewGoalDetails()
-        Thread.sleep(2_000)
+
+        // Wait for navigation + ViewModel data loading (popBackStack + navigate is async)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Ship v1.0", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
 
         // Should be on goal detail screen showing the goal title
         composeRule.onNodeWithText("Ship v1.0", substring = true)

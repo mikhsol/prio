@@ -438,7 +438,10 @@ private fun SwipeableTaskCard(
                     onComplete()
                     true
                 }
-                SwipeToDismissBoxValue.Settled -> false
+                // Allow return to Settled — needed for:
+                // 1. Sub-threshold swipes to spring back naturally
+                // 2. snapTo(Settled) in LaunchedEffect after undo re-insert
+                SwipeToDismissBoxValue.Settled -> true
             }
         }
     )
@@ -447,7 +450,9 @@ private fun SwipeableTaskCard(
     // rememberSwipeToDismissBoxState uses rememberSaveable, so LazyList's
     // SaveableStateHolder may restore a dismissed position when the same key
     // reappears. Snap back to Settled to show the task card properly.
-    LaunchedEffect(Unit) {
+    // Key on task.id so the effect re-fires whenever this composable re-enters
+    // composition for the same task (e.g. after undo re-insert).
+    LaunchedEffect(task.id) {
         if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
             dismissState.snapTo(SwipeToDismissBoxValue.Settled)
         }

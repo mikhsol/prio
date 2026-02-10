@@ -178,6 +178,7 @@ class EdgeCaseE2ETest : BaseE2ETest() {
         nav.goToTasks()
         nav.tapFab()
         quickCapture.typeTaskText("Offline task")
+        quickCapture.submitInput()
         quickCapture.waitForAiClassification()
         quickCapture.tapCreateTask()
         quickCapture.assertSheetDismissed()

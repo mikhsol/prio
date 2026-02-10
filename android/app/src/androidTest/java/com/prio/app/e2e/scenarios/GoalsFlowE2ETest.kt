@@ -105,7 +105,7 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         // On test device, AI fails and fallback sets refinedGoal = input.
         // This test validates the full flow works with AI fallback.
         nav.goToGoals()
-        goals.tapCreateGoalFab()
+        goals.tapCreateFirstGoal()
 
         goals.typeGoalTitle("Get healthier")
         Thread.sleep(500)

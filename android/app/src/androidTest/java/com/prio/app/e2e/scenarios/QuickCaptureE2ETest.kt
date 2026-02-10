@@ -39,6 +39,9 @@ class QuickCaptureE2ETest : BaseE2ETest() {
         // 3. Type a task
         quickCapture.typeTaskText("Buy groceries for dinner tonight")
 
+        // 3b. Submit input — triggers IME Done which sets showPreview = true
+        quickCapture.submitInput()
+
         // 4. Wait for AI classification
         quickCapture.waitForAiClassification()
 
@@ -65,6 +68,7 @@ class QuickCaptureE2ETest : BaseE2ETest() {
 
         // Type an urgent-sounding task
         quickCapture.typeTaskText("Submit tax return by tomorrow deadline")
+        quickCapture.submitInput()
         quickCapture.waitForAiClassification()
 
         // Verify AI assigned urgent quadrant (labels are ALL CAPS in UI)
@@ -89,6 +93,7 @@ class QuickCaptureE2ETest : BaseE2ETest() {
         quickCapture.assertSheetVisible()
 
         quickCapture.typeTaskText("Clean the garage")
+        quickCapture.submitInput()
         quickCapture.waitForAiClassification()
 
         // Override priority — QuadrantPickerDialog uses ModalBottomSheet which
@@ -201,6 +206,7 @@ class QuickCaptureE2ETest : BaseE2ETest() {
         quickCapture.assertSheetVisible()
 
         quickCapture.typeTaskText("Go for a 30 minute run")
+        quickCapture.submitInput()
         quickCapture.waitForAiClassification()
 
         // AI may auto-suggest "Get Fit" goal, in which case "Link to a goal"
