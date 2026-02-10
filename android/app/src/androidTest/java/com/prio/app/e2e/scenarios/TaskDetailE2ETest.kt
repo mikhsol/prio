@@ -44,8 +44,15 @@ class TaskDetailE2ETest : BaseE2ETest() {
         )
 
         nav.goToTasks()
+        waitForIdle()
         taskList.tapTask("Important meeting prep")
 
+        // Inline TaskDetailSheet renders in main Compose tree (post-migration)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("More options")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         taskDetail.assertSheetVisible()
         taskDetail.assertTaskTitle("Important meeting prep")
         taskDetail.assertNotCompleted()
@@ -84,12 +91,15 @@ class TaskDetailE2ETest : BaseE2ETest() {
 
         nav.goToTasks()
         taskList.tapTask("Delete me")
+        taskDetail.assertSheetVisible()
 
         taskDetail.openOverflowMenu()
         taskDetail.tapDelete()
+        // Wait for PrioConfirmDialog to appear before confirming
         taskDetail.confirmDelete()
 
-        // Back to task list, task should be gone
+        // After deletion, sheet closes and returns to task list
+        waitForIdle()
         nav.goToTasks()
         taskList.assertTaskNotDisplayed("Delete me")
     }

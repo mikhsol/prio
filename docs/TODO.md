@@ -26,3 +26,4 @@
 25. Sync up notes from Notion.
 26. Telegram/WhatsApp mini app/bot -> Send message to todo.
 27. Separate personal to work spaces/user profies?
+28. Integration with other apps.

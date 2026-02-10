@@ -16,7 +16,7 @@ composeBom = "2025.01.01"
 composeNavigation = "2.8.9"
 
 # Hilt Dependency Injection
-hilt = "2.54"
+hilt = "2.56.2"
 hiltNavigationCompose = "1.2.0"
 
 # Room Database
@@ -35,9 +35,9 @@ coroutines = "1.10.1"
 # Testing
 junit = "4.13.2"
 junitJupiter = "5.10.2"
-androidxTestExt = "1.1.5"
-espressoCore = "3.5.1"
-mockk = "1.13.17"
+androidxTestExt = "1.3.0"
+espressoCore = "3.7.0"
+mockk = "1.14.9"
 turbine = "1.0.0"
 coroutinesTest = "1.10.1"
 archCoreTesting = "2.2.0"
@@ -115,8 +115,8 @@ junit-jupiter-api = { group = "org.junit.jupiter", name = "junit-jupiter-api", v
 junit-jupiter-engine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junitJupiter" }
 junit-jupiter-params = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junitJupiter" }
 androidx-test-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "androidxTestExt" }
-androidx-test-runner = { group = "androidx.test", name = "runner", version = "1.5.2" }
-androidx-test-rules = { group = "androidx.test", name = "rules", version = "1.5.0" }
+androidx-test-runner = { group = "androidx.test", name = "runner", version = "1.7.0" }
+androidx-test-rules = { group = "androidx.test", name = "rules", version = "1.7.0" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 mockk-android = { group = "io.mockk", name = "mockk-android", version.ref = "mockk" }

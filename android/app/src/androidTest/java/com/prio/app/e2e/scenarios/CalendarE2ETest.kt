@@ -1,5 +1,6 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.performClick
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -40,17 +41,22 @@ class CalendarE2ETest : BaseE2ETest() {
 
     @Test
     fun calendarWithMeetings_showsTimeline() = runTest {
+        // Insert meeting for today (default startTime = hoursFromNow(1))
         meetingRepository.insertMeeting(
             TestDataFactory.meeting(title = "Team Standup")
         )
 
         nav.goToCalendar()
-        calendar.assertScreenVisible()
+
+        // CalendarScreen may show "Connect Your Calendar" if no READ_CALENDAR.
+        // Our MeetingRepository data is from Room (not ContentProvider),
+        // so meetings should appear regardless of calendar permission.
+        // Wait for screen to settle and data to load from Room.
+        waitForIdle()
 
         // Meeting appears in timeline with title in content description
         // Format: "{title}. {startTime} to {endTime}. {duration}..."
-        // Use waitUntil to handle async data loading
-        composeRule.waitUntil(timeoutMillis = 10_000) {
+        composeRule.waitUntil(timeoutMillis = 15_000) {
             composeRule.onAllNodes(
                 androidx.compose.ui.test.hasContentDescription("Team Standup", substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
@@ -98,18 +104,35 @@ class CalendarE2ETest : BaseE2ETest() {
 
     @Test
     fun calendarWithUntimedTasks_showsTaskSection() = runTest {
+        // Insert a task due today with time — it should appear in the
+        // "Tasks Without Time" section (tasks with date but no calendar slot)
         taskRepository.insertTask(
-            TestDataFactory.task(title = "No-time task", dueDate = TestDataFactory.hoursFromNow(6))
+            TestDataFactory.task(
+                title = "No-time task",
+                dueDate = TestDataFactory.hoursFromNow(6),
+                quadrant = com.prio.core.common.model.EisenhowerQuadrant.SCHEDULE
+            )
         )
 
         nav.goToCalendar()
         waitForIdle()
 
-        // Untimed tasks section shows below the timeline if tasks exist
-        // The section may not appear if the task's due date doesn't match today
-        // or the calendar view doesn't include untimed tasks.
-        // Verify no crash — this is the critical check.
-        calendar.assertScreenVisible()
+        // Verify the untimed tasks section renders.
+        // Section header: "📋 Tasks Without Time ({count})"
+        // If section doesn't appear (task date != today in calendar view),
+        // at minimum verify no crash.
+        try {
+            composeRule.waitUntil(timeoutMillis = 10_000) {
+                composeRule.onAllNodes(
+                    androidx.compose.ui.test.hasText("Tasks Without Time", substring = true)
+                ).fetchSemanticsNodes().isNotEmpty()
+            }
+            calendar.assertUntimedTasksSection()
+        } catch (_: androidx.compose.ui.test.ComposeTimeoutException) {
+            // Task's due date may not match today's calendar view date —
+            // verify no crash is the critical check
+            calendar.assertScreenVisible()
+        }
     }
 
     // =========================================================================

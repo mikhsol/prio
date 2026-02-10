@@ -4,7 +4,10 @@
 
     <!--
     Debug manifest overlay.
-    Disables Firebase auto-initialization for debug builds since we use placeholder keys.
+    - Disables Firebase auto-initialization for debug builds (placeholder keys).
+    - Replaces splash-screen theme with regular Theme.Prio so that
+      installSplashScreen()'s OnPreDrawListener does not block the first
+      Compose frame during instrumented tests.
     -->
     <application>
         <!-- Disable Firebase Crashlytics auto-init -->
@@ -21,6 +24,27 @@
         <provider
             android:name="com.google.firebase.provider.FirebaseInitProvider"
             android:authorities="${applicationId}.firebaseinitprovider"
+            tools:node="remove" />
+
+        <!--
+        Override the splash-screen theme for debug builds.
+        The splash screen's OnPreDrawListener blocks the first Compose
+        frame, causing "No compose hierarchies found" in every E2E test.
+        Using Theme.Prio directly bypasses this.
+        -->
+        <activity
+            android:name="com.prio.app.MainActivity"
+            android:theme="@style/Theme.Prio"
+            tools:replace="android:theme" />
+
+        <!--
+        Disable BootReceiver in debug/test builds.
+        During instrumented tests, Hilt is not yet initialized when Android
+        delivers stale BOOT_COMPLETED broadcasts, causing:
+        "The component was not created. Check that you have added the HiltAndroidRule."
+        -->
+        <receiver
+            android:name="com.prio.app.worker.BootReceiver"
             tools:node="remove" />
     </application>
 

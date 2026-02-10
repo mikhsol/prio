@@ -3,15 +3,13 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
 
 /**
  * Robot for the Goals screens: GoalsListScreen, CreateGoalScreen, GoalDetailScreen.
@@ -39,7 +37,7 @@ import com.prio.app.MainActivity
  * - Progress ring: contentDescription "{n} percent complete, status: {status.displayName}"
  */
 class GoalsRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================

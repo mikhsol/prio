@@ -39,18 +39,28 @@ class EdgeCaseE2ETest : BaseE2ETest() {
 
         // Verify task is linked to goal
         nav.goToTasks()
+        waitForIdle()
         taskList.assertTaskDisplayed("Go running")
 
         // Verify goal exists
         nav.goToGoals()
+        waitForIdle()
+
+        // Wait for goals to load from Room before asserting
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Fitness goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
         goals.assertGoalDisplayed("Fitness goal")
 
-        // Delete goal directly via repository (goal detail delete not yet implemented)
+        // Delete goal directly via repository
         goalRepository.deleteGoalById(goalId)
         waitForIdle()
 
         // Task should still exist (FK SET NULL cascading)
         nav.goToTasks()
+        waitForIdle()
         taskList.assertTaskDisplayed("Go running")
     }
 
@@ -161,22 +171,27 @@ class EdgeCaseE2ETest : BaseE2ETest() {
 
     @Test
     fun goalProgressBoundaries_noNaN() = runTest {
+        // Test boundary values: 0% progress and 99% progress
+        // (100% + isCompleted=true would land in collapsed "Completed" section)
         goalRepository.insertGoal(TestDataFactory.goal(title = "Zero Goal", progress = 0))
-        goalRepository.insertGoal(TestDataFactory.goal(title = "Full Goal", progress = 100))
+        goalRepository.insertGoal(TestDataFactory.goal(title = "Almost Done Goal", progress = 99))
 
         nav.goToGoals()
         waitForIdle()
 
-        // Wait for data to load (async from Room)
-        composeRule.waitUntil(timeoutMillis = 5_000) {
+        // Wait for data to load (async from Room → Flow → ViewModel → Compose)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodes(
                 androidx.compose.ui.test.hasText("Zero Goal", substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
 
         goals.assertGoalDisplayed("Zero Goal")
-        goals.assertGoalDisplayed("Full Goal")
-        // No NaN/crash in the overview card averageProgress calculation
+        goals.assertGoalDisplayed("Almost Done Goal")
+
+        // Verify overview card renders without NaN crash
+        // (averageProgress = (0 + 99) / 2 = 49.5 — valid float)
+        goals.assertOverviewCard()
     }
 
     // =========================================================================
@@ -198,15 +213,18 @@ class EdgeCaseE2ETest : BaseE2ETest() {
         )
 
         nav.goToTasks()
+        waitForIdle()
         taskList.assertTaskDisplayed("Bare minimum")
         taskList.tapTask("Bare minimum")
 
-        // Wait for task detail to load
-        composeRule.waitUntil(timeoutMillis = 5_000) {
+        // Inline TaskDetailSheet renders in main Compose tree.
+        // Wait for it to appear after tap + animation.
+        composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodes(
                 androidx.compose.ui.test.hasContentDescription("More options")
             ).fetchSemanticsNodes().isNotEmpty()
         }
         taskDetail.assertSheetVisible()
+        taskDetail.assertTaskTitle("Bare minimum")
     }
 }

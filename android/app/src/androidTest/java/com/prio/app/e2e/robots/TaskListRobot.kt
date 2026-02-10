@@ -3,7 +3,7 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
@@ -14,8 +14,6 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
 
 /**
  * Robot for the Tasks list screen (TaskListScreen).
@@ -35,7 +33,7 @@ import com.prio.app.MainActivity
  *   "Mark {task.title} as complete" / "Completed. Double tap to mark incomplete"
  */
 class TaskListRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================
@@ -123,7 +121,9 @@ class TaskListRobot(
     }
 
     fun assertSectionVisible(sectionTitle: String) {
-        rule.waitUntil(timeoutMillis = 5_000) {
+        // Generous timeout: Room → Flow → ViewModel → Compose pipeline
+        // can take several seconds on low-resource emulators (2 cores / 2GB)
+        rule.waitUntil(timeoutMillis = 10_000) {
             rule.onAllNodesWithText(sectionTitle, substring = true, ignoreCase = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }

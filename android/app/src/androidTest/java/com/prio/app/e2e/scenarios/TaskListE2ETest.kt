@@ -32,14 +32,19 @@ class TaskListE2ETest : BaseE2ETest() {
 
     @Test
     fun taskListShowsEisenhowerSections() = runTest {
-        // Pre-populate tasks across quadrants
+        // Pre-populate tasks across all 4 quadrants
         val tasks = TestDataFactory.mixedTaskSet()
         tasks.forEach { taskRepository.insertTask(it) }
 
         nav.goToTasks()
         taskList.assertScreenVisible()
 
+        // Wait for Room data to propagate through Flow → ViewModel → UI
+        waitForIdle()
+
         // Verify Eisenhower sections are visible
+        // Section headers render as "🔴 DO FIRST", "🟡 SCHEDULE", etc.
+        // assertSectionVisible uses substring matching + waitUntil(10s)
         taskList.assertSectionVisible("DO FIRST")
         taskList.assertSectionVisible("SCHEDULE")
         taskList.assertSectionVisible("DELEGATE")

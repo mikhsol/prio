@@ -5,12 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import com.prio.core.data.preferences.UserPreferencesRepository
 import com.prio.core.ui.theme.PrioTheme
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -46,38 +47,44 @@ class MainActivity : ComponentActivity() {
     lateinit var userPreferencesRepository: UserPreferencesRepository
     
     override fun onCreate(savedInstanceState: Bundle?) {
+        android.util.Log.d("PrioTest", "=== MainActivity.onCreate START ===")
         // Install splash screen before super.onCreate()
-        installSplashScreen()
+        val splashScreen = installSplashScreen()
         
         super.onCreate(savedInstanceState)
+
+        // Allow the first frame to draw immediately.
+        // Without this the OnPreDrawListener blocks the Compose hierarchy,
+        // which causes "No compose hierarchies found" in instrumented tests.
+        splashScreen.setKeepOnScreenCondition { false }
         
         // Enable edge-to-edge display
         enableEdgeToEdge()
         
-        // Determine onboarding state and deep link from intent
-        lifecycleScope.launch {
-            val hasCompletedOnboarding = try {
-                userPreferencesRepository.hasCompletedOnboarding.first()
-            } catch (e: Exception) {
-                Timber.w(e, "Failed to read onboarding preference, defaulting to false")
-                false
-            }
-            val deepLinkRoute = parseDeepLink(intent)
+        val deepLinkRoute = parseDeepLink(intent)
 
-            setContent {
-                PrioTheme {
-                    PrioAppShell(
-                        showOnboarding = !hasCompletedOnboarding,
-                        deepLinkRoute = deepLinkRoute,
-                        onFirstLaunchComplete = {
-                            lifecycleScope.launch {
-                                userPreferencesRepository.setOnboardingComplete()
-                            }
+        android.util.Log.d("PrioTest", "=== MainActivity calling setContent ===")
+        // Set content synchronously so Compose hierarchy is available
+        // immediately for both production and test scenarios
+        setContent {
+            android.util.Log.d("PrioTest", "=== Inside setContent composable ===")
+            val onboardingCompleted by userPreferencesRepository
+                .onboardingCompleted
+                .collectAsStateWithLifecycle(initialValue = true)
+
+            PrioTheme {
+                PrioAppShell(
+                    showOnboarding = !onboardingCompleted,
+                    deepLinkRoute = deepLinkRoute,
+                    onFirstLaunchComplete = {
+                        lifecycleScope.launch {
+                            userPreferencesRepository.setOnboardingCompleted(true)
                         }
-                    )
-                }
+                    }
+                )
             }
         }
+        android.util.Log.d("PrioTest", "=== MainActivity.onCreate END ===")
     }
 
     override fun onNewIntent(intent: Intent) {

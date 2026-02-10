@@ -54,6 +54,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -382,7 +383,8 @@ private fun SectionHeader(
             .clip(RoundedCornerShape(8.dp))
             .clickable(onClick = onToggle)
             .padding(vertical = 12.dp, horizontal = 8.dp)
-            .semantics { heading() },
+            .semantics { heading() }
+            .testTag("section_header_${section.quadrant.name}"),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {

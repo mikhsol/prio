@@ -3,13 +3,11 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
 
 /**
  * Robot for the CalendarScreen.
@@ -31,7 +29,7 @@ import com.prio.app.MainActivity
  * - "NOW" badge for ongoing meetings
  */
 class CalendarRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================

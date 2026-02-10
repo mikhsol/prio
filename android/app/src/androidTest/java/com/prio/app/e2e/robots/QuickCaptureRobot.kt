@@ -3,15 +3,13 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
 
 /**
  * Robot for the QuickCaptureSheet modal.
@@ -35,7 +33,7 @@ import com.prio.app.MainActivity
  * Flow: type text → AI parses → parsed fields shown → tap "Create Task"
  */
 class QuickCaptureRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================

@@ -3,17 +3,16 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
 
 /**
  * Robot for the TaskDetailSheet modal.
@@ -33,7 +32,7 @@ import com.prio.app.MainActivity
  * Note: "Add subtask" button currently does nothing (known defect DEF-011).
  */
 class TaskDetailRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================
@@ -90,14 +89,16 @@ class TaskDetailRobot(
      * Called after [tapDelete] which opens the dialog.
      */
     fun confirmDelete() {
-        // PrioConfirmDialog has a "Delete" confirm button
-        // Wait for dialog to appear, then tap the confirm button
-        rule.waitUntil(timeoutMillis = 3_000) {
-            rule.onAllNodesWithText("Delete")
-                .fetchSemanticsNodes().size >= 1
+        // Wait for PrioConfirmDialog to appear (title: "Delete Task?")
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Delete Task?")
+                .fetchSemanticsNodes().isNotEmpty()
         }
+        // The dialog has "Cancel" and "Delete" buttons.
+        // Find all "Delete" text nodes — the dialog confirm button is the last one
+        // (after the dialog title "Delete Task?" and potentially the menu item).
         rule.onAllNodesWithText("Delete")
-            .onFirst()
+            .onLast()
             .performClick()
         rule.waitForIdle()
     }

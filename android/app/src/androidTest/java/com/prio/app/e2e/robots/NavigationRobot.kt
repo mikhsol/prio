@@ -1,13 +1,12 @@
 package com.prio.app.e2e.robots
 
+import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.performClick
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.prio.app.MainActivity
+import androidx.test.espresso.Espresso
 
 /**
  * Robot for navigating between main app screens via bottom navigation.
@@ -25,7 +24,7 @@ import com.prio.app.MainActivity
  * Note: TaskListScreen also has an "Add new task" FAB, so we use onAllNodes().onFirst().
  */
 class NavigationRobot(
-    private val rule: AndroidComposeTestRule<ActivityScenarioRule<MainActivity>, MainActivity>
+    private val rule: ComposeTestRule
 ) {
 
     // =========================================================================
@@ -72,9 +71,7 @@ class NavigationRobot(
     }
 
     fun pressBack() {
-        rule.activityRule.scenario.onActivity { activity ->
-            activity.onBackPressedDispatcher.onBackPressed()
-        }
+        Espresso.pressBack()
         rule.waitForIdle()
     }
 

@@ -42,7 +42,7 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         taskList.assertTaskDisplayed("Rotation test")
 
         // Rotate to landscape
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
         waitForIdle()
@@ -51,7 +51,7 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         taskList.assertTaskDisplayed("Rotation test")
 
         // Rotate back to portrait
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         waitForIdle()
@@ -71,7 +71,7 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         quickCapture.typeTaskText("Rotating input test")
 
         // Rotate
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
         waitForIdle()
@@ -80,7 +80,7 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         // The sheet may dismiss on config change — this tests that edge case
 
         // Restore orientation
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         waitForIdle()
@@ -99,7 +99,7 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         taskList.assertTaskDisplayed("Persistent task")
 
         // Simulate process recreation
-        composeRule.activityRule.scenario.recreate()
+        scenario.recreate()
         waitForIdle()
 
         // Data should still be there (persisted in Room)
@@ -217,12 +217,12 @@ class CrashResilienceE2ETest : BaseE2ETest() {
         quickCapture.typeTaskText("Multi-config")
 
         // Rotate twice
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
         }
         waitForIdle()
 
-        composeRule.activityRule.scenario.onActivity { activity ->
+        scenario.onActivity { activity ->
             activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
         waitForIdle()

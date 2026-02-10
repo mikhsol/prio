@@ -73,10 +73,13 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         goals.typeGoalTitle("Get healthier")
         goals.tapRefineWithAi()
 
-        // AI should refine the vague goal into SMART format
-        // Wait for AI processing (generous timeout for on-device LLM)
-        waitUntil(timeoutMs = 30_000L, conditionDescription = "AI refinement complete") {
-            true // AI result will update the text field
+        // Wait for AI refinement to complete — the "Next: Timeline" button
+        // becomes enabled after AI finishes processing.
+        // FakeAiProvider returns deterministic results within ~100ms.
+        composeRule.waitUntil(timeoutMillis = 30_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Next: Timeline")
+            ).fetchSemanticsNodes().isNotEmpty()
         }
 
         goals.tapNextTimeline()
@@ -164,10 +167,19 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         )
 
         nav.goToGoals()
+        waitForIdle()
         goals.assertGoalDisplayed("Learn Kotlin")
         goals.tapGoal("Learn Kotlin")
 
-        // Goal detail should show progress
+        // Wait for GoalDetailScreen to load (async from Room)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Goal detail should show progress ring
+        // contentDescription format: "{n} percent complete, status: {status}"
         goals.assertProgressRing("40 percent")
     }
 }
