@@ -24,7 +24,7 @@ import androidx.compose.ui.test.swipeRight
  * - Show completed toggle (contentDescription: "Show/Hide completed tasks")
  * - Filter chips (contentDescription: "{filter.name} filter")
  * - LazyColumn with TaskSection headers + TaskCard items
- * - FAB is in PrioBottomNavigation, not directly on this screen
+ * - FAB is in PrioBottomNavigation only (duplicate removed, Bug 5 fix)
  *
  * TaskCard contentDescription:
  *   "{title}. Priority: {quadrant.label}. Completed. Overdue. Due: {dueText}. Reminder set. Goal: {goalName}"

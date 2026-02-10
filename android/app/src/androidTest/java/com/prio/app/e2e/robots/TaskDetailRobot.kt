@@ -136,6 +136,89 @@ class TaskDetailRobot(
         rule.waitForIdle()
     }
 
+    /**
+     * Fill in and confirm the Add Subtask dialog.
+     */
+    fun addSubtaskViaDialog(subtaskTitle: String) {
+        tapAddSubtask()
+        // Wait for AlertDialog to appear ("Add Subtask" title)
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Add Subtask")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        // Type into the "Subtask title" placeholder field
+        rule.onNode(hasText("Subtask title") and hasSetTextAction())
+            .performTextInput(subtaskTitle)
+        rule.waitForIdle()
+        rule.onNodeWithText("Add")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Tap the task title text to enter edit mode (Bug 4 fix).
+     */
+    fun tapTitleToEdit(title: String) {
+        rule.onNodeWithText(title, substring = true)
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Tap the "Save" button (Bug 1 fix — replaces "Complete" in edit mode).
+     */
+    fun tapSave() {
+        rule.onNodeWithText("Save")
+            .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Tap a property row by its label text to trigger the "Change" action.
+     * The entire PropertyRow is clickable (not just the "Change" TextButton).
+     *
+     * Note: We click the label text directly because there are multiple "Change"
+     * TextButtons in the sheet (QuadrantSection also has one), so matching
+     * by "Change" text is ambiguous.
+     */
+    fun tapChangeForProperty(propertyLabel: String) {
+        rule.onNodeWithText(propertyLabel, substring = true)
+            .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Type into the notes field.
+     */
+    fun typeNotes(notes: String) {
+        rule.onNode(
+            hasText("Add notes", substring = true) and hasSetTextAction()
+        )
+            .performScrollTo()
+            .performTextInput(notes)
+        rule.waitForIdle()
+    }
+
+    /**
+     * Clear and type into the notes field (for editing existing notes).
+     */
+    fun editNotes(currentNotes: String, newNotes: String) {
+        rule.onNode(
+            hasText(currentNotes, substring = true) and hasSetTextAction()
+        )
+            .performScrollTo()
+            .performTextClearance()
+        rule.waitForIdle()
+        rule.onNode(
+            hasText("Add notes", substring = true) and hasSetTextAction()
+        )
+            .performScrollTo()
+            .performTextInput(newNotes)
+        rule.waitForIdle()
+    }
+
     // =========================================================================
     // Assertions
     // =========================================================================
@@ -168,5 +251,106 @@ class TaskDetailRobot(
     fun assertAiExplanation(text: String) {
         rule.onNodeWithText(text, substring = true)
             .assertIsDisplayed()
+    }
+
+    fun assertSaveButtonVisible() {
+        rule.onNodeWithText("Save")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    fun assertCompleteButtonVisible() {
+        rule.onNodeWithText("Complete")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    fun assertSaveButtonNotVisible() {
+        val nodes = rule.onAllNodesWithText("Save").fetchSemanticsNodes()
+        assert(nodes.isEmpty()) {
+            "Save button should not be visible but found ${nodes.size} node(s)"
+        }
+    }
+
+    fun assertInEditMode() {
+        // In edit mode, the title OutlinedTextField is displayed
+        rule.onNode(hasSetTextAction() and hasText("Task title", substring = true))
+            .assertIsDisplayed()
+    }
+
+    fun assertTitleEditable(currentTitle: String) {
+        // Title field is an OutlinedTextField with SetTextAction containing the current title
+        rule.onNode(hasSetTextAction() and hasText(currentTitle, substring = true))
+            .assertIsDisplayed()
+    }
+
+    fun assertNotesContain(text: String) {
+        rule.onNodeWithText(text, substring = true)
+            .assertIsDisplayed()
+    }
+
+    fun assertDatePickerVisible() {
+        // Material3 DatePickerDialog has "OK" and "Cancel" buttons
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("OK")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    fun assertGoalPickerVisible() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Link Goal")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    fun assertSnackbarMessage(text: String) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(text, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(text, substring = true)
+            .assertIsDisplayed()
+    }
+
+    fun assertSubtaskDisplayed(title: String) {
+        rule.onNodeWithText(title, substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Dismiss the date picker by tapping Cancel.
+     */
+    fun dismissDatePicker() {
+        rule.onNodeWithText("Cancel")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Confirm the date picker by tapping OK.
+     */
+    fun confirmDatePicker() {
+        rule.onNodeWithText("OK")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Dismiss the goal picker by tapping Cancel.
+     */
+    fun dismissGoalPicker() {
+        rule.onNodeWithText("Cancel")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Select a goal from the goal picker by title.
+     */
+    fun selectGoalInPicker(goalTitle: String) {
+        rule.onNodeWithText(goalTitle, substring = true)
+            .performClick()
+        rule.waitForIdle()
     }
 }

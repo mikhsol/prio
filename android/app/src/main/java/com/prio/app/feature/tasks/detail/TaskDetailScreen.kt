@@ -3,18 +3,31 @@ package com.prio.app.feature.tasks.detail
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +61,8 @@ fun TaskDetailScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showGoalPicker by remember { mutableStateOf(false) }
 
     // Handle side effects
     LaunchedEffect(viewModel) {
@@ -81,16 +96,24 @@ fun TaskDetailScreen(
                     clipboard.setPrimaryClip(ClipData.newPlainText("Prio Task", effect.text))
                 }
                 is TaskDetailEffect.OpenDatePicker -> {
-                    // TODO: Integrate date picker (3.1.5.B.4 handled inline)
+                    showDatePicker = true
                 }
                 is TaskDetailEffect.OpenGoalPicker -> {
-                    // Goal picker opens inline via TaskDetailSheet
+                    showGoalPicker = true
                 }
                 is TaskDetailEffect.OpenRecurrencePicker -> {
                     // Future: recurrence picker
+                    snackbarHostState.showSnackbar(
+                        message = "Recurrence settings coming soon",
+                        duration = SnackbarDuration.Short
+                    )
                 }
                 is TaskDetailEffect.OpenReminderPicker -> {
                     // Future: reminder picker
+                    snackbarHostState.showSnackbar(
+                        message = "Reminders coming soon",
+                        duration = SnackbarDuration.Short
+                    )
                 }
             }
         }
@@ -121,6 +144,78 @@ fun TaskDetailScreen(
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+
+    // Date picker dialog
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState()
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.onEvent(TaskDetailEvent.UpdateDueDate(datePickerState.selectedDateMillis))
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+    // Goal picker dialog
+    if (showGoalPicker) {
+        val goals by viewModel.availableGoals.collectAsStateWithLifecycle()
+        AlertDialog(
+            onDismissRequest = { showGoalPicker = false },
+            title = { Text("Link Goal") },
+            text = {
+                if (goals.isEmpty()) {
+                    Text("No goals available. Create a goal first.")
+                } else {
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        // Option to unlink
+                        if (state.linkedGoal != null) {
+                            item {
+                                ListItem(
+                                    headlineContent = { Text("Remove goal link") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            viewModel.onEvent(TaskDetailEvent.UpdateGoalLink(null))
+                                            showGoalPicker = false
+                                        }
+                                )
+                            }
+                        }
+                        items(goals) { goal ->
+                            ListItem(
+                                headlineContent = { Text(goal.title) },
+                                supportingContent = { Text("${goal.progress}%") },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.onEvent(TaskDetailEvent.UpdateGoalLink(goal.id))
+                                        showGoalPicker = false
+                                    }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showGoalPicker = false }) {
+                    Text("Cancel")
+                }
+            }
         )
     }
 }

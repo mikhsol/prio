@@ -21,7 +21,8 @@ import androidx.test.espresso.Espresso
  * We use the ". " suffix pattern to disambiguate from other nodes containing the label text.
  *
  * FAB is centered in bottom nav with contentDescription = "Add new task".
- * Note: TaskListScreen also has an "Add new task" FAB, so we use onAllNodes().onFirst().
+ * Since TaskListScreen's duplicate FAB was removed (Bug 5 fix), there is now
+ * only one "Add new task" FAB on screen at a time.
  */
 class NavigationRobot(
     private val rule: ComposeTestRule

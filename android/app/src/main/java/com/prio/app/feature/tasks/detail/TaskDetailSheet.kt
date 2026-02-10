@@ -137,6 +137,10 @@ sealed interface TaskDetailEvent {
     data class UpdateTitle(val title: String) : TaskDetailEvent
     data class UpdateNotes(val notes: String) : TaskDetailEvent
     data class UpdateQuadrant(val quadrant: EisenhowerQuadrant) : TaskDetailEvent
+    /** Update due date from date picker (null to clear). */
+    data class UpdateDueDate(val dateMillis: Long?) : TaskDetailEvent
+    /** Link/unlink a goal (null to unlink). */
+    data class UpdateGoalLink(val goalId: Long?) : TaskDetailEvent
     object ToggleComplete : TaskDetailEvent
     object Delete : TaskDetailEvent
     object ConfirmDelete : TaskDetailEvent
@@ -355,7 +359,9 @@ fun TaskDetailSheet(
             item {
                 ActionButtons(
                     isCompleted = state.isCompleted,
+                    isEditing = state.isEditing,
                     onCompleteClick = { onEvent(TaskDetailEvent.ToggleComplete) },
+                    onSaveClick = { onEvent(TaskDetailEvent.Save) },
                     onDeleteClick = { showDeleteDialog = true }
                 )
             }
@@ -514,6 +520,7 @@ private fun TitleSection(
                 modifier = Modifier
                     .weight(1f)
                     .alpha(contentAlpha)
+                    .clickable { onEditClick() }
             )
         }
         
@@ -862,32 +869,53 @@ private fun CompletedInfo(completedAt: String) {
 @Composable
 private fun ActionButtons(
     isCompleted: Boolean,
+    isEditing: Boolean,
     onCompleteClick: () -> Unit,
+    onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Complete/Mark Incomplete button
-        Button(
-            onClick = onCompleteClick,
-            modifier = Modifier.weight(1f),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isCompleted) {
-                    MaterialTheme.colorScheme.surfaceVariant
-                } else {
-                    MaterialTheme.colorScheme.primary
-                }
-            )
-        ) {
-            Icon(
-                imageVector = if (isCompleted) Icons.Default.AccessTime else Icons.Default.Check,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isCompleted) "Mark Incomplete" else "Complete")
+        if (isEditing) {
+            // Save button — primary action in edit mode
+            Button(
+                onClick = onSaveClick,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Save")
+            }
+        } else {
+            // Complete/Mark Incomplete button
+            Button(
+                onClick = onCompleteClick,
+                modifier = Modifier.weight(1f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isCompleted) {
+                        MaterialTheme.colorScheme.surfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.primary
+                    }
+                )
+            ) {
+                Icon(
+                    imageVector = if (isCompleted) Icons.Default.AccessTime else Icons.Default.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (isCompleted) "Mark Incomplete" else "Complete")
+            }
         }
         
         // Delete button

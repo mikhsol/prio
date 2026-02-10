@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,6 +82,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
@@ -267,6 +270,7 @@ fun QuickCaptureSheet(
             modifier = Modifier
                 .fillMaxWidth()
                 .imePadding()
+                .verticalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
@@ -306,11 +310,13 @@ fun QuickCaptureSheet(
                 exit = fadeOut()
             ) {
                 Column {
-                    // Input section
+                    // Input section — priority dot renders INSIDE the
+                    // fixed-height row so the sheet never resizes.
                     InputSection(
                         inputText = state.inputText,
                         isVoiceActive = state.isVoiceInputActive,
                         isParsing = state.isAiParsing,
+                        inlineQuadrant = if (!state.showPreview) state.parsedResult?.quadrant else null,
                         focusRequester = focusRequester,
                         onInputChange = { onEvent(QuickCaptureEvent.UpdateInput(it)) },
                         onVoiceClick = {
@@ -402,9 +408,9 @@ fun QuickCaptureSheet(
                         }
                     }
                     
-                    // Parsed result preview
+                    // Parsed result preview — only after Done (showPreview)
                     AnimatedVisibility(
-                        visible = state.parsedResult != null && !state.isAiParsing,
+                        visible = state.showPreview && state.parsedResult != null && !state.isAiParsing,
                         enter = slideInVertically(initialOffsetY = { it / 2 }) + fadeIn(),
                         exit = slideOutVertically(targetOffsetY = { it / 2 }) + fadeOut()
                     ) {
@@ -421,9 +427,9 @@ fun QuickCaptureSheet(
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
-                    // Action buttons (only show when we have parsed result)
+                    // Action buttons — only after Done (showPreview)
                     AnimatedVisibility(
-                        visible = state.parsedResult != null && !state.isAiParsing,
+                        visible = state.showPreview && state.parsedResult != null && !state.isAiParsing,
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
@@ -489,12 +495,15 @@ private fun InputSection(
     inputText: String,
     isVoiceActive: Boolean,
     isParsing: Boolean,
+    inlineQuadrant: EisenhowerQuadrant?,
     focusRequester: FocusRequester,
     onInputChange: (String) -> Unit,
     onVoiceClick: () -> Unit,
     onClose: () -> Unit,
     onDone: () -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(28.dp),
@@ -554,8 +563,47 @@ private fun InputSection(
                 ),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { onDone() })
+                keyboardActions = KeyboardActions(onDone = {
+                    keyboardController?.hide()
+                    onDone()
+                })
             )
+
+            // Inline priority dot — renders INSIDE the 56dp row so the
+            // sheet height never changes while the user is typing.
+            // Appears after the debounce classifies the text silently.
+            androidx.compose.animation.AnimatedVisibility(
+                visible = inlineQuadrant != null,
+                enter = fadeIn(animationSpec = tween(200)),
+                exit = fadeOut(animationSpec = tween(150))
+            ) {
+                inlineQuadrant?.let { q ->
+                    Surface(
+                        modifier = Modifier
+                            .padding(horizontal = 4.dp)
+                            .semantics { contentDescription = "Priority: ${q.displayLabel}" },
+                        shape = RoundedCornerShape(12.dp),
+                        color = q.color.copy(alpha = 0.15f)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = q.emoji,
+                                style = MaterialTheme.typography.labelSmall
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = q.displayLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Medium,
+                                color = q.color
+                            )
+                        }
+                    }
+                }
+            }
             
             // Close button
             IconButton(

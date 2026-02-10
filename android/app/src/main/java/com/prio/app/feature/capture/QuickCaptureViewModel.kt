@@ -84,8 +84,10 @@ class QuickCaptureViewModel @Inject constructor(
     }
     
     private fun updateInput(text: String) {
-        // Keep current parsed result while typing to avoid flicker
-        _uiState.update { it.copy(inputText = text) }
+        // Collapse the preview card when the user resumes typing.
+        // This prevents the parsed-result + action-buttons content from
+        // pushing the input field off-screen when the keyboard is open.
+        _uiState.update { it.copy(inputText = text, showPreview = false) }
         
         // Debounce parsing - cancel previous and wait for typing to stop
         parseJob?.cancel()
@@ -207,15 +209,22 @@ class QuickCaptureViewModel @Inject constructor(
         if (input.isBlank()) return
         
         viewModelScope.launch {
-            // Don't show isAiParsing = true to avoid UI disruption
-            performParsing(input)
+            // Don't show isAiParsing = true to avoid UI disruption.
+            // Silent mode: stores parsed result but does NOT expand the preview
+            // card, preventing the bottom sheet from resizing mid-typing.
+            performParsing(input, silent = true)
         }
     }
     
     /**
      * Common parsing logic used by both parseInput and parseInputSilently.
+     *
+     * @param input The text to parse
+     * @param silent When true (background debounce), stores the result but does NOT
+     *   expand the preview card. This prevents the bottom sheet from resizing while
+     *   the user is still typing with the keyboard open.
      */
-    private suspend fun performParsing(input: String) {
+    private suspend fun performParsing(input: String, silent: Boolean = false) {
         try {
             // Parse natural language input
             val parsed = naturalLanguageParser.parse(input)
@@ -247,7 +256,7 @@ class QuickCaptureViewModel @Inject constructor(
                 it.copy(
                     isAiParsing = false,
                     parsedResult = result,
-                    showPreview = true
+                    showPreview = if (silent) it.showPreview else true
                 )
             }
         } catch (e: Exception) {
@@ -262,7 +271,7 @@ class QuickCaptureViewModel @Inject constructor(
                 it.copy(
                     isAiParsing = false,
                     parsedResult = fallbackResult,
-                    showPreview = true
+                    showPreview = if (silent) it.showPreview else true
                 )
             }
         }

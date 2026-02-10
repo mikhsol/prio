@@ -10,10 +10,13 @@ import com.prio.core.data.repository.TaskRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -54,6 +57,24 @@ class TaskDetailViewModel @Inject constructor(
     
     // Original task for undo
     private var originalTask: TaskEntity? = null
+
+    /**
+     * Active goals for the goal-picker dialog.
+     * Maps GoalEntity → LinkedGoalInfo so the UI doesn't import data-layer types.
+     */
+    val availableGoals: StateFlow<List<LinkedGoalInfo>> =
+        goalRepository.getAllActiveGoals()
+            .map { goals ->
+                goals.map { goal ->
+                    LinkedGoalInfo(
+                        id = goal.id,
+                        title = goal.title,
+                        progress = goal.progress.toInt(),
+                        category = goal.category.name
+                    )
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     
     init {
         if (taskId > 0) {
@@ -128,6 +149,8 @@ class TaskDetailViewModel @Inject constructor(
             is TaskDetailEvent.UpdateTitle -> updateTitle(event.title)
             is TaskDetailEvent.UpdateNotes -> updateNotes(event.notes)
             is TaskDetailEvent.UpdateQuadrant -> updateQuadrant(event.quadrant)
+            is TaskDetailEvent.UpdateDueDate -> updateDueDate(event.dateMillis)
+            is TaskDetailEvent.UpdateGoalLink -> updateGoalLink(event.goalId)
             is TaskDetailEvent.ToggleComplete -> toggleComplete()
             is TaskDetailEvent.Delete -> { /* Show confirmation handled in UI */ }
             is TaskDetailEvent.ConfirmDelete -> deleteTask()
@@ -176,6 +199,63 @@ class TaskDetailViewModel @Inject constructor(
                 ))
             } catch (e: Exception) {
                 _effect.send(TaskDetailEffect.ShowError("Failed to update priority"))
+            }
+        }
+    }
+
+    /**
+     * Update due date from date picker.
+     * Persists immediately and refreshes the formatted label.
+     */
+    private fun updateDueDate(dateMillis: Long?) {
+        viewModelScope.launch {
+            try {
+                val currentId = _uiState.value.id
+                val newDueDate = dateMillis?.let { Instant.fromEpochMilliseconds(it) }
+                taskRepository.updateTaskDueDate(currentId, newDueDate)
+                _uiState.update {
+                    it.copy(
+                        dueDateFormatted = newDueDate?.let { d -> formatDueDate(d) } ?: "No due date"
+                    )
+                }
+                originalTask = originalTask?.copy(dueDate = newDueDate)
+                _effect.send(TaskDetailEffect.ShowSnackbar(
+                    newDueDate?.let { "Due date updated" } ?: "Due date cleared"
+                ))
+            } catch (e: Exception) {
+                _effect.send(TaskDetailEffect.ShowError("Failed to update due date"))
+            }
+        }
+    }
+
+    /**
+     * Link or unlink a goal.
+     * Persists immediately and refreshes the linked goal info.
+     */
+    private fun updateGoalLink(goalId: Long?) {
+        viewModelScope.launch {
+            try {
+                val currentId = _uiState.value.id
+                val task = originalTask?.copy(goalId = goalId) ?: return@launch
+                taskRepository.updateTask(task)
+                originalTask = task
+
+                val linkedGoal = goalId?.let { id ->
+                    goalRepository.getGoalById(id)?.let { goal ->
+                        LinkedGoalInfo(
+                            id = goal.id,
+                            title = goal.title,
+                            progress = goal.progress.toInt(),
+                            category = goal.category.name
+                        )
+                    }
+                }
+                _uiState.update { it.copy(linkedGoal = linkedGoal) }
+                _effect.send(TaskDetailEffect.ShowSnackbar(
+                    if (goalId != null) "Goal linked" else "Goal unlinked"
+                ))
+            } catch (e: Exception) {
+                _effect.send(TaskDetailEffect.ShowError("Failed to update goal"))
             }
         }
     }
@@ -308,12 +388,44 @@ class TaskDetailViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val parentId = _uiState.value.id
+
+                // Preserve in-flight edits (notes, title, quadrant) before reload
+                val pendingTitle = _uiState.value.title
+                val pendingNotes = _uiState.value.notes
+                val pendingQuadrant = _uiState.value.quadrant
+                val wasEditing = _uiState.value.isEditing
+
+                // Auto-save current edits so they aren't lost
+                if (wasEditing) {
+                    val task = originalTask?.copy(
+                        title = pendingTitle,
+                        notes = pendingNotes,
+                        quadrant = pendingQuadrant
+                    )
+                    if (task != null) {
+                        taskRepository.updateTask(task)
+                        originalTask = task
+                    }
+                }
+
                 taskRepository.createTask(
                     title = title,
                     parentTaskId = parentId
                 )
                 // Reload to get updated subtasks
                 loadTask(parentId)
+
+                // Restore editing state after reload
+                if (wasEditing) {
+                    _uiState.update {
+                        it.copy(
+                            title = pendingTitle,
+                            notes = pendingNotes,
+                            quadrant = pendingQuadrant,
+                            isEditing = true
+                        )
+                    }
+                }
             } catch (e: Exception) {
                 _effect.send(TaskDetailEffect.ShowError("Failed to add subtask"))
             }
