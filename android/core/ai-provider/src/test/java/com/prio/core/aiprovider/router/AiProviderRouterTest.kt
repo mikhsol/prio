@@ -8,6 +8,7 @@ import com.prio.core.ai.model.AiResponseMetadata
 import com.prio.core.ai.model.AiResult
 import com.prio.core.ai.registry.ModelRegistry
 import com.prio.core.aiprovider.llm.LlamaEngine
+import com.prio.core.aiprovider.nano.GeminiNanoProvider
 import com.prio.core.aiprovider.provider.OnDeviceAiProvider
 import com.prio.core.aiprovider.provider.RuleBasedFallbackProvider
 import com.prio.core.common.model.EisenhowerQuadrant
@@ -40,11 +41,13 @@ class AiProviderRouterTest {
     private lateinit var router: AiProviderRouter
     private lateinit var ruleBasedProvider: RuleBasedFallbackProvider
     private lateinit var onDeviceProvider: OnDeviceAiProvider
+    private lateinit var geminiNanoProvider: GeminiNanoProvider
     private lateinit var mockLlamaEngine: LlamaEngine
     private lateinit var mockModelRegistry: ModelRegistry
     private lateinit var eisenhowerEngine: EisenhowerEngine
     
     private val llmAvailable = MutableStateFlow(false)
+    private val nanoAvailable = MutableStateFlow(false)
     
     @BeforeEach
     fun setup() {
@@ -61,7 +64,12 @@ class AiProviderRouterTest {
             every { providerId } returns "on-device"
         }
         
-        router = AiProviderRouter(ruleBasedProvider, onDeviceProvider)
+        geminiNanoProvider = mockk(relaxed = true) {
+            every { isAvailable } returns nanoAvailable
+            every { providerId } returns "gemini-nano"
+        }
+        
+        router = AiProviderRouter(ruleBasedProvider, onDeviceProvider, geminiNanoProvider)
     }
     
     @Nested

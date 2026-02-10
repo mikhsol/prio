@@ -1,11 +1,12 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
 }
 
 android {
     namespace = "com.prio.core.ui"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 29
@@ -27,16 +28,8 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 }
 

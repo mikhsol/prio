@@ -1,6 +1,7 @@
 package com.prio.core.aiprovider.di
 
 import com.prio.core.ai.provider.AiProvider
+import com.prio.core.aiprovider.nano.GeminiNanoProvider
 import com.prio.core.aiprovider.provider.OnDeviceAiProvider
 import com.prio.core.aiprovider.provider.RuleBasedFallbackProvider
 import com.prio.core.aiprovider.router.AiProviderRouter
@@ -35,12 +36,21 @@ annotation class RuleBasedProvider
 annotation class OnDeviceProvider
 
 /**
+ * Qualifier for the Gemini Nano provider (Milestone 3.6).
+ */
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class GeminiNanoProviderQualifier
+
+/**
  * Hilt module providing AI provider dependencies.
  * 
  * Task 2.2.5-2.2.8: AI Provider implementations and routing.
+ * Task 3.6.6: Gemini Nano provider integration.
  * 
  * Provides:
  * - RuleBasedFallbackProvider: Primary classifier (75% accuracy, <50ms)
+ * - GeminiNanoProvider: Gemini Nano via Android AI Core (0 MB, ~1-2s) — Milestone 3.6
  * - OnDeviceAiProvider: LLM-based classifier (2-3s, higher accuracy for edge cases)
  * - AiProviderRouter: Smart router that chains providers
  */
@@ -80,14 +90,25 @@ object AiProviderModule {
     ): AiProvider = provider
     
     /**
+     * Provide the Gemini Nano provider (Milestone 3.6).
+     */
+    @Provides
+    @Singleton
+    @GeminiNanoProviderQualifier
+    fun provideGeminiNanoProvider(
+        provider: GeminiNanoProvider
+    ): AiProvider = provider
+    
+    /**
      * Provide all available providers as a set for enumeration.
      */
     @Provides
     @Singleton
     fun provideAllProviders(
         ruleBasedProvider: RuleBasedFallbackProvider,
-        onDeviceProvider: OnDeviceAiProvider
-    ): Set<AiProvider> = setOf(ruleBasedProvider, onDeviceProvider)
+        onDeviceProvider: OnDeviceAiProvider,
+        geminiNanoProvider: GeminiNanoProvider
+    ): Set<AiProvider> = setOf(ruleBasedProvider, onDeviceProvider, geminiNanoProvider)
 }
 
 /**
@@ -113,5 +134,14 @@ abstract class AiProviderBindingsModule {
     @IntoSet
     abstract fun bindOnDeviceProvider(
         provider: OnDeviceAiProvider
+    ): AiProvider
+    
+    /**
+     * Bind GeminiNanoProvider to AiProvider for multi-binding (Milestone 3.6).
+     */
+    @Binds
+    @IntoSet
+    abstract fun bindGeminiNanoProvider(
+        provider: GeminiNanoProvider
     ): AiProvider
 }

@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.prio.core.data"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 29
@@ -35,10 +35,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-    
     testOptions {
         unitTests.all {
             it.useJUnitPlatform()

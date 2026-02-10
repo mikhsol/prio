@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -8,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.prio.core.aiprovider"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 29
@@ -54,10 +55,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    buildFeatures {
+        compose = true
     }
-    
+
     @Suppress("UnstableApiUsage")
     testOptions {
         unitTests.all {
@@ -70,6 +71,15 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:domain"))
     implementation(project(":core:ai"))
+
+    // Compose (for Gemini Nano UI components)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.bundles.compose)
+    debugImplementation(libs.bundles.compose.debug)
+
+    // ML Kit GenAI (Gemini Nano on-device AI — Milestone 3.6)
+    implementation(libs.mlkit.genai.prompt)
+    implementation(libs.mlkit.genai.summarization)
     
     // Hilt DI
     implementation(libs.hilt.android)

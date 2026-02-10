@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
@@ -10,7 +11,7 @@ plugins {
 
 android {
     namespace = "com.prio.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.prio.app"
@@ -76,17 +77,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
 
     packaging {

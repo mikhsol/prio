@@ -1,59 +1,62 @@
 [versions]
 # Core Android
-agp = "8.3.0"
-kotlin = "1.9.22"
-ksp = "1.9.22-1.0.17"
+agp = "8.9.0"
+kotlin = "2.2.0"
+ksp = "2.2.0-2.0.2"
 
 # AndroidX Core
-coreKtx = "1.12.0"
-lifecycleRuntimeKtx = "2.7.0"
-activityCompose = "1.8.2"
+coreKtx = "1.15.0"
+lifecycleRuntimeKtx = "2.8.7"
+activityCompose = "1.9.3"
 appcompat = "1.6.1"
 splashscreen = "1.0.1"
 
 # Compose
-composeBom = "2024.02.00"
-composeNavigation = "2.7.7"
-composeCompiler = "1.5.10"
+composeBom = "2025.01.01"
+composeNavigation = "2.8.9"
 
 # Hilt Dependency Injection
-hilt = "2.50"
+hilt = "2.54"
 hiltNavigationCompose = "1.2.0"
 
 # Room Database
-room = "2.6.1"
+room = "2.7.0"
 
 # DataStore Preferences
 datastore = "1.0.0"
 
 # Kotlin Serialization
-kotlinxSerialization = "1.6.3"
-kotlinxDatetime = "0.5.0"
+kotlinxSerialization = "1.8.0"
+kotlinxDatetime = "0.6.2"
 
 # Coroutines
-coroutines = "1.8.0"
+coroutines = "1.10.1"
 
 # Testing
 junit = "4.13.2"
 junitJupiter = "5.10.2"
 androidxTestExt = "1.1.5"
 espressoCore = "3.5.1"
-mockk = "1.13.9"
+mockk = "1.13.17"
 turbine = "1.0.0"
-coroutinesTest = "1.8.0"
+coroutinesTest = "1.10.1"
 archCoreTesting = "2.2.0"
 
 # Firebase
-firebaseBom = "32.7.2"
+firebaseBom = "33.7.0"
 
 # Timber Logging
 timber = "5.0.1"
 
 # WorkManager (for background tasks, reminders, recurring tasks)
-workManager = "2.9.0"
+workManager = "2.10.0"
 
 # Accompanist (Google Compose utilities)
-accompanist = "0.34.0"
+accompanist = "0.36.0"
+
+# ML Kit GenAI (Gemini Nano on-device, Milestone 3.6)
+mlkitGenaiPrompt = "1.0.0-beta1"
+mlkitGenaiSummarization = "1.0.0-beta1"
 
 # llama.cpp JNI (future integration)
 # Custom JNI bindings - no version catalog entry
@@ -138,15 +141,20 @@ hilt-work-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.
 accompanist-systemuicontroller = { group = "com.google.accompanist", name = "accompanist-systemuicontroller", version.ref = "accompanist" }
 accompanist-permissions = { group = "com.google.accompanist", name = "accompanist-permissions", version.ref = "accompanist" }
 
+# ML Kit GenAI (Gemini Nano on-device)
+mlkit-genai-prompt = { group = "com.google.mlkit", name = "genai-prompt", version.ref = "mlkitGenaiPrompt" }
+mlkit-genai-summarization = { group = "com.google.mlkit", name = "genai-summarization", version.ref = "mlkitGenaiSummarization" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-google-services = { id = "com.google.gms.google-services", version = "4.4.1" }
-firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "2.9.9" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
+firebase-crashlytics = { id = "com.google.firebase.crashlytics", version = "3.0.3" }
 
 [bundles]
 compose = [

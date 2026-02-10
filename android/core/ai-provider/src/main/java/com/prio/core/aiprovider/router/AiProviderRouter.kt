@@ -9,6 +9,7 @@ import com.prio.core.ai.model.AiStreamChunk
 import com.prio.core.ai.provider.AiCapability
 import com.prio.core.ai.provider.AiProvider
 import com.prio.core.ai.provider.ModelInfo
+import com.prio.core.aiprovider.nano.GeminiNanoProvider
 import com.prio.core.aiprovider.provider.OnDeviceAiProvider
 import com.prio.core.aiprovider.provider.RuleBasedFallbackProvider
 import kotlinx.coroutines.flow.Flow
@@ -44,7 +45,8 @@ import javax.inject.Singleton
 @Singleton
 class AiProviderRouter @Inject constructor(
     private val ruleBasedProvider: RuleBasedFallbackProvider,
-    private val onDeviceProvider: OnDeviceAiProvider
+    private val onDeviceProvider: OnDeviceAiProvider,
+    private val geminiNanoProvider: GeminiNanoProvider
 ) : AiProvider {
     
     companion object {
@@ -94,6 +96,12 @@ class AiProviderRouter @Inject constructor(
         /** Rule-based first, LLM for low-confidence cases (default) */
         HYBRID,
         
+        /**
+         * Rule-based first, prefer Gemini Nano over llama.cpp for LLM escalation.
+         * Milestone 3.6: AI Core devices get zero-download AI; others fall back to llama.cpp.
+         */
+        HYBRID_NANO,
+        
         /** Always try LLM first, rule-based fallback (slower, potentially higher accuracy) */
         LLM_PREFERRED,
         
@@ -136,8 +144,16 @@ class AiProviderRouter @Inject constructor(
     override suspend fun initialize(): Boolean {
         Timber.tag(TAG).i("Initializing AiProviderRouter")
         
-        // Initialize both providers
+        // Initialize all providers
         ruleBasedProvider.initialize()
+        
+        // Try Gemini Nano first (zero cost, zero download on supported devices)
+        val nanoReady = try {
+            geminiNanoProvider.initialize()
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Gemini Nano initialization failed — will try llama.cpp")
+            false
+        }
         
         // Try to initialize LLM provider (may not have model yet)
         val llmReady = try {
@@ -147,7 +163,13 @@ class AiProviderRouter @Inject constructor(
             false
         }
         
-        Timber.tag(TAG).i("Router initialized. LLM available: $llmReady")
+        // Auto-select best routing mode based on available providers
+        if (nanoReady) {
+            _routingMode.value = RoutingMode.HYBRID_NANO
+            Timber.tag(TAG).i("Gemini Nano available — auto-selecting HYBRID_NANO mode")
+        }
+        
+        Timber.tag(TAG).i("Router initialized. Nano=$nanoReady, LLM=$llmReady")
         return true // Router is always ready (rule-based always works)
     }
     
@@ -171,6 +193,9 @@ class AiProviderRouter @Inject constructor(
             }
             RoutingMode.HYBRID -> {
                 processWithHybrid(request, startTime)
+            }
+            RoutingMode.HYBRID_NANO -> {
+                processWithHybridNano(request, startTime)
             }
             RoutingMode.LLM_PREFERRED -> {
                 processWithLlmPreferred(request, startTime)
@@ -286,6 +311,101 @@ class AiProviderRouter @Inject constructor(
         }
     }
     
+    /**
+     * Hybrid Nano mode — rule-based first, then Gemini Nano, then llama.cpp fallback.
+     *
+     * Milestone 3.6 routing priority:
+     * 1. Rule-based (<50ms, 75% accuracy) — if confidence ≥ threshold, done
+     * 2. Gemini Nano (~1-2s, 0 MB APK) — if AI Core available
+     * 3. llama.cpp (~2-3s, 2.3GB) — fallback LLM
+     */
+    private suspend fun processWithHybridNano(
+        request: AiRequest,
+        startTime: Long
+    ): Result<AiResponse> {
+        // Step 1: Rule-based
+        val ruleBasedResult = ruleBasedProvider.complete(request)
+        val ruleBasedLatency = System.currentTimeMillis() - startTime
+
+        if (ruleBasedResult.isFailure) {
+            updateStats(ruleBasedOnly = true, latencyMs = ruleBasedLatency)
+            return ruleBasedResult
+        }
+
+        val ruleBasedResponse = ruleBasedResult.getOrThrow()
+        val confidence = ruleBasedResponse.metadata.confidenceScore
+
+        if (!shouldEscalateToLlm(request, confidence)) {
+            Timber.tag(TAG).d("HYBRID_NANO: Rule-based confidence ($confidence) sufficient")
+            updateStats(ruleBasedOnly = true, latencyMs = ruleBasedLatency)
+            return Result.success(ruleBasedResponse.copy(
+                metadata = ruleBasedResponse.metadata.copy(provider = PROVIDER_ID)
+            ))
+        }
+
+        // Step 2: Try Gemini Nano
+        if (geminiNanoProvider.isAvailable.value) {
+            Timber.tag(TAG).d("HYBRID_NANO: Escalating to Gemini Nano (confidence=$confidence)")
+            val nanoResult = try {
+                geminiNanoProvider.complete(request)
+            } catch (e: Exception) {
+                Timber.tag(TAG).w(e, "Gemini Nano escalation failed")
+                null
+            }
+
+            if (nanoResult?.isSuccess == true) {
+                val totalLatency = System.currentTimeMillis() - startTime
+                updateStats(
+                    ruleBasedOnly = false,
+                    llmEscalated = true,
+                    latencyMs = totalLatency,
+                    llmLatencyMs = totalLatency - ruleBasedLatency
+                )
+                return Result.success(nanoResult.getOrThrow().copy(
+                    metadata = nanoResult.getOrThrow().metadata.copy(
+                        provider = PROVIDER_ID,
+                        wasLlmFallback = true
+                    )
+                ))
+            }
+        }
+
+        // Step 3: Try llama.cpp fallback
+        if (onDeviceProvider.isAvailable.value) {
+            Timber.tag(TAG).d("HYBRID_NANO: Gemini Nano unavailable, trying llama.cpp")
+            val llmResult = try {
+                onDeviceProvider.complete(request)
+            } catch (e: Exception) {
+                Timber.tag(TAG).w(e, "llama.cpp fallback failed")
+                null
+            }
+
+            if (llmResult?.isSuccess == true) {
+                val totalLatency = System.currentTimeMillis() - startTime
+                updateStats(
+                    ruleBasedOnly = false,
+                    llmEscalated = true,
+                    latencyMs = totalLatency,
+                    llmLatencyMs = totalLatency - ruleBasedLatency
+                )
+                return Result.success(llmResult.getOrThrow().copy(
+                    metadata = llmResult.getOrThrow().metadata.copy(
+                        provider = PROVIDER_ID,
+                        wasLlmFallback = true
+                    )
+                ))
+            }
+        }
+
+        // Step 4: All LLMs failed — return rule-based result
+        Timber.tag(TAG).d("HYBRID_NANO: All LLMs failed, using rule-based")
+        val totalLatency = System.currentTimeMillis() - startTime
+        updateStats(ruleBasedOnly = true, llmFailed = true, latencyMs = totalLatency)
+        return Result.success(ruleBasedResponse.copy(
+            metadata = ruleBasedResponse.metadata.copy(provider = PROVIDER_ID)
+        ))
+    }
+
     /**
      * LLM preferred mode - try LLM first, rule-based fallback.
      */
@@ -466,6 +586,7 @@ class AiProviderRouter @Inject constructor(
     override suspend fun estimateCost(request: AiRequest): Float? = null // All on-device
     
     override suspend fun release() {
+        geminiNanoProvider.release()
         onDeviceProvider.release()
         // Rule-based has nothing to release
         Timber.tag(TAG).i("AiProviderRouter released")
