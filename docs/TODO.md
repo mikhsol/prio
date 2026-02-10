@@ -33,13 +33,16 @@
 32. Design MONETISATION model!!!
 
 ## Bugs:
-* [GOAL] Close milestone -> no task progress (how milestone related to tasks?).
-* [GOAL] How milstones related to tasks? Shoul it be relation?
-* [GOAL] Create goal -> Add multiple milestones -> Last edded milestone not saved.
-
+* [GOAL] Create goal -> Add multiple milestones -> Last added milestone not saved.
+* [GOAL] Edit button not working.
+* [GOAL] Can't undo goal deletion.
+* [GOAL] Refine with AI not working.
+* [GOAL] Complete task -> goal progress not updated
+* [TASK] Create task -> Task Created at the botton don't disappears
+* [GOAL] No complete goal button.
 
 * [TASK] No time picker when choose date.
-* [CALENDAR] Month/Week/Day view missing.
+* [CALENDAR] Month/Week view missing.
 
 * [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
 * [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
