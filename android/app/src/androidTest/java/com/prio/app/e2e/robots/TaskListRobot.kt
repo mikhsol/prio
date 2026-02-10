@@ -152,6 +152,23 @@ class TaskListRobot(
             .assertIsDisplayed()
     }
 
+    fun assertSnackbarWithUndo(message: String) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(message, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(message, substring = true)
+            .assertIsDisplayed()
+        rule.onNodeWithText("Undo")
+            .assertIsDisplayed()
+    }
+
+    fun tapSnackbarUndo() {
+        rule.onNodeWithText("Undo")
+            .performClick()
+        rule.waitForIdle()
+    }
+
     fun assertErrorState() {
         rule.onNodeWithText("Couldn't load your tasks", substring = true)
             .assertIsDisplayed()

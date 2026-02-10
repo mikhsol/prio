@@ -1,7 +1,9 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.EisenhowerQuadrant
@@ -20,6 +22,9 @@ import org.junit.Test
  * Bug 3 — Notes preserved when adding subtask (was: notes lost on reload)
  * Bug 4 — Tap task name to enter edit mode (was: only via overflow menu)
  * Bug 5 — Single FAB for add task (was: duplicate FAB on Tasks screen)
+ * Bug 6 — Delete task undo restores task (was: undo called uncomplete instead of re-insert)
+ * Bug 7 — Single create-goal CTA on empty goals screen (was: FAB + empty-state button)
+ * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub)
  *
  * Test naming: regression_{bugNumber}_{scenario}
  */
@@ -448,5 +453,236 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         assert(calendarFabs.size == 1) {
             "Calendar: Expected 1 FAB, found ${calendarFabs.size}"
         }
+    }
+
+    // =========================================================================
+    // Bug 6: Delete task → Undo not working
+    // Was: Snackbar undo action always dispatched OnUndoComplete (uncomplete)
+    //      instead of OnUndoDelete (re-insert). Deleted task was permanently lost.
+    // Fix: ShowSnackbar effect now carries the correct undoEvent so the screen
+    //      dispatches OnUndoDelete for deletes and OnUndoComplete for completes.
+    // =========================================================================
+
+    @Test
+    fun regression_bug6_deleteTaskUndoRestoresTask() {
+        runBlocking {
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Delete undo test task",
+                    quadrant = EisenhowerQuadrant.SCHEDULE
+                )
+            )
+        }
+
+        nav.goToTasks()
+        waitForIdle()
+        taskList.assertTaskDisplayed("Delete undo test task")
+
+        // Swipe left to delete
+        taskList.swipeTaskLeft("Delete undo test task")
+        Thread.sleep(1_000)
+
+        // Snackbar should show "Task deleted" with "Undo"
+        taskList.assertSnackbarWithUndo("Task deleted")
+
+        // Tap Undo
+        taskList.tapSnackbarUndo()
+        Thread.sleep(2_000) // Wait for Room insert + Flow pipeline
+
+        // Task should reappear in the list
+        taskList.assertTaskDisplayed("Delete undo test task")
+    }
+
+    @Test
+    fun regression_bug6_completeTaskUndoStillWorks() {
+        runBlocking {
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Complete undo test task",
+                    quadrant = EisenhowerQuadrant.DO_FIRST
+                )
+            )
+        }
+
+        nav.goToTasks()
+        waitForIdle()
+        taskList.assertTaskDisplayed("Complete undo test task")
+
+        // Swipe right to complete
+        taskList.swipeTaskRight("Complete undo test task")
+        Thread.sleep(1_000)
+
+        // Snackbar should show "Task completed" with "Undo"
+        taskList.assertSnackbarWithUndo("Task completed")
+
+        // Tap Undo
+        taskList.tapSnackbarUndo()
+        Thread.sleep(2_000)
+
+        // Task should reappear (uncompleted) in the list
+        taskList.assertTaskDisplayed("Complete undo test task")
+    }
+
+    @Test
+    fun regression_bug6_deleteTaskWithoutUndoRemovesPermanently() {
+        runBlocking {
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Permanent delete task",
+                    quadrant = EisenhowerQuadrant.ELIMINATE
+                )
+            )
+        }
+
+        nav.goToTasks()
+        waitForIdle()
+        taskList.assertTaskDisplayed("Permanent delete task")
+
+        // Swipe left to delete
+        taskList.swipeTaskLeft("Permanent delete task")
+        Thread.sleep(5_000) // Wait for snackbar to auto-dismiss
+
+        // Task should be gone
+        taskList.assertTaskNotDisplayed("Permanent delete task")
+    }
+
+    // =========================================================================
+    // Bug 7: Duplicate "Create Goal" buttons on empty goals screen
+    // Was: GoalsListScreen showed both the Scaffold FAB ("New Goal") AND the
+    //      EmptyGoalsState "Create First Goal" button when there were no goals,
+    //      creating two overlapping CTAs.
+    // Fix: FAB is hidden when uiState.isEmpty is true; only the empty-state
+    //      "Create First Goal" button is shown.
+    // =========================================================================
+
+    @Test
+    fun regression_bug7_emptyGoalsShowsSingleCreateButton() {
+        // No goals pre-created → empty state
+        nav.goToGoals()
+        waitForIdle()
+
+        goals.assertEmptyState()
+
+        // The empty-state "Create First Goal" button should be visible
+        composeRule.onNodeWithText("Create First Goal")
+            .assertIsDisplayed()
+
+        // The FAB ("Create new goal") should NOT be visible
+        goals.assertFabNotVisible()
+    }
+
+    @Test
+    fun regression_bug7_goalsWithDataShowsFab() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.goal(title = "My active goal")
+            )
+        }
+
+        nav.goToGoals()
+        waitForIdle()
+        Thread.sleep(2_000) // Wait for Room → Flow pipeline
+
+        // FAB should be visible when there are goals
+        goals.assertFabVisible()
+    }
+
+    @Test
+    fun regression_bug7_emptyStateCreateButtonNavigatesToWizard() {
+        // No goals pre-created → empty state
+        nav.goToGoals()
+        waitForIdle()
+
+        goals.assertEmptyState()
+
+        // Tap the empty-state "Create First Goal" button
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        // Should navigate to Create Goal wizard
+        goals.assertCreateScreenVisible()
+    }
+
+    // =========================================================================
+    // Bug 8: "Add First Task" button not working after goal creation
+    // Was: CreateGoalEffect.OpenQuickCapture was a TODO stub that showed
+    //      "Quick capture coming soon" snackbar. The button did nothing useful.
+    // Fix: CreateGoalScreen now receives onShowQuickCapture callback from
+    //      PrioNavHost, navigates to goal detail, and opens quick capture.
+    // =========================================================================
+
+    @Test
+    fun regression_bug8_addFirstTaskNavigatesFromCelebration() {
+        nav.goToGoals()
+        waitForIdle()
+
+        // Tap empty-state button to create a goal
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        // Step 1: Describe
+        goals.typeGoalTitle("Learn Kotlin Multiplatform")
+        goals.tapRefineWithAi()
+
+        // Wait for AI or timeout then skip
+        Thread.sleep(3_000)
+        try {
+            goals.tapSkipAi()
+        } catch (_: Exception) {
+            // AI may have already completed
+        }
+        waitForIdle()
+
+        // Step 2: SMART → Next
+        goals.tapNextTimeline()
+        waitForIdle()
+
+        // Step 3: Create the goal
+        goals.tapCreateGoalButton()
+        Thread.sleep(3_000) // Wait for goal creation
+
+        // Celebration overlay should appear
+        goals.assertCelebrationVisible()
+
+        // Tap "Add First Task" — should navigate to goal detail + open quick capture
+        goals.tapAddFirstTask()
+        Thread.sleep(2_000)
+
+        // Quick capture sheet should be visible (the fix wires up onShowQuickCapture)
+        quickCapture.assertSheetVisible()
+    }
+
+    @Test
+    fun regression_bug8_viewDetailsWorksFromCelebration() {
+        nav.goToGoals()
+        waitForIdle()
+
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        // Quick create flow
+        goals.typeGoalTitle("Ship v1.0")
+        goals.tapRefineWithAi()
+        Thread.sleep(3_000)
+        try {
+            goals.tapSkipAi()
+        } catch (_: Exception) {}
+        waitForIdle()
+        goals.tapNextTimeline()
+        waitForIdle()
+        goals.tapCreateGoalButton()
+        Thread.sleep(3_000)
+
+        goals.assertCelebrationVisible()
+
+        // Tap "View Goal Details" — should navigate to goal detail
+        goals.tapViewGoalDetails()
+        Thread.sleep(2_000)
+
+        // Should be on goal detail screen showing the goal title
+        composeRule.onNodeWithText("Ship v1.0", substring = true)
+            .assertIsDisplayed()
     }
 }

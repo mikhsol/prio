@@ -320,7 +320,8 @@ class TaskListViewModel @Inject constructor(
                 _effect.send(
                     TaskListEffect.ShowSnackbar(
                         message = if (task?.isRecurring == true) "Task completed. Next occurrence created." else "Task completed",
-                        actionLabel = "Undo"
+                        actionLabel = "Undo",
+                        undoEvent = TaskListEvent.OnUndoComplete
                     )
                 )
                 
@@ -360,7 +361,8 @@ class TaskListViewModel @Inject constructor(
                 _effect.send(
                     TaskListEffect.ShowSnackbar(
                         message = "Task deleted",
-                        actionLabel = "Undo"
+                        actionLabel = "Undo",
+                        undoEvent = TaskListEvent.OnUndoDelete
                     )
                 )
             } catch (e: Exception) {

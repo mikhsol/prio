@@ -1,5 +1,4 @@
 ## Ideas for future.
-1. Split task to subtasks.
 2. Agent specific to specific goal.
 3. Personal/Work/etc... 
 4. Identify duplicates.
@@ -31,15 +30,11 @@
 
 
 ## Bugs:
-* [TASK] Poor UX, to save edited task you need to go to menu. Better experience would be have button "save" instead of "complete" in edit mode.
-* [TASK] While creating a task and trying to edit details "change" button not working for all the fields (date, goal linked, does not repeate, no reminder).
-* [TASK] Edit mode for task, type something in notes, try to add subtask, notes gone. Save notes while user typing it periodically.
-* [TASK] Edit task name when press on task name in detailed view.
-
-* [TASK] Last subtasks not saved after editing.
-* [TASK] Subtasks completed after saving, without explicitly marking it as completed.
+* [TASK] Delete task -> Undo not working.
 * [GOAL] Duplicat buttons to create goal when no goals (in the middle and at the bottom right corner).
 * [GOAL] Create goal -> Add first task not working.
+
+* [GOAL] Close milestone -> no task progress (how milestone related to tasks?).
 * [GOAL] How milstones related to tasks? Shoul it be relation?
 * [GOAL] Create goal -> Add multiple milestones -> Last edded milestone not saved.
 * [TASK] No time picke when choose date.
@@ -48,3 +43,6 @@
 * [APP] Swipe left twice, leaving app.
 * [CALENDAR] Month/Week/Day view.
 * [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
+* [GOAL] Wrong category for SMART goal chosen on creation.
+* [GOAL] Adding milestone, new milestone hidden under keyboard and you don't see what are you typing.
+* [TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.

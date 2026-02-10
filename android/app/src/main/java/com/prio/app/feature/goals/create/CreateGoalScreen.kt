@@ -102,6 +102,7 @@ fun CreateGoalScreen(
     onNavigateBack: () -> Unit,
     onNavigateToGoalDetail: (Long) -> Unit,
     onNavigateToGoalsList: () -> Unit,
+    onShowQuickCapture: () -> Unit = {},
     viewModel: CreateGoalViewModel = hiltViewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -115,8 +116,11 @@ fun CreateGoalScreen(
                 is CreateGoalEffect.NavigateToGoalDetail -> onNavigateToGoalDetail(effect.goalId)
                 is CreateGoalEffect.NavigateToGoalsList -> onNavigateToGoalsList()
                 is CreateGoalEffect.OpenQuickCapture -> {
-                    // TODO: Navigate to quick capture with goal pre-linked
-                    snackbarHostState.showSnackbar("Quick capture coming soon")
+                    // Navigate to goal detail first, then open quick capture
+                    state.createdGoalId?.let { goalId ->
+                        onNavigateToGoalDetail(goalId)
+                    }
+                    onShowQuickCapture()
                 }
                 is CreateGoalEffect.ShowSnackbar -> snackbarHostState.showSnackbar(effect.message)
                 is CreateGoalEffect.ShowCelebration -> {

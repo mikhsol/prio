@@ -123,6 +123,10 @@ sealed interface TaskListEvent {
 sealed interface TaskListEffect {
     data class NavigateToTaskDetail(val taskId: Long) : TaskListEffect
     data object NavigateToQuickCapture : TaskListEffect
-    data class ShowSnackbar(val message: String, val actionLabel: String? = null) : TaskListEffect
+    data class ShowSnackbar(
+        val message: String,
+        val actionLabel: String? = null,
+        val undoEvent: TaskListEvent? = null
+    ) : TaskListEffect
     data object ShowCompleteConfetti : TaskListEffect
 }

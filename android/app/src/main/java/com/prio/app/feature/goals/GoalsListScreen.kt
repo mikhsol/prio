@@ -147,18 +147,21 @@ fun GoalsListScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { viewModel.onEvent(GoalsListEvent.OnCreateGoalClick) },
-                icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text("New Goal") },
-                modifier = Modifier.semantics {
-                    contentDescription = if (uiState.canCreateNewGoal) {
-                        "Create new goal"
-                    } else {
-                        "Maximum goals reached"
+            // Only show FAB when goals exist; empty state has its own CTA button
+            if (!uiState.isEmpty) {
+                ExtendedFloatingActionButton(
+                    onClick = { viewModel.onEvent(GoalsListEvent.OnCreateGoalClick) },
+                    icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                    text = { Text("New Goal") },
+                    modifier = Modifier.semantics {
+                        contentDescription = if (uiState.canCreateNewGoal) {
+                            "Create new goal"
+                        } else {
+                            "Maximum goals reached"
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { paddingValues ->
         when {

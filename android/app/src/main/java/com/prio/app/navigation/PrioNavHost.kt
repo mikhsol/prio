@@ -253,7 +253,8 @@ fun PrioNavHost(
                 },
                 onNavigateToGoalsList = {
                     navController.popBackStack(route = NavRoutes.GOALS, inclusive = false)
-                }
+                },
+                onShowQuickCapture = onShowQuickCapture
             )
         }
         

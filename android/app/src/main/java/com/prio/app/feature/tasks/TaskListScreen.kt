@@ -110,7 +110,9 @@ fun TaskListScreen(
                         duration = SnackbarDuration.Short
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.onEvent(TaskListEvent.OnUndoComplete)
+                        effect.undoEvent?.let { undoEvent ->
+                            viewModel.onEvent(undoEvent)
+                        }
                     }
                 }
                 is TaskListEffect.NavigateToTaskDetail -> {

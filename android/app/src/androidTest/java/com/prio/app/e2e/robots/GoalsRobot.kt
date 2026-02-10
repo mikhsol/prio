@@ -156,10 +156,21 @@ class GoalsRobot(
     // =========================================================================
 
     fun assertListScreenVisible() {
-        // Use the Goals FAB which is unique to GoalsListScreen
-        // (avoids matching the 'Goals' bottom nav label)
+        // Wait for goals list to load — check for the top bar title "Goals"
+        rule.waitUntil(timeoutMillis = 10_000) {
+            rule.onAllNodesWithText("Goals", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    fun assertFabVisible() {
         rule.onNodeWithContentDescription("Create new goal")
             .assertIsDisplayed()
+    }
+
+    fun assertFabNotVisible() {
+        rule.onNodeWithContentDescription("Create new goal")
+            .assertDoesNotExist()
     }
 
     fun assertCreateScreenVisible() {
