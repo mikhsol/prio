@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -190,7 +191,8 @@ fun PrioAppShell(
                         scope.launch {
                             val result = snackbarHostState.showSnackbar(
                                 message = effect.message,
-                                actionLabel = effect.actionLabel
+                                actionLabel = effect.actionLabel,
+                                duration = SnackbarDuration.Short
                             )
                             if (result == SnackbarResult.ActionPerformed) {
                                 // Navigate to the created task detail

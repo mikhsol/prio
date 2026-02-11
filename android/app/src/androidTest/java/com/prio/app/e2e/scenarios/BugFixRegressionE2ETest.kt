@@ -32,6 +32,8 @@ import org.junit.Test
  *          for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider missing handler)
  * Bug 11 — Complete task → goal progress not updated (was: TaskRepository.completeTask
  *          and uncompleteTask did not call recalculateGoalProgress for linked tasks)
+ * Bug 12 — "Task created" snackbar never auto-dismisses (was: showSnackbar() with
+ *          actionLabel="View" but no explicit duration, defaults to Indefinite)
  *
  * Test naming: regression_{bugNumber}_{scenario}
  */
@@ -1101,5 +1103,41 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
             ).fetchSemanticsNodes().isNotEmpty()
         }
         goals.assertProgressRing("100 percent")
+    }
+
+    // =========================================================================
+    // Bug 12: "Task created" snackbar never auto-dismisses
+    // Was: showSnackbar() called with actionLabel="View" but no explicit
+    //      duration. Material3 defaults to Indefinite when actionLabel is set,
+    //      so the snackbar stayed on screen forever.
+    // Fix: Added duration = SnackbarDuration.Short to the showSnackbar() call.
+    // =========================================================================
+
+    @Test
+    fun regression_bug12_taskCreatedSnackbarAutoDismisses() = runTest {
+        // 1. Navigate to tasks screen
+        nav.goToTasks()
+        waitForIdle()
+
+        // 2. Open quick capture and create a task
+        nav.tapFab()
+        quickCapture.assertSheetVisible()
+        quickCapture.typeTaskText("Snackbar dismiss test")
+        quickCapture.submitInput()
+        quickCapture.waitForAiClassification()
+        quickCapture.tapCreateTask()
+
+        // 3. Wait for sheet to dismiss
+        quickCapture.assertSheetDismissed()
+
+        // 4. Verify snackbar appears with "Task created"
+        nav.assertSnackbarDisplayed("Task created")
+
+        // 5. Verify snackbar auto-dismisses (Material3 Short ≈ 4s)
+        //    Timeout set to 10s for safety margin on slow devices.
+        nav.assertSnackbarAutoDismisses("Task created", timeoutMs = 10_000L)
+
+        // 6. Verify task is still in the list after snackbar disappears
+        taskList.assertTaskDisplayed("Snackbar dismiss test")
     }
 }

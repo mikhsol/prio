@@ -3,8 +3,10 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.espresso.Espresso
 
@@ -122,5 +124,35 @@ class NavigationRobot(
         rule.onAllNodesWithContentDescription("Add new task")
             .onFirst()
             .assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // Snackbar assertions (Scaffold-level)
+    // =========================================================================
+
+    /**
+     * Assert that a snackbar with the given message is currently displayed.
+     */
+    fun assertSnackbarDisplayed(message: String) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(message, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText(message, substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert that a snackbar with the given message auto-dismisses
+     * within the specified timeout. Material3 SnackbarDuration.Short is ~4s.
+     *
+     * @param message    text expected in the snackbar
+     * @param timeoutMs  maximum wait time for the snackbar to disappear
+     */
+    fun assertSnackbarAutoDismisses(message: String, timeoutMs: Long = 10_000L) {
+        rule.waitUntil(timeoutMillis = timeoutMs) {
+            rule.onAllNodesWithText(message, substring = true)
+                .fetchSemanticsNodes().isEmpty()
+        }
     }
 }
