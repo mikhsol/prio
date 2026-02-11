@@ -261,6 +261,53 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     }
 
     // =========================================================================
+    // E2E-A9-06: Complete goal from detail screen
+    // Priority: P1 (Core) — GL-006 / Regression: "No complete goal button"
+    // =========================================================================
+
+    @Test
+    fun completeGoal_fromDetailScreen_marksAsCompleted() {
+        // Seed an active goal
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Complete Me Goal")
+            )
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        // Wait for goal to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Complete Me Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Tap goal to enter detail
+        goals.tapGoal("Complete Me Goal")
+
+        // Wait for GoalDetailScreen to load (async from Room)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Verify complete button is visible
+        goals.assertCompleteButtonVisible()
+
+        // Tap complete goal
+        goals.tapCompleteGoal()
+
+        // Verify completion snackbar
+        goals.assertCompletionSnackbar()
+
+        // After completion the complete button should be hidden
+        goals.assertCompleteButtonNotVisible()
+    }
+
+    // =========================================================================
     // E2E-A10-04: Swipe to delete goal with undo
     // Priority: P1 (Core) — Regression test for "Can't undo goal deletion"
     // =========================================================================

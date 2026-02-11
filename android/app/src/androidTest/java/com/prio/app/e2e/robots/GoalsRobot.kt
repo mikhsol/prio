@@ -306,6 +306,46 @@ class GoalsRobot(
     }
 
     // =========================================================================
+    // Goal Detail — Complete Goal helpers
+    // =========================================================================
+
+    /**
+     * Tap the "Complete goal" button in the GoalDetailScreen top bar.
+     * Triggers goal completion and confetti effect.
+     */
+    fun tapCompleteGoal() {
+        rule.onNodeWithContentDescription("Complete goal")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert the completion snackbar "🎉 Congratulations! Goal completed!" is displayed.
+     */
+    fun assertCompletionSnackbar() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Goal completed", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * Assert that the "Complete goal" button is visible in the GoalDetailScreen top bar.
+     */
+    fun assertCompleteButtonVisible() {
+        rule.onNodeWithContentDescription("Complete goal")
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert that the "Complete goal" button is NOT visible (e.g. already completed).
+     */
+    fun assertCompleteButtonNotVisible() {
+        rule.onNodeWithContentDescription("Complete goal")
+            .assertDoesNotExist()
+    }
+
+    // =========================================================================
     // Goal Detail — Inline Edit helpers (Bug fix: Edit button not working)
     // =========================================================================
 

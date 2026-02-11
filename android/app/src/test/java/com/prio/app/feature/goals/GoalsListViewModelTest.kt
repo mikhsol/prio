@@ -270,6 +270,50 @@ class GoalsListViewModelTest {
     }
 
     @Nested
+    @DisplayName("Goal Completion")
+    inner class GoalCompletion {
+
+        @Test
+        @DisplayName("completes goal and emits confetti effect")
+        fun completesGoalAndEmitsConfetti() = runTest {
+            val goal = createGoal(id = 1, title = "Goal to Complete")
+            every { goalRepository.getAllActiveGoals() } returns flowOf(listOf(goal))
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(1)
+            coEvery { goalRepository.completeGoal(1L) } returns Unit
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.effect.test {
+                viewModel.onEvent(GoalsListEvent.OnGoalComplete(1L))
+                advanceUntilIdle()
+
+                val effect = awaitItem()
+                assertTrue(effect is GoalsListEffect.ShowCompletionConfetti)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        @DisplayName("calls repository completeGoal with correct id")
+        fun callsRepositoryCompleteGoal() = runTest {
+            val goal = createGoal(id = 42, title = "Goal 42")
+            every { goalRepository.getAllActiveGoals() } returns flowOf(listOf(goal))
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(1)
+            coEvery { goalRepository.completeGoal(42L) } returns Unit
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onEvent(GoalsListEvent.OnGoalComplete(42L))
+            advanceUntilIdle()
+
+            io.mockk.coVerify { goalRepository.completeGoal(42L) }
+        }
+    }
+
+    @Nested
     @DisplayName("Delete with Undo")
     inner class DeleteWithUndo {
 

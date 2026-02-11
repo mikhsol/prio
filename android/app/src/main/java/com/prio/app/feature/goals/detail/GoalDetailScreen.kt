@@ -163,6 +163,11 @@ fun GoalDetailScreen(
                             Icon(Icons.Default.Check, "Save goal")
                         }
                     } else {
+                        if (!uiState.isCompleted) {
+                            IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnCompleteGoal) }) {
+                                Icon(Icons.Default.CheckCircle, "Complete goal")
+                            }
+                        }
                         IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnEditGoal) }) {
                             Icon(Icons.Default.Edit, "Edit goal")
                         }
