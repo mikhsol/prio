@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,7 +37,10 @@ import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -153,18 +160,43 @@ fun CalendarScreen(
                 .fillMaxSize()
                 .padding(paddingValues),
         ) {
-            // Week strip navigation
-            WeekNavigationBar(
-                onPreviousWeek = { viewModel.onEvent(CalendarEvent.OnPreviousWeek) },
-                onNextWeek = { viewModel.onEvent(CalendarEvent.OnNextWeek) },
+            // View mode switcher: Day | Week | Month
+            ViewModeSwitcher(
+                currentMode = uiState.viewMode,
+                onModeChanged = { viewModel.onEvent(CalendarEvent.OnViewModeChanged(it)) },
             )
 
-            WeekDateStrip(
-                days = uiState.weekDays,
-                onDateSelected = { viewModel.onEvent(CalendarEvent.OnDateSelected(it)) },
-            )
+            // Week strip navigation (shown in Day mode)
+            if (uiState.viewMode == CalendarViewMode.DAY) {
+                WeekNavigationBar(
+                    onPreviousWeek = { viewModel.onEvent(CalendarEvent.OnPreviousWeek) },
+                    onNextWeek = { viewModel.onEvent(CalendarEvent.OnNextWeek) },
+                )
 
-            Spacer(modifier = Modifier.height(8.dp))
+                WeekDateStrip(
+                    days = uiState.weekDays,
+                    onDateSelected = { viewModel.onEvent(CalendarEvent.OnDateSelected(it)) },
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Month navigation (shown in Month mode)
+            if (uiState.viewMode == CalendarViewMode.MONTH) {
+                MonthNavigationBar(
+                    monthYear = uiState.displayedMonthYear,
+                    onPreviousMonth = { viewModel.onEvent(CalendarEvent.OnPreviousMonth) },
+                    onNextMonth = { viewModel.onEvent(CalendarEvent.OnNextMonth) },
+                )
+            }
+
+            // Week navigation (shown in Week mode)
+            if (uiState.viewMode == CalendarViewMode.WEEK) {
+                WeekNavigationBar(
+                    onPreviousWeek = { viewModel.onEvent(CalendarEvent.OnPreviousWeek) },
+                    onNextWeek = { viewModel.onEvent(CalendarEvent.OnNextWeek) },
+                )
+            }
 
             // Main content area
             when {
@@ -207,34 +239,389 @@ fun CalendarScreen(
                     )
                 }
 
-                // Empty state
-                uiState.timelineItems.isEmpty() &&
-                    uiState.untimedTaskItems.isEmpty() &&
-                    !uiState.isLoading -> {
-                    EmptyDayContent(
-                        hasCalendarPermission = uiState.hasCalendarPermission,
-                        onConnectCalendar = {
-                            viewModel.onEvent(CalendarEvent.OnRequestCalendarPermission)
+                // View mode content
+                else -> {
+                    when (uiState.viewMode) {
+                        CalendarViewMode.DAY -> {
+                            when {
+                                // Empty state
+                                uiState.timelineItems.isEmpty() &&
+                                    uiState.untimedTaskItems.isEmpty() &&
+                                    !uiState.isLoading -> {
+                                    EmptyDayContent(
+                                        hasCalendarPermission = uiState.hasCalendarPermission,
+                                        onConnectCalendar = {
+                                            viewModel.onEvent(CalendarEvent.OnRequestCalendarPermission)
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(1f),
+                                    )
+                                }
+                                // Main day timeline
+                                else -> {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .weight(1f),
+                                    ) {
+                                        DayContent(
+                                            timelineItems = uiState.timelineItems,
+                                            untimedTasks = uiState.untimedTaskItems,
+                                            currentTimeMinutes = uiState.currentTimeMinutes,
+                                            onMeetingClick = onNavigateToMeeting,
+                                            onTaskClick = onNavigateToTask,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        CalendarViewMode.WEEK -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                            ) {
+                                WeekViewContent(
+                                    weekDays = uiState.weekViewDays,
+                                    isLoading = uiState.isLoading,
+                                    onDayClick = { date ->
+                                        viewModel.onEvent(CalendarEvent.OnDateSelected(date))
+                                        viewModel.onEvent(CalendarEvent.OnViewModeChanged(CalendarViewMode.DAY))
+                                    },
+                                )
+                            }
+                        }
+
+                        CalendarViewMode.MONTH -> {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .weight(1f),
+                            ) {
+                                MonthViewContent(
+                                    monthDays = uiState.monthViewDays,
+                                    isLoading = uiState.isLoading,
+                                    onDayClick = { date ->
+                                        viewModel.onEvent(CalendarEvent.OnDateSelected(date))
+                                        viewModel.onEvent(CalendarEvent.OnViewModeChanged(CalendarViewMode.DAY))
+                                    },
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==================== View Mode Switcher ====================
+
+@Composable
+private fun ViewModeSwitcher(
+    currentMode: CalendarViewMode,
+    onModeChanged: (CalendarViewMode) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    ) {
+        CalendarViewMode.entries.forEach { mode ->
+            FilterChip(
+                selected = mode == currentMode,
+                onClick = { onModeChanged(mode) },
+                label = {
+                    Text(
+                        text = when (mode) {
+                            CalendarViewMode.DAY -> "Day"
+                            CalendarViewMode.WEEK -> "Week"
+                            CalendarViewMode.MONTH -> "Month"
                         },
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f),
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                },
+                modifier = Modifier.semantics {
+                    contentDescription = when (mode) {
+                        CalendarViewMode.DAY -> "Day view"
+                        CalendarViewMode.WEEK -> "Week view"
+                        CalendarViewMode.MONTH -> "Month view"
+                    }
+                },
+            )
+        }
+    }
+}
+
+// ==================== Month Navigation ====================
+
+@Composable
+private fun MonthNavigationBar(
+    monthYear: String,
+    onPreviousMonth: () -> Unit,
+    onNextMonth: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onPreviousMonth) {
+            Icon(Icons.Default.ChevronLeft, contentDescription = "Previous month")
+        }
+        Text(
+            text = monthYear,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+        )
+        IconButton(onClick = onNextMonth) {
+            Icon(Icons.Default.ChevronRight, contentDescription = "Next month")
+        }
+    }
+}
+
+// ==================== Week View ====================
+
+@Composable
+private fun WeekViewContent(
+    weekDays: List<WeekDaySummary>,
+    isLoading: Boolean,
+    onDayClick: (java.time.LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (isLoading) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    LazyColumn(
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(weekDays, key = { it.date.toString() }) { day ->
+            WeekDayCard(day = day, onClick = { onDayClick(day.date) })
+        }
+    }
+}
+
+@Composable
+private fun WeekDayCard(
+    day: WeekDaySummary,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bgColor = when {
+        day.isSelected -> MaterialTheme.colorScheme.primaryContainer
+        day.isToday -> MaterialTheme.colorScheme.secondaryContainer
+        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    }
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .semantics {
+                contentDescription = buildString {
+                    append(day.dayName)
+                    append(" ${day.dayNumber}")
+                    if (day.isToday) append(", today")
+                    append(". ${day.meetingCount} meetings, ${day.taskCount} tasks")
+                }
+            },
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = bgColor),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            // Day header
+            Column(
+                modifier = Modifier.width(56.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text(
+                    text = day.dayName,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = day.dayNumber.toString(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Day summary
+            Column(modifier = Modifier.weight(1f)) {
+                if (day.meetingCount > 0 || day.taskCount > 0) {
+                    Text(
+                        text = buildString {
+                            if (day.meetingCount > 0) append("${day.meetingCount} meeting${if (day.meetingCount > 1) "s" else ""}")
+                            if (day.meetingCount > 0 && day.taskCount > 0) append(" · ")
+                            if (day.taskCount > 0) append("${day.taskCount} task${if (day.taskCount > 1) "s" else ""}")
+                        },
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    day.topItems.forEach { item ->
+                        Text(
+                            text = "• $item",
+                            style = MaterialTheme.typography.bodySmall,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = "No events",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+            }
+        }
+    }
+}
 
-                // Main timeline + tasks
-                else -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f),
-                    ) {
-                        DayContent(
-                            timelineItems = uiState.timelineItems,
-                            untimedTasks = uiState.untimedTaskItems,
-                            currentTimeMinutes = uiState.currentTimeMinutes,
-                            onMeetingClick = onNavigateToMeeting,
-                            onTaskClick = onNavigateToTask,
+// ==================== Month View ====================
+
+@Composable
+private fun MonthViewContent(
+    monthDays: List<MonthDayUiModel>,
+    isLoading: Boolean,
+    onDayClick: (java.time.LocalDate) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    if (isLoading) {
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    Column(modifier = modifier.fillMaxSize()) {
+        // Day-of-week header row
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun").forEach { dayName ->
+                Text(
+                    text = dayName,
+                    style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        // Month grid
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(7),
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(horizontal = 4.dp),
+            contentPadding = PaddingValues(vertical = 4.dp),
+        ) {
+            items(monthDays, key = { it.date.toString() }) { day ->
+                MonthDayCell(
+                    day = day,
+                    onClick = { onDayClick(day.date) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun MonthDayCell(
+    day: MonthDayUiModel,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val textColor = when {
+        day.isSelected -> MaterialTheme.colorScheme.onPrimary
+        !day.isCurrentMonth -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f)
+        day.isToday -> MaterialTheme.colorScheme.primary
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    val bgColor = when {
+        day.isSelected -> MaterialTheme.colorScheme.primary
+        day.isToday -> MaterialTheme.colorScheme.primaryContainer
+        else -> Color.Transparent
+    }
+
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .padding(2.dp)
+            .clip(CircleShape)
+            .background(bgColor)
+            .clickable { onClick() }
+            .semantics {
+                contentDescription = buildString {
+                    append("${day.dayNumber}")
+                    if (day.isToday) append(", today")
+                    if (day.eventCount > 0) append(", ${day.eventCount} events")
+                    if (day.taskCount > 0) append(", ${day.taskCount} tasks")
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = day.dayNumber.toString(),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = if (day.isToday || day.isSelected) FontWeight.Bold else FontWeight.Normal,
+                color = textColor,
+            )
+            // Event indicator dots
+            if (day.eventCount > 0 || day.taskCount > 0) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                ) {
+                    if (day.eventCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (day.isSelected) textColor.copy(alpha = 0.7f)
+                                    else MaterialTheme.colorScheme.primary
+                                ),
+                        )
+                    }
+                    if (day.taskCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (day.isSelected) textColor.copy(alpha = 0.7f)
+                                    else MaterialTheme.colorScheme.tertiary
+                                ),
                         )
                     }
                 }

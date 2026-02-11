@@ -21,7 +21,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -62,6 +64,8 @@ fun TaskDetailScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
     var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+    var pendingDateMillis by remember { mutableStateOf<Long?>(null) }
     var showGoalPicker by remember { mutableStateOf(false) }
 
     // Handle side effects
@@ -147,17 +151,18 @@ fun TaskDetailScreen(
         )
     }
 
-    // Date picker dialog
+    // Date picker dialog — step 1: pick date
     if (showDatePicker) {
         val datePickerState = rememberDatePickerState()
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
-                    viewModel.onEvent(TaskDetailEvent.UpdateDueDate(datePickerState.selectedDateMillis))
+                    pendingDateMillis = datePickerState.selectedDateMillis
                     showDatePicker = false
+                    showTimePicker = true
                 }) {
-                    Text("OK")
+                    Text("Next")
                 }
             },
             dismissButton = {
@@ -168,6 +173,53 @@ fun TaskDetailScreen(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    // Time picker dialog — step 2: pick time
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState()
+        AlertDialog(
+            onDismissRequest = {
+                // User dismissed time picker — save date without time
+                viewModel.onEvent(TaskDetailEvent.UpdateDueDate(pendingDateMillis))
+                showTimePicker = false
+                pendingDateMillis = null
+            },
+            title = { Text("Set Time") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    // Combine date + time millis
+                    val dateMillis = pendingDateMillis
+                    val combinedMillis = if (dateMillis != null) {
+                        val timeOffsetMillis =
+                            (timePickerState.hour * 3600_000L) + (timePickerState.minute * 60_000L)
+                        // DatePicker returns midnight UTC for the selected date;
+                        // add the chosen hour/minute offset
+                        dateMillis + timeOffsetMillis
+                    } else {
+                        null
+                    }
+                    viewModel.onEvent(TaskDetailEvent.UpdateDueDate(combinedMillis))
+                    showTimePicker = false
+                    pendingDateMillis = null
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    // Skip time — save date only
+                    viewModel.onEvent(TaskDetailEvent.UpdateDueDate(pendingDateMillis))
+                    showTimePicker = false
+                    pendingDateMillis = null
+                }) {
+                    Text("Skip")
+                }
+            }
+        )
     }
 
     // Goal picker dialog

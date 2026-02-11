@@ -3,12 +3,24 @@ package com.prio.app.feature.calendar
 import com.prio.core.common.model.EisenhowerQuadrant
 
 /**
+ * Calendar view mode: Day, Week, or Month.
+ */
+enum class CalendarViewMode {
+    DAY,
+    WEEK,
+    MONTH
+}
+
+/**
  * UI state for CalendarScreen per 1.1.6 Calendar Day View Spec.
  *
  * Sections:
- * - Week strip with selectable days and event dots
- * - Hourly timeline with calendar events and timed tasks
- * - Tasks-without-time section at bottom
+ * - View mode switcher (Day / Week / Month)
+ * - Week strip with selectable days and event dots (Day mode)
+ * - Hourly timeline with calendar events and timed tasks (Day mode)
+ * - Tasks-without-time section at bottom (Day mode)
+ * - Week grid with daily summaries (Week mode)
+ * - Month grid with event dot indicators (Month mode)
  */
 data class CalendarUiState(
     val isLoading: Boolean = true,
@@ -16,11 +28,18 @@ data class CalendarUiState(
     val hasCalendarPermission: Boolean = false,
     val showPermissionPrompt: Boolean = false,
     val selectedDate: java.time.LocalDate = java.time.LocalDate.now(),
+    val viewMode: CalendarViewMode = CalendarViewMode.DAY,
     val weekDays: List<DayChipUiModel> = emptyList(),
     val timelineItems: List<TimelineItemUiModel> = emptyList(),
     val untimedTaskItems: List<UntimedTaskUiModel> = emptyList(),
     val currentTimeMinutes: Int = 0, // minutes since midnight, for current-time indicator
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    /** Week view: daily summaries for each day of the week. */
+    val weekViewDays: List<WeekDaySummary> = emptyList(),
+    /** Month view: all days in the current month with event counts. */
+    val monthViewDays: List<MonthDayUiModel> = emptyList(),
+    /** Month view: the month/year displayed. */
+    val displayedMonthYear: String = ""
 )
 
 /**
@@ -68,6 +87,33 @@ data class UntimedTaskUiModel(
     val dueText: String
 )
 
+/**
+ * Summary of a single day for the week view.
+ */
+data class WeekDaySummary(
+    val date: java.time.LocalDate,
+    val dayName: String,
+    val dayNumber: Int,
+    val isToday: Boolean,
+    val isSelected: Boolean,
+    val meetingCount: Int,
+    val taskCount: Int,
+    val topItems: List<String> // Top 3 event/task titles
+)
+
+/**
+ * A single day cell in the month grid view.
+ */
+data class MonthDayUiModel(
+    val date: java.time.LocalDate,
+    val dayNumber: Int,
+    val isCurrentMonth: Boolean,
+    val isToday: Boolean,
+    val isSelected: Boolean,
+    val eventCount: Int,
+    val taskCount: Int
+)
+
 // ==================== Events ====================
 
 /**
@@ -83,6 +129,9 @@ sealed interface CalendarEvent {
     data object OnPermissionGranted : CalendarEvent
     data object OnPermissionDenied : CalendarEvent
     data object OnSkipCalendarSetup : CalendarEvent
+    data class OnViewModeChanged(val mode: CalendarViewMode) : CalendarEvent
+    data object OnPreviousMonth : CalendarEvent
+    data object OnNextMonth : CalendarEvent
 }
 
 // ==================== Effects ====================

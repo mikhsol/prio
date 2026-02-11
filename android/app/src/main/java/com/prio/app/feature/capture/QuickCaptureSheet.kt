@@ -44,6 +44,7 @@ import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SmartToy
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,8 +67,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -115,6 +118,10 @@ data class QuickCaptureUiState(
     val voiceState: VoiceInputState = VoiceInputState.Idle,
     /** Whether the date picker dialog is visible. */
     val showDatePicker: Boolean = false,
+    /** Whether the time picker dialog is visible (step 2 after date picker). */
+    val showTimePicker: Boolean = false,
+    /** Pending date millis selected in date picker, waiting for time picker. */
+    val pendingDateMillis: Long? = null,
     /** Whether the goal picker sheet is visible. */
     val showGoalPicker: Boolean = false,
     /** Available goals for the goal picker. */
@@ -173,6 +180,12 @@ sealed interface QuickCaptureEvent {
     data class UpdateParsedDueDate(val dateMillis: Long?) : QuickCaptureEvent
     /** Open/close date picker in Quick Capture. */
     object ToggleDatePicker : QuickCaptureEvent
+    /** Open/close time picker in Quick Capture (step 2 after date picker). */
+    object ToggleTimePicker : QuickCaptureEvent
+    /** Store pending date millis while time picker is shown. */
+    data class SetPendingDate(val dateMillis: Long?) : QuickCaptureEvent
+    /** Update parsed due date+time from combined pickers. */
+    data class UpdateParsedDueDateTime(val dateMillis: Long?, val hour: Int, val minute: Int) : QuickCaptureEvent
     /** Open/close goal picker in Quick Capture. */
     object ToggleGoalPicker : QuickCaptureEvent
     /** Link task to selected goal. */
@@ -445,7 +458,7 @@ fun QuickCaptureSheet(
     } // Surface
     } // Box (inline bottom sheet)
 
-    // Date Picker Dialog (3.1.5.B.4)
+    // Date Picker Dialog — step 1: pick date (3.1.5.B.4)
     if (state.showDatePicker) {
         val initialDateMillis = state.parsedResult?.dueDate?.let {
             try { kotlinx.datetime.Instant.parse(it).toEpochMilliseconds() } catch (_: Exception) { null }
@@ -456,11 +469,12 @@ fun QuickCaptureSheet(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        onEvent(QuickCaptureEvent.UpdateParsedDueDate(datePickerState.selectedDateMillis))
+                        onEvent(QuickCaptureEvent.SetPendingDate(datePickerState.selectedDateMillis))
                         onEvent(QuickCaptureEvent.ToggleDatePicker)
+                        onEvent(QuickCaptureEvent.ToggleTimePicker)
                     }
                 ) {
-                    Text("OK")
+                    Text("Next")
                 }
             },
             dismissButton = {
@@ -471,6 +485,49 @@ fun QuickCaptureSheet(
         ) {
             DatePicker(state = datePickerState)
         }
+    }
+
+    // Time Picker Dialog — step 2: pick time (3.1.5.B.4)
+    if (state.showTimePicker) {
+        val timePickerState = rememberTimePickerState()
+        AlertDialog(
+            onDismissRequest = {
+                // User dismissed time picker — save date without time
+                onEvent(QuickCaptureEvent.UpdateParsedDueDate(state.pendingDateMillis))
+                onEvent(QuickCaptureEvent.ToggleTimePicker)
+            },
+            title = { Text("Set Time") },
+            text = {
+                TimePicker(state = timePickerState)
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(
+                            QuickCaptureEvent.UpdateParsedDueDateTime(
+                                state.pendingDateMillis,
+                                timePickerState.hour,
+                                timePickerState.minute
+                            )
+                        )
+                        onEvent(QuickCaptureEvent.ToggleTimePicker)
+                    }
+                ) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        // Skip time — save date only
+                        onEvent(QuickCaptureEvent.UpdateParsedDueDate(state.pendingDateMillis))
+                        onEvent(QuickCaptureEvent.ToggleTimePicker)
+                    }
+                ) {
+                    Text("Skip")
+                }
+            }
+        )
     }
 
     // Goal Picker Sheet (3.1.5.B.5)

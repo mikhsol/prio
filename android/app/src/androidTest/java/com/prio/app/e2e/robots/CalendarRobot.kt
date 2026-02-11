@@ -4,6 +4,8 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -122,5 +124,73 @@ class CalendarRobot(
     fun assertPrivacyNote() {
         rule.onNodeWithText("Read-only access", substring = true)
             .assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // View Mode Switching
+    // =========================================================================
+
+    fun switchToDayView() {
+        rule.onNodeWithContentDescription("Day view")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun switchToWeekView() {
+        rule.onNodeWithContentDescription("Week view")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun switchToMonthView() {
+        rule.onNodeWithContentDescription("Month view")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun assertViewModeSwitcherVisible() {
+        rule.onNodeWithContentDescription("Day view")
+            .assertIsDisplayed()
+        rule.onNodeWithContentDescription("Week view")
+            .assertIsDisplayed()
+        rule.onNodeWithContentDescription("Month view")
+            .assertIsDisplayed()
+    }
+
+    fun assertWeekViewVisible() {
+        // Week view shows day summary cards with meeting/task counts or "No events".
+        // Wait for content to load — check for any of the expected texts.
+        rule.waitUntil(timeoutMillis = 5_000) {
+            val hasMeetingText = rule.onAllNodesWithText("meeting", substring = true, ignoreCase = true)
+                .fetchSemanticsNodes().isNotEmpty()
+            val hasTaskText = rule.onAllNodesWithText("task", substring = true, ignoreCase = true)
+                .fetchSemanticsNodes().isNotEmpty()
+            val hasNoEvents = rule.onAllNodesWithText("No events", substring = true, ignoreCase = true)
+                .fetchSemanticsNodes().isNotEmpty()
+            hasMeetingText || hasTaskText || hasNoEvents
+        }
+    }
+
+    fun assertMonthViewVisible() {
+        // Month mode shows month navigation bar with Previous/Next month buttons.
+        // Wait for the month navigation to render after mode switch.
+        rule.waitUntil(timeoutMillis = 10_000) {
+            rule.onAllNodesWithText("Previous month", substring = false)
+                .fetchSemanticsNodes().isNotEmpty() ||
+                rule.onAllNodesWithContentDescription("Previous month")
+                    .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    fun goToPreviousMonth() {
+        rule.onNodeWithContentDescription("Previous month")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    fun goToNextMonth() {
+        rule.onNodeWithContentDescription("Next month")
+            .performClick()
+        rule.waitForIdle()
     }
 }

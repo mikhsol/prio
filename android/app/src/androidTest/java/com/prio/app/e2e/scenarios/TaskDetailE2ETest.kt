@@ -175,4 +175,89 @@ class TaskDetailE2ETest : BaseE2ETest() {
         taskDetail.assertSheetVisible()
         taskDetail.assertSubtasksSection()
     }
+
+    // =========================================================================
+    // E2E-A5-07: Date picker shows "Next" → Time picker flow
+    // Priority: P1 (Core) — Regression for time picker feature
+    // =========================================================================
+
+    @Test
+    fun changeDueDate_showsTimePickerAfterDateSelection() = runTest {
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Task with due date",
+                quadrant = EisenhowerQuadrant.DO_FIRST,
+            )
+        )
+
+        nav.goToTasks()
+        waitForIdle()
+        taskList.tapTask("Task with due date")
+
+        // Wait for sheet to open
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("More options")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Enter edit mode
+        taskDetail.openOverflowMenu()
+        taskDetail.tapEdit()
+
+        // Tap the due date property row to open date picker
+        taskDetail.tapChangeForProperty("No due date")
+
+        // Step 1: Date picker should show "Next" button (not "OK")
+        taskDetail.assertDatePickerHasNextButton()
+
+        // Tap "Next" to proceed to time picker
+        taskDetail.tapDatePickerNext()
+
+        // Step 2: Time picker dialog should appear
+        taskDetail.assertTimePickerVisible()
+
+        // Confirm time selection
+        taskDetail.confirmTimePicker()
+    }
+
+    // =========================================================================
+    // E2E-A5-08: Time picker "Skip" saves date without time
+    // Priority: P1 (Core) — Regression for time picker feature
+    // =========================================================================
+
+    @Test
+    fun changeDueDate_skipTime_savesDateOnly() = runTest {
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Task skip time",
+                quadrant = EisenhowerQuadrant.SCHEDULE,
+            )
+        )
+
+        nav.goToTasks()
+        waitForIdle()
+        taskList.tapTask("Task skip time")
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("More options")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Enter edit mode and open date picker
+        taskDetail.openOverflowMenu()
+        taskDetail.tapEdit()
+        taskDetail.tapChangeForProperty("No due date")
+
+        // Select date and proceed to time picker
+        taskDetail.tapDatePickerNext()
+        taskDetail.assertTimePickerVisible()
+
+        // Skip time selection — should save date without time
+        taskDetail.skipTimePicker()
+
+        // Verify no crash and sheet still visible
+        taskDetail.assertSheetVisible()
+    }
 }

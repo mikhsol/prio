@@ -6,6 +6,7 @@ import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -169,5 +170,59 @@ class QuickCaptureRobot(
         rule.waitUntil(timeoutMillis = timeoutMs) {
             rule.onAllNodes(hasText("Create Task")).fetchSemanticsNodes().isNotEmpty()
         }
+    }
+
+    // =========================================================================
+    // Time Picker (two-step date → time flow)
+    // =========================================================================
+
+    /**
+     * Assert that the time picker dialog is visible.
+     * The time picker is shown in an AlertDialog with title "Set Time".
+     */
+    fun assertTimePickerVisible() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Set Time")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("Set Time").assertIsDisplayed()
+    }
+
+    /**
+     * Assert that the date picker shows "Next" button (step 1 of two-step flow).
+     */
+    fun assertDatePickerHasNextButton() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Next")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("Next").assertIsDisplayed()
+    }
+
+    /**
+     * Tap "Next" in the date picker to proceed to time picker.
+     */
+    fun tapDatePickerNext() {
+        rule.onNodeWithText("Next")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Confirm the time picker by tapping OK (saves date + time).
+     */
+    fun confirmTimePicker() {
+        rule.onNodeWithText("OK")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Skip the time picker by tapping Skip (saves date only).
+     */
+    fun skipTimePicker() {
+        rule.onNodeWithText("Skip")
+            .performClick()
+        rule.waitForIdle()
     }
 }

@@ -522,17 +522,29 @@ class TaskDetailViewModel @Inject constructor(
     
     private fun formatDueDate(instant: Instant): String {
         val now = clock.now()
-        val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val tz = TimeZone.currentSystemDefault()
+        val localDateTime = instant.toLocalDateTime(tz)
+        val localDate = localDateTime.date
+        val today = now.toLocalDateTime(tz).date
         val tomorrow = today.plus(1, DateTimeUnit.DAY)
+
+        val hasTime = localDateTime.hour > 0 || localDateTime.minute > 0
+        val timeSuffix = if (hasTime) {
+            val hour = localDateTime.hour
+            val minute = localDateTime.minute.toString().padStart(2, '0')
+            val amPm = if (hour < 12) "AM" else "PM"
+            val hour12 = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+            " at $hour12:$minute $amPm"
+        } else ""
         
         return when {
-            localDate == today -> "Today"
-            localDate == tomorrow -> "Tomorrow"
+            localDate == today -> "Today$timeSuffix"
+            localDate == tomorrow -> "Tomorrow$timeSuffix"
             instant < now -> "Overdue"
             else -> {
                 // Format as "Feb 4, 2026"
-                "${localDate.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }} ${localDate.dayOfMonth}, ${localDate.year}"
+                val dateStr = "${localDate.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }} ${localDate.dayOfMonth}, ${localDate.year}"
+                "$dateStr$timeSuffix"
             }
         }
     }

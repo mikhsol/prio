@@ -73,6 +73,9 @@ class QuickCaptureViewModel @Inject constructor(
             is QuickCaptureEvent.UpdateParsedQuadrant -> updateParsedQuadrant(event.quadrant)
             is QuickCaptureEvent.UpdateParsedDueDate -> updateParsedDueDate(event.dateMillis)
             is QuickCaptureEvent.ToggleDatePicker -> toggleDatePicker()
+            is QuickCaptureEvent.ToggleTimePicker -> toggleTimePicker()
+            is QuickCaptureEvent.SetPendingDate -> setPendingDate(event.dateMillis)
+            is QuickCaptureEvent.UpdateParsedDueDateTime -> updateParsedDueDateTime(event.dateMillis, event.hour, event.minute)
             is QuickCaptureEvent.ToggleGoalPicker -> toggleGoalPicker()
             is QuickCaptureEvent.SelectGoal -> selectGoal(event.goalId, event.goalTitle)
             is QuickCaptureEvent.AddSuggestionToInput -> addSuggestion(event.suggestion)
@@ -333,6 +336,53 @@ class QuickCaptureViewModel @Inject constructor(
     }
 
     /**
+     * Toggle time picker visibility (step 2 after date picker).
+     */
+    private fun toggleTimePicker() {
+        _uiState.update { it.copy(showTimePicker = !it.showTimePicker) }
+    }
+
+    /**
+     * Store pending date millis while time picker is shown.
+     */
+    private fun setPendingDate(dateMillis: Long?) {
+        _uiState.update { it.copy(pendingDateMillis = dateMillis) }
+    }
+
+    /**
+     * Update parsed due date+time from combined date and time pickers.
+     * Combines the date millis with hour/minute offset.
+     */
+    private fun updateParsedDueDateTime(dateMillis: Long?, hour: Int, minute: Int) {
+        _uiState.update { current ->
+            if (dateMillis == null) {
+                current.copy(
+                    parsedResult = current.parsedResult?.copy(
+                        dueDate = null,
+                        dueDateFormatted = null,
+                        dueTime = null
+                    ),
+                    pendingDateMillis = null
+                )
+            } else {
+                val timeOffsetMillis = (hour * 3600_000L) + (minute * 60_000L)
+                val combinedMillis = dateMillis + timeOffsetMillis
+                val instant = Instant.fromEpochMilliseconds(combinedMillis)
+                val formatted = formatDueDate(instant)
+                val timeStr = String.format("%02d:%02d", hour, minute)
+                current.copy(
+                    parsedResult = current.parsedResult?.copy(
+                        dueDate = instant.toString(),
+                        dueDateFormatted = formatted,
+                        dueTime = timeStr
+                    ),
+                    pendingDateMillis = null
+                )
+            }
+        }
+    }
+
+    /**
      * Update parsed due date from date picker selection (3.1.5.B.4).
      * Converts epoch millis to formatted date string.
      */
@@ -499,16 +549,27 @@ class QuickCaptureViewModel @Inject constructor(
     
     private fun formatDueDate(instant: Instant): String {
         val now = clock.now()
-        val localDate = instant.toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val today = now.toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val tz = TimeZone.currentSystemDefault()
+        val localDateTime = instant.toLocalDateTime(tz)
+        val localDate = localDateTime.date
+        val today = now.toLocalDateTime(tz).date
         val tomorrow = today.plus(1, DateTimeUnit.DAY)
+
+        val hasTime = localDateTime.hour > 0 || localDateTime.minute > 0
+        val timeSuffix = if (hasTime) {
+            val hour = localDateTime.hour
+            val minute = localDateTime.minute.toString().padStart(2, '0')
+            val amPm = if (hour < 12) "AM" else "PM"
+            val hour12 = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+            " at $hour12:$minute $amPm"
+        } else ""
         
         return when (localDate) {
-            today -> "Today"
-            tomorrow -> "Tomorrow"
+            today -> "Today$timeSuffix"
+            tomorrow -> "Tomorrow$timeSuffix"
             else -> {
                 val month = localDate.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
-                "$month ${localDate.dayOfMonth}"
+                "$month ${localDate.dayOfMonth}$timeSuffix"
             }
         }
     }

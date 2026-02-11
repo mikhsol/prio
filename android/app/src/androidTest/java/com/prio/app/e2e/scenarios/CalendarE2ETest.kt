@@ -190,4 +190,112 @@ class CalendarE2ETest : BaseE2ETest() {
             // Both are valid states; no crash is the critical check.
         }
     }
+
+    // =========================================================================
+    // E2E-A11-07: View Mode Switcher visible
+    // Priority: P0 (Smoke) — Regression for Month/Week view feature
+    // =========================================================================
+
+    @Test
+    fun calendarScreen_showsViewModeSwitcher() {
+        nav.goToCalendar()
+        calendar.assertScreenVisible()
+        calendar.assertViewModeSwitcherVisible()
+    }
+
+    // =========================================================================
+    // E2E-A11-08: Switch to Week view
+    // Priority: P1 (Core) — CB-004 Week View
+    // =========================================================================
+
+    @Test
+    fun switchToWeekView_showsWeekSummary() {
+        nav.goToCalendar()
+
+        // Dismiss permission prompt if shown
+        dismissCalendarPermissionIfNeeded()
+
+        calendar.switchToWeekView()
+        calendar.assertWeekViewVisible()
+    }
+
+    // =========================================================================
+    // E2E-A11-09: Switch to Month view
+    // Priority: P1 (Core) — CB-005 Month View
+    // =========================================================================
+
+    @Test
+    fun switchToMonthView_showsMonthGrid() {
+        nav.goToCalendar()
+
+        // Dismiss permission prompt if shown
+        dismissCalendarPermissionIfNeeded()
+
+        calendar.switchToMonthView()
+        calendar.assertMonthViewVisible()
+    }
+
+    // =========================================================================
+    // E2E-A11-10: Month view navigation
+    // Priority: P1 (Core) — CB-005 Month View
+    // =========================================================================
+
+    @Test
+    fun monthView_navigateMonths() {
+        nav.goToCalendar()
+
+        // Dismiss permission prompt if shown
+        dismissCalendarPermissionIfNeeded()
+
+        calendar.switchToMonthView()
+        calendar.assertMonthViewVisible()
+
+        calendar.goToNextMonth()
+        calendar.assertMonthViewVisible()
+
+        calendar.goToPreviousMonth()
+        calendar.assertMonthViewVisible()
+    }
+
+    // =========================================================================
+    // E2E-A11-11: Switch between all three views
+    // Priority: P1 (Core) — Regression for view mode switching
+    // =========================================================================
+
+    @Test
+    fun switchAllViews_roundTrip() {
+        nav.goToCalendar()
+
+        // Dismiss permission prompt if shown
+        dismissCalendarPermissionIfNeeded()
+
+        // Day → Week
+        calendar.switchToWeekView()
+        calendar.assertWeekViewVisible()
+
+        // Week → Month
+        calendar.switchToMonthView()
+        calendar.assertMonthViewVisible()
+
+        // Month → Day
+        calendar.switchToDayView()
+        calendar.assertScreenVisible()
+    }
+
+    // =========================================================================
+    // Helper
+    // =========================================================================
+
+    private fun dismissCalendarPermissionIfNeeded() {
+        try {
+            composeRule.waitUntil(timeoutMillis = 3_000) {
+                composeRule.onAllNodes(
+                    androidx.compose.ui.test.hasText("Skip for Now")
+                ).fetchSemanticsNodes().isNotEmpty()
+            }
+            calendar.tapSkipCalendarConnect()
+        } catch (_: androidx.compose.ui.test.ComposeTimeoutException) {
+            // Permission already granted — no prompt to dismiss
+        }
+    }
 }

@@ -353,4 +353,58 @@ class TaskDetailRobot(
             .performClick()
         rule.waitForIdle()
     }
+
+    // =========================================================================
+    // Time Picker (two-step date → time flow)
+    // =========================================================================
+
+    /**
+     * Assert that the time picker dialog is visible after selecting a date.
+     * The time picker is shown in an AlertDialog with title "Set Time".
+     */
+    fun assertTimePickerVisible() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Set Time")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("Set Time").assertIsDisplayed()
+    }
+
+    /**
+     * Confirm the time picker by tapping OK (saves date + time).
+     */
+    fun confirmTimePicker() {
+        rule.onNodeWithText("OK")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Skip the time picker by tapping Skip (saves date only).
+     */
+    fun skipTimePicker() {
+        rule.onNodeWithText("Skip")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert that the date picker shows "Next" button (step 1 of two-step flow).
+     */
+    fun assertDatePickerHasNextButton() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Next")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithText("Next").assertIsDisplayed()
+    }
+
+    /**
+     * Tap "Next" in the date picker to proceed to time picker.
+     */
+    fun tapDatePickerNext() {
+        rule.onNodeWithText("Next")
+            .performClick()
+        rule.waitForIdle()
+    }
 }
