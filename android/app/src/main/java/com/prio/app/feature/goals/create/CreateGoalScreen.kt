@@ -70,10 +70,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTag
@@ -84,6 +86,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.prio.core.common.model.GoalCategory
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Create Goal Wizard Screen.
@@ -640,10 +644,20 @@ private fun TimelineStepContent(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
     var milestoneInput by remember { mutableStateOf("") }
+    val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Auto-scroll to keep milestone input visible when new chips are added
+    LaunchedEffect(state.milestones.size) {
+        if (state.milestones.isNotEmpty()) {
+            delay(150) // allow layout to settle after recomposition
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
 
     Column(
         modifier = modifier
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
             .padding(24.dp)
             .imePadding()
     ) {
@@ -720,7 +734,15 @@ private fun TimelineStepContent(
                     onValueChange = { milestoneInput = it },
                     modifier = Modifier
                         .weight(1f)
-                        .semantics { testTag = "milestone_input" },
+                        .semantics { testTag = "milestone_input" }
+                        .onFocusChanged { focusState ->
+                            if (focusState.isFocused) {
+                                coroutineScope.launch {
+                                    delay(300) // wait for IME to adjust layout
+                                    scrollState.animateScrollTo(scrollState.maxValue)
+                                }
+                            }
+                        },
                     placeholder = { Text("Add a milestone…") },
                     singleLine = true,
                     shape = RoundedCornerShape(12.dp)

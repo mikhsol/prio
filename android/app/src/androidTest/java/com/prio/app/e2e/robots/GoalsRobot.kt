@@ -305,6 +305,16 @@ class GoalsRobot(
         }
     }
 
+    /**
+     * Assert that the milestone input field is visible on screen without
+     * explicitly scrolling to it. Used to verify auto-scroll behaviour
+     * after adding multiple milestones (keyboard occlusion regression).
+     */
+    fun assertMilestoneInputVisible() {
+        rule.onNodeWithTag("milestone_input")
+            .assertIsDisplayed()
+    }
+
     // =========================================================================
     // Goal Detail — Complete Goal helpers
     // =========================================================================

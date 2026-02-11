@@ -38,17 +38,14 @@
 * [FIXED][GOAL] Can't undo goal deletion.
 * [FIXED][GOAL] Refine with AI not working. Router short-circuited on rule-based failure for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider was missing a SUGGEST_SMART_GOAL handler.
 * [FIXED][GOAL] Complete task -> goal progress not updated
-* [GOAL] No complete goal button.
+* [FIXED][GOAL] No complete goal button.
 
-* [TASK] Create task -> "Task created" caption at the botton don't disappears
+* [FIXED][TASK] Create task -> "Task created" caption at the botton don't disappears
 
-* [TASK] No time picker when choose date.
-* [CALENDAR] Month/Week view missing.
+* [FIXED][TASK] No time picker when choose date.
+* [FIXED][CALENDAR] Month/Week view missing.
 
-* [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
-* [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
-
-* [GOAL] Adding milestone, new milestone hidden under keyboard and you don't see what are you typing.
+* [FIXED][GOAL] Adding milestone (more than 2), new milestone hidden under keyboard and you don't see what are you typing.
 * [TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
 
 * [GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
@@ -56,3 +53,6 @@
 
 * [TASK] Recurrent tasks not implemented.
 * [TASK] Reminder not implemented.
+
+* [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
+* [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.

@@ -562,4 +562,85 @@ class MilestoneRegressionE2ETest : BaseE2ETest() {
         goals.assertMilestoneDisplayed("Sauce basics")
         goals.assertMilestoneDisplayed("Baking bread")
     }
+
+    // =========================================================================
+    // REG-M09: Milestone input stays visible when adding 3+ milestones
+    // Regression for keyboard occlusion bug — after adding >2 milestones the
+    // input field was pushed below the keyboard and the user couldn't see
+    // what they were typing.
+    // =========================================================================
+
+    @Test
+    fun addMultipleMilestones_inputRemainsVisibleAboveKeyboard() {
+        nav.goToGoals()
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        goals.assertCreateScreenVisible()
+
+        // Step 1: Describe
+        goals.typeGoalTitle("Build a garden")
+        Thread.sleep(500)
+
+        // Step 1 → Step 2 (AI refinement)
+        goals.tapRefineWithAi()
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(hasText("SMART Goal", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Step 2 → Step 3 (Timeline & Milestones)
+        goals.tapNextTimeline()
+        Thread.sleep(500)
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(hasText("Milestones", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        Thread.sleep(500)
+
+        // Clear any AI-suggested milestones
+        goals.clearAllMilestoneChips()
+        Thread.sleep(1_000)
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithContentDescription("Remove")
+                .fetchSemanticsNodes().isEmpty()
+        }
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(hasTestTag("milestone_input"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Add milestones one by one and verify the input stays visible
+        // after auto-scroll. Checking input visibility BEFORE scrolling to
+        // chips, because assertMilestoneChip uses performScrollTo which
+        // would mask the bug.
+        goals.typeMilestoneAndAdd("Prepare soil")
+        Thread.sleep(800) // allow auto-scroll animation to complete
+        goals.assertMilestoneInputVisible()
+
+        goals.typeMilestoneAndAdd("Plant seeds")
+        Thread.sleep(800)
+        goals.assertMilestoneInputVisible()
+
+        goals.typeMilestoneAndAdd("Install irrigation")
+        Thread.sleep(800)
+        // KEY ASSERTION: after 3 milestones, the input must still be on screen
+        goals.assertMilestoneInputVisible()
+
+        // Add a 4th milestone to prove the field is fully interactable
+        goals.typeMilestoneAndAdd("First harvest")
+        Thread.sleep(800)
+        goals.assertMilestoneInputVisible()
+
+        // Verify all 4 chips are present on the create screen
+        goals.assertMilestoneChip("Prepare soil")
+        goals.assertMilestoneChip("Plant seeds")
+        goals.assertMilestoneChip("Install irrigation")
+        goals.assertMilestoneChip("First harvest")
+
+        // Full creation + detail screen milestone persistence is
+        // covered by REG-M04 (createGoal_multiMilestones_allSaved).
+    }
 }
