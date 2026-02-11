@@ -29,6 +29,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.float
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import timber.log.Timber
 import javax.inject.Inject
@@ -154,6 +155,7 @@ class OnDeviceAiProvider @Inject constructor(
                 AiRequestType.CLASSIFY_EISENHOWER -> classifyEisenhower(request)
                 AiRequestType.PARSE_TASK -> parseTask(request)
                 AiRequestType.GENERATE_BRIEFING -> generateBriefing(request)
+                AiRequestType.SUGGEST_SMART_GOAL -> suggestSmartGoal(request)
                 else -> {
                     // General generation for unsupported types
                     generalGenerate(request)
@@ -372,6 +374,91 @@ Be concise and actionable. Focus on priorities."""
         )
     }
     
+    /**
+     * Suggest a SMART goal refinement using on-device LLM.
+     *
+     * Builds a structured prompt and parses the JSON response into
+     * [AiResult.SmartGoalSuggestion]. Falls back to a minimal suggestion
+     * (using the raw input as the refined goal) when parsing fails.
+     */
+    private suspend fun suggestSmartGoal(request: AiRequest): AiResponse {
+        val template = currentModelDefinition?.promptTemplate ?: PromptTemplate.PHI3
+        val systemPrompt = """Refine this goal into a SMART goal (Specific, Measurable, Achievable, Relevant, Time-bound).
+Respond in exactly this JSON format:
+{"refined_goal": "...", "specific": "...", "measurable": "...", "achievable": "...", "relevant": "...", "time_bound": "...", "suggested_milestones": ["m1", "m2"]}
+Only output the JSON object, nothing else."""
+
+        val prompt = PromptFormatter.format(template, systemPrompt, "Goal: \"${request.input}\"")
+
+        val result = llamaEngine.generate(
+            prompt = prompt,
+            maxTokens = request.options.maxTokens,
+            temperature = request.options.temperature
+        )
+
+        if (result.error != null) {
+            return AiResponse(
+                success = false,
+                requestId = request.id,
+                result = null,
+                error = result.error,
+                errorCode = "GENERATION_FAILED"
+            )
+        }
+
+        val smartResult = parseSmartGoalResponse(result.text, request.input)
+
+        return AiResponse(
+            success = true,
+            requestId = request.id,
+            result = smartResult,
+            rawText = result.text,
+            metadata = AiResponseMetadata(
+                tokensUsed = result.tokensGenerated,
+                wasRuleBased = false
+            )
+        )
+    }
+
+    /**
+     * Parse the LLM's raw text into [AiResult.SmartGoalSuggestion].
+     */
+    private fun parseSmartGoalResponse(raw: String, originalInput: String): AiResult.SmartGoalSuggestion {
+        return try {
+            val jsonMatch = Regex("""\{[\s\S]*\}""").find(raw)
+            if (jsonMatch != null) {
+                val obj = json.decodeFromString<JsonObject>(jsonMatch.value)
+                AiResult.SmartGoalSuggestion(
+                    refinedGoal = obj["refined_goal"]?.jsonPrimitive?.content ?: originalInput,
+                    specific = obj["specific"]?.jsonPrimitive?.content ?: "",
+                    measurable = obj["measurable"]?.jsonPrimitive?.content ?: "",
+                    achievable = obj["achievable"]?.jsonPrimitive?.content ?: "",
+                    relevant = obj["relevant"]?.jsonPrimitive?.content ?: "",
+                    timeBound = obj["time_bound"]?.jsonPrimitive?.content ?: "",
+                    suggestedMilestones = try {
+                        obj["suggested_milestones"]?.jsonArray?.map {
+                            it.jsonPrimitive.content
+                        } ?: emptyList()
+                    } catch (_: Exception) { emptyList() }
+                )
+            } else {
+                // No JSON found — use raw text as refined goal
+                AiResult.SmartGoalSuggestion(
+                    refinedGoal = raw.take(200).ifBlank { originalInput },
+                    specific = "", measurable = "", achievable = "",
+                    relevant = "", timeBound = ""
+                )
+            }
+        } catch (e: Exception) {
+            Timber.tag(TAG).w(e, "Failed to parse SMART goal response")
+            AiResult.SmartGoalSuggestion(
+                refinedGoal = originalInput,
+                specific = "", measurable = "", achievable = "",
+                relevant = "", timeBound = ""
+            )
+        }
+    }
+
     /**
      * General text generation for other request types.
      */

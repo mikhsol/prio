@@ -243,6 +243,28 @@ class AiProviderRouter @Inject constructor(
         val ruleBasedLatency = System.currentTimeMillis() - startTime
         
         if (ruleBasedResult.isFailure) {
+            // Rule-based doesn't support this request type (e.g. SUGGEST_SMART_GOAL).
+            // If the type is escalation-eligible, skip straight to LLM instead of
+            // propagating the failure — this is the normal path for generation tasks.
+            if (request.type in ESCALATION_ELIGIBLE_TYPES && onDeviceProvider.isAvailable.value) {
+                Timber.tag(TAG).d("Rule-based unsupported for ${request.type}, escalating to LLM")
+                val llmResult = try {
+                    onDeviceProvider.complete(request)
+                } catch (e: Exception) {
+                    Timber.tag(TAG).w(e, "LLM escalation after rule-based failure also failed")
+                    null
+                }
+                val totalLatency = System.currentTimeMillis() - startTime
+                return if (llmResult?.isSuccess == true) {
+                    updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
+                    Result.success(llmResult.getOrThrow().copy(
+                        metadata = llmResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
+                    ))
+                } else {
+                    updateStats(ruleBasedOnly = true, llmFailed = true, latencyMs = totalLatency)
+                    ruleBasedResult
+                }
+            }
             Timber.tag(TAG).w("Rule-based failed unexpectedly")
             updateStats(ruleBasedOnly = true, latencyMs = ruleBasedLatency)
             return ruleBasedResult
@@ -328,6 +350,45 @@ class AiProviderRouter @Inject constructor(
         val ruleBasedLatency = System.currentTimeMillis() - startTime
 
         if (ruleBasedResult.isFailure) {
+            // Rule-based doesn't support this request type (e.g. SUGGEST_SMART_GOAL).
+            // If escalation-eligible, try Gemini Nano → llama.cpp before giving up.
+            if (request.type in ESCALATION_ELIGIBLE_TYPES) {
+                Timber.tag(TAG).d("HYBRID_NANO: Rule-based unsupported for ${request.type}, trying LLMs")
+
+                // Try Gemini Nano first
+                if (geminiNanoProvider.isAvailable.value) {
+                    val nanoResult = try { geminiNanoProvider.complete(request) } catch (e: Exception) {
+                        Timber.tag(TAG).w(e, "Gemini Nano escalation failed"); null
+                    }
+                    if (nanoResult?.isSuccess == true) {
+                        val totalLatency = System.currentTimeMillis() - startTime
+                        updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
+                        return Result.success(nanoResult.getOrThrow().copy(
+                            metadata = nanoResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
+                        ))
+                    }
+                }
+
+                // Try llama.cpp
+                if (onDeviceProvider.isAvailable.value) {
+                    val llmResult = try { onDeviceProvider.complete(request) } catch (e: Exception) {
+                        Timber.tag(TAG).w(e, "llama.cpp fallback failed"); null
+                    }
+                    if (llmResult?.isSuccess == true) {
+                        val totalLatency = System.currentTimeMillis() - startTime
+                        updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
+                        return Result.success(llmResult.getOrThrow().copy(
+                            metadata = llmResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
+                        ))
+                    }
+                }
+
+                // All LLMs failed
+                val totalLatency = System.currentTimeMillis() - startTime
+                updateStats(ruleBasedOnly = true, llmFailed = true, latencyMs = totalLatency)
+                return ruleBasedResult
+            }
+
             updateStats(ruleBasedOnly = true, latencyMs = ruleBasedLatency)
             return ruleBasedResult
         }

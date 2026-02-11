@@ -34,10 +34,9 @@
 33. Add donation in crypto screen.
 
 ## Bugs:
-* [GOAL] Create goal -> Add multiple milestones -> Last added milestone not saved.
-* [GOAL] Edit button not working.
-* [GOAL] Can't undo goal deletion.
-* [GOAL] Refine with AI not working.
+
+* [FIXED][GOAL] Can't undo goal deletion.
+* [FIXED][GOAL] Refine with AI not working. Router short-circuited on rule-based failure for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider was missing a SUGGEST_SMART_GOAL handler.
 * [GOAL] Complete task -> goal progress not updated
 * [GOAL] No complete goal button.
 

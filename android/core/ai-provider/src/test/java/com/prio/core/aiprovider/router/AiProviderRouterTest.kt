@@ -375,6 +375,117 @@ class AiProviderRouterTest {
     }
     
     @Nested
+    @DisplayName("SUGGEST_SMART_GOAL Routing")
+    inner class SmartGoalRoutingTests {
+
+        private fun createSmartGoalRequest(input: String) = AiRequest(
+            type = AiRequestType.SUGGEST_SMART_GOAL,
+            input = input
+        )
+
+        private val smartGoalResponse = AiResponse(
+            success = true,
+            requestId = "test",
+            result = AiResult.SmartGoalSuggestion(
+                refinedGoal = "Get promoted to Senior Engineer by December 2026",
+                specific = "Achieve Senior Engineer title",
+                measurable = "Lead 2 major projects",
+                achievable = "Currently mid-level with 3 years experience",
+                relevant = "Aligns with career growth",
+                timeBound = "By December 2026",
+                suggestedMilestones = listOf("Complete leadership course", "Lead first project")
+            ),
+            metadata = AiResponseMetadata(wasRuleBased = false, confidenceScore = 0.8f)
+        )
+
+        @Test
+        @DisplayName("Hybrid mode: escalates SUGGEST_SMART_GOAL to LLM when rule-based fails")
+        fun hybridMode_escalatesSmartGoalToLlm() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
+            llmAvailable.value = true
+
+            coEvery { onDeviceProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Get promoted")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+            val suggestion = response.result as AiResult.SmartGoalSuggestion
+            assertEquals("Get promoted to Senior Engineer by December 2026", suggestion.refinedGoal)
+
+            coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
+        }
+
+        @Test
+        @DisplayName("Hybrid mode: returns failure when LLM also unavailable for SMART goal")
+        fun hybridMode_failsWhenLlmUnavailableForSmartGoal() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
+            llmAvailable.value = false
+
+            val request = createSmartGoalRequest("Get promoted")
+            val result = router.complete(request)
+
+            // When rule-based fails and LLM is unavailable, should propagate failure
+            assertTrue(result.isFailure)
+        }
+
+        @Test
+        @DisplayName("Hybrid Nano mode: escalates SMART goal to Gemini Nano first")
+        fun hybridNanoMode_escalatesSmartGoalToNano() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID_NANO)
+            nanoAvailable.value = true
+            llmAvailable.value = false
+
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Learn Spanish")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+
+            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
+        }
+
+        @Test
+        @DisplayName("Hybrid Nano mode: falls back to llama.cpp when Nano fails for SMART goal")
+        fun hybridNanoMode_fallsToLlamaCpp() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID_NANO)
+            nanoAvailable.value = true
+            llmAvailable.value = true
+
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.failure(RuntimeException("Nano failed"))
+            coEvery { onDeviceProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Read 12 books")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+
+            coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
+        }
+
+        @Test
+        @DisplayName("Hybrid Nano mode: returns failure when all LLMs fail for SMART goal")
+        fun hybridNanoMode_allLlmsFail() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID_NANO)
+            nanoAvailable.value = false
+            llmAvailable.value = false
+
+            val request = createSmartGoalRequest("Save money")
+            val result = router.complete(request)
+
+            // All LLMs unavailable, rule-based doesn't support it → failure
+            assertTrue(result.isFailure)
+        }
+    }
+
+    @Nested
     @DisplayName("Request Options")
     inner class RequestOptionsTests {
         

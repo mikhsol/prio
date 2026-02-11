@@ -27,7 +27,10 @@ import org.junit.Test
  * Bug 5 — Single FAB for add task (was: duplicate FAB on Tasks screen)
  * Bug 6 — Delete task undo restores task (was: undo called uncomplete instead of re-insert)
  * Bug 7 — Single create-goal CTA on empty goals screen (was: FAB + empty-state button)
- * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub) * Bug 9 — Goal Edit button not working (was: OnEditGoal was a no-op stub) *
+ * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub) * Bug 9 — Goal Edit button not working (was: OnEditGoal was a no-op stub)
+ * Bug 10 — "Refine with AI" not working (was: router short-circuited on rule-based failure
+ *          for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider missing handler)
+ *
  * Test naming: regression_{bugNumber}_{scenario}
  */
 @HiltAndroidTest
@@ -717,6 +720,122 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
     //      title/description. Save persists via goalRepository.updateGoal().
     //      Cancel discards edits.
     // =========================================================================
+
+    // =========================================================================
+    // Bug 10: "Refine with AI" not working
+    // Was: AiProviderRouter.processWithHybrid/processWithHybridNano returned
+    //      a failure immediately when the rule-based provider didn't support
+    //      SUGGEST_SMART_GOAL, without ever trying Gemini Nano or llama.cpp.
+    //      Additionally, OnDeviceAiProvider had no SUGGEST_SMART_GOAL handler
+    //      and fell through to generalGenerate() returning ChatResponse instead
+    //      of SmartGoalSuggestion.
+    // Fix: Router now escalates to LLM when rule-based fails for escalation-
+    //      eligible request types. OnDeviceAiProvider now has a dedicated
+    //      suggestSmartGoal() method that returns SmartGoalSuggestion.
+    //      On devices without LLM, the ViewModel fallback sets refinedGoal
+    //      from user input and the wizard still advances.
+    // =========================================================================
+
+    @Test
+    fun regression_bug10_refineWithAiAdvancesToSmartStep() {
+        nav.goToGoals()
+        waitForIdle()
+
+        // Create goal from empty state
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+        goals.assertCreateScreenVisible()
+
+        // Step 1: Describe
+        goals.typeGoalTitle("Run a half marathon in under 2 hours")
+
+        // Tap "Refine with AI" — this was the broken button
+        goals.tapRefineWithAi()
+
+        // AI processing should start and either:
+        // a) Return a SmartGoalSuggestion from Gemini Nano / llama.cpp, or
+        // b) Fall back gracefully setting refinedGoal = user input
+        // In both cases, the "✨ SMART Goal" heading should appear on Step 2.
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("SMART Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // The refined goal field should contain text (either AI-refined or original input)
+        composeRule.onNodeWithText("Run a half marathon", substring = true)
+            .assertIsDisplayed()
+
+        // Category chips should be visible
+        composeRule.onNodeWithText("Category", substring = true)
+            .performScrollTo()
+            .assertIsDisplayed()
+
+        // Should be able to continue to Step 3
+        goals.tapNextTimeline()
+        waitForIdle()
+
+        // Step 3: Timeline should be visible
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Target Date", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun regression_bug10_refineWithAiThenSkipCompletesWizard() {
+        nav.goToGoals()
+        waitForIdle()
+
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        // Step 1: Describe
+        goals.typeGoalTitle("Save ten thousand for emergency fund")
+        goals.tapRefineWithAi()
+
+        // Wait for Step 2 to load (AI processing + result or fallback)
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("SMART Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // If AI didn't skip already, explicitly tap "Skip AI"
+        try {
+            goals.tapSkipAi()
+        } catch (_: Throwable) {
+            // AI may have already been skipped by fallback
+        }
+        waitForIdle()
+
+        // Continue to Step 3: Timeline
+        goals.tapNextTimeline()
+        waitForIdle()
+
+        // Create the goal
+        goals.tapCreateGoalButton()
+        Thread.sleep(3_000) // Wait for goal creation
+
+        // Celebration should appear
+        goals.assertCelebrationVisible()
+
+        // Go back to goals list
+        goals.tapBackToGoals()
+
+        // Wait for navigation
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("Create new goal")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Goal should appear in the list
+        goals.assertGoalDisplayed("Save ten thousand")
+    }
 
     /**
      * Navigate to goal detail for a pre-created goal.
