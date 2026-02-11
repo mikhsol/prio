@@ -30,6 +30,8 @@ import org.junit.Test
  * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub) * Bug 9 — Goal Edit button not working (was: OnEditGoal was a no-op stub)
  * Bug 10 — "Refine with AI" not working (was: router short-circuited on rule-based failure
  *          for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider missing handler)
+ * Bug 11 — Complete task → goal progress not updated (was: TaskRepository.completeTask
+ *          and uncompleteTask did not call recalculateGoalProgress for linked tasks)
  *
  * Test naming: regression_{bugNumber}_{scenario}
  */
@@ -948,5 +950,156 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
 
         // Should be back in view mode — Edit button visible, not Save
         goals.assertEditButtonVisible()
+    }
+
+    // =========================================================================
+    // Bug 11: Complete task → goal progress not updated
+    // Was: TaskRepository.completeTask() and uncompleteTask() did not call
+    //      recalculateGoalProgress() for linked tasks. Goal progress stayed stale.
+    // Fix: TaskRepository now recalculates goal progress via GoalDao after
+    //      completing or uncompleting a task linked to a goal.
+    // =========================================================================
+
+    @Test
+    fun regression_bug11_completeTaskUpdatesGoalProgress() = runTest {
+        // Create a goal with 0% progress
+        val goalId = goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Fitness Goal", progress = 0)
+        )
+
+        // Create 2 tasks linked to the goal
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Go for a run",
+                quadrant = EisenhowerQuadrant.DO_FIRST,
+                goalId = goalId
+            )
+        )
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Do stretches",
+                quadrant = EisenhowerQuadrant.SCHEDULE,
+                goalId = goalId
+            )
+        )
+
+        // Navigate to tasks and complete one task
+        nav.goToTasks()
+        waitForIdle()
+        Thread.sleep(1_000)
+        taskList.completeTask("Go for a run")
+        Thread.sleep(2_000) // Wait for Room → recalculation pipeline
+
+        // Navigate to goals and verify progress updated to 50%
+        nav.goToGoals()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Fitness Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.tapGoal("Fitness Goal")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.assertProgressRing("50 percent")
+    }
+
+    @Test
+    fun regression_bug11_undoCompleteRevertsGoalProgress() = runTest {
+        // Create a goal with 0% progress
+        val goalId = goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Study Goal", progress = 0)
+        )
+
+        // Create 2 tasks linked to the goal
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Read chapter 1",
+                quadrant = EisenhowerQuadrant.DO_FIRST,
+                goalId = goalId
+            )
+        )
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Read chapter 2",
+                quadrant = EisenhowerQuadrant.SCHEDULE,
+                goalId = goalId
+            )
+        )
+
+        // Navigate to tasks and complete one task
+        nav.goToTasks()
+        waitForIdle()
+        Thread.sleep(1_000)
+        taskList.completeTask("Read chapter 1")
+        Thread.sleep(1_000)
+
+        // Undo the completion
+        taskList.tapSnackbarUndo()
+        Thread.sleep(2_000) // Wait for Room → recalculation pipeline
+
+        // Navigate to goals and verify progress is back to 0%
+        nav.goToGoals()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Study Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.tapGoal("Study Goal")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.assertProgressRing("0 percent")
+    }
+
+    @Test
+    fun regression_bug11_completeFromDetailUpdatesGoalProgress() = runTest {
+        // Create a goal
+        val goalId = goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Work Goal", progress = 0)
+        )
+
+        // Create 1 task linked to goal
+        taskRepository.insertTask(
+            TestDataFactory.task(
+                title = "Finish report",
+                quadrant = EisenhowerQuadrant.DO_FIRST,
+                goalId = goalId
+            )
+        )
+
+        // Open task detail and complete
+        nav.goToTasks()
+        waitForIdle()
+        Thread.sleep(1_000)
+        taskList.tapTask("Finish report")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("More options")
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        taskDetail.tapComplete()
+        Thread.sleep(2_000) // Wait for recalculation
+
+        // Navigate to goals and verify 100% progress (1/1 tasks completed)
+        nav.pressBack()
+        waitForIdle()
+        nav.goToGoals()
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Work Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.tapGoal("Work Goal")
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.assertProgressRing("100 percent")
     }
 }

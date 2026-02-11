@@ -4,6 +4,8 @@ import app.cash.turbine.test
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.common.model.RecurrencePattern
 import com.prio.core.data.local.dao.DailyAnalyticsDao
+import com.prio.core.data.local.dao.GoalDao
+import com.prio.core.data.local.dao.MilestoneDao
 import com.prio.core.data.local.dao.TaskDao
 import com.prio.core.data.local.entity.TaskEntity
 import io.mockk.MockKAnnotations
@@ -43,6 +45,12 @@ class TaskRepositoryTest {
     private lateinit var taskDao: TaskDao
     
     @MockK
+    private lateinit var goalDao: GoalDao
+    
+    @MockK
+    private lateinit var milestoneDao: MilestoneDao
+    
+    @MockK
     private lateinit var dailyAnalyticsDao: DailyAnalyticsDao
     
     @MockK
@@ -56,7 +64,7 @@ class TaskRepositoryTest {
     fun setup() {
         MockKAnnotations.init(this, relaxUnitFun = true)
         every { clock.now() } returns now
-        repository = TaskRepository(taskDao, dailyAnalyticsDao, clock)
+        repository = TaskRepository(taskDao, goalDao, milestoneDao, dailyAnalyticsDao, clock)
     }
     
     private fun createTestTask(
@@ -200,6 +208,8 @@ class TaskRepositoryTest {
         @Test
         @DisplayName("uncompleteTask clears completion status")
         fun uncompleteTask_clearsStatus() = runTest {
+            coEvery { taskDao.getById(1L) } returns null
+
             repository.uncompleteTask(1L)
             
             coVerify {
@@ -223,6 +233,136 @@ class TaskRepositoryTest {
                     quadrant = EisenhowerQuadrant.SCHEDULE,
                     updatedAt = now
                 )
+            }
+        }
+    }
+    
+    @Nested
+    @DisplayName("Goal Progress Recalculation")
+    inner class GoalProgressRecalculation {
+        
+        @Test
+        @DisplayName("completeTask recalculates goal progress when task is linked")
+        fun completeTask_recalculatesGoalProgress() = runTest {
+            val goalId = 100L
+            val task = createTestTask(1L, "Task for Goal", goalId = goalId)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            // After completion: 1 completed, 2 active => 1/3 = 33%
+            coEvery { taskDao.getActiveByGoalId(goalId) } returns listOf(
+                createTestTask(2L, goalId = goalId),
+                createTestTask(3L, goalId = goalId)
+            )
+            coEvery { taskDao.getCompletedByGoalId(goalId) } returns listOf(
+                createTestTask(1L, goalId = goalId, isCompleted = true)
+            )
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
+            
+            repository.completeTask(1L)
+            
+            coVerify {
+                goalDao.updateProgress(goalId, 33, now)
+            }
+        }
+        
+        @Test
+        @DisplayName("completeTask does not recalculate when task has no goal")
+        fun completeTask_noGoal_skipsRecalculation() = runTest {
+            val task = createTestTask(1L, "No Goal Task", goalId = null)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            repository.completeTask(1L)
+            
+            coVerify(exactly = 0) {
+                goalDao.updateProgress(any(), any(), any())
+            }
+        }
+        
+        @Test
+        @DisplayName("uncompleteTask recalculates goal progress when task is linked")
+        fun uncompleteTask_recalculatesGoalProgress() = runTest {
+            val goalId = 100L
+            val task = createTestTask(1L, "Task for Goal", goalId = goalId, isCompleted = true)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            // After uncompletion: 2 active (including the uncompleted one), 1 completed => 1/3 = 33%
+            coEvery { taskDao.getActiveByGoalId(goalId) } returns listOf(
+                createTestTask(1L, goalId = goalId),
+                createTestTask(2L, goalId = goalId)
+            )
+            coEvery { taskDao.getCompletedByGoalId(goalId) } returns listOf(
+                createTestTask(3L, goalId = goalId, isCompleted = true)
+            )
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
+            
+            repository.uncompleteTask(1L)
+            
+            coVerify {
+                goalDao.updateProgress(goalId, 33, now)
+            }
+        }
+        
+        @Test
+        @DisplayName("uncompleteTask does not recalculate when task has no goal")
+        fun uncompleteTask_noGoal_skipsRecalculation() = runTest {
+            val task = createTestTask(1L, "No Goal Task", goalId = null)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            repository.uncompleteTask(1L)
+            
+            coVerify(exactly = 0) {
+                goalDao.updateProgress(any(), any(), any())
+            }
+        }
+        
+        @Test
+        @DisplayName("completeTask recalculates with milestones and tasks weighted formula")
+        fun completeTask_withMilestones_usesWeightedFormula() = runTest {
+            val goalId = 100L
+            val task = createTestTask(1L, "Task for Goal", goalId = goalId)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            // 2 milestones, 1 completed = 50% milestone ratio
+            // 1 completed task out of 2 total = 50% task ratio
+            // Weighted: 0.6 * 0.5 + 0.4 * 0.5 = 0.5 => 50%
+            coEvery { taskDao.getActiveByGoalId(goalId) } returns listOf(
+                createTestTask(2L, goalId = goalId)
+            )
+            coEvery { taskDao.getCompletedByGoalId(goalId) } returns listOf(
+                createTestTask(1L, goalId = goalId, isCompleted = true)
+            )
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 2
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 1
+            
+            repository.completeTask(1L)
+            
+            coVerify {
+                goalDao.updateProgress(goalId, 50, now)
+            }
+        }
+        
+        @Test
+        @DisplayName("completeTask with all tasks completed updates to 100%")
+        fun completeTask_allCompleted_updatesTo100() = runTest {
+            val goalId = 100L
+            val task = createTestTask(1L, "Last Task", goalId = goalId)
+            coEvery { taskDao.getById(1L) } returns task
+            
+            // All tasks completed
+            coEvery { taskDao.getActiveByGoalId(goalId) } returns emptyList()
+            coEvery { taskDao.getCompletedByGoalId(goalId) } returns listOf(
+                createTestTask(1L, goalId = goalId, isCompleted = true),
+                createTestTask(2L, goalId = goalId, isCompleted = true)
+            )
+            coEvery { milestoneDao.getMilestoneCountForGoal(goalId) } returns 0
+            coEvery { milestoneDao.getCompletedMilestoneCountForGoal(goalId) } returns 0
+            
+            repository.completeTask(1L)
+            
+            coVerify {
+                goalDao.updateProgress(goalId, 100, now)
             }
         }
     }

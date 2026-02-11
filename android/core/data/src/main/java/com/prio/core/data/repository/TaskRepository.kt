@@ -2,6 +2,8 @@ package com.prio.core.data.repository
 
 import com.prio.core.common.model.EisenhowerQuadrant
 import com.prio.core.data.local.dao.DailyAnalyticsDao
+import com.prio.core.data.local.dao.GoalDao
+import com.prio.core.data.local.dao.MilestoneDao
 import com.prio.core.data.local.dao.TaskDao
 import com.prio.core.data.local.entity.DailyAnalyticsEntity
 import com.prio.core.data.local.entity.TaskEntity
@@ -35,6 +37,8 @@ import kotlin.math.min
 @Singleton
 class TaskRepository @Inject constructor(
     private val taskDao: TaskDao,
+    private val goalDao: GoalDao,
+    private val milestoneDao: MilestoneDao,
     private val dailyAnalyticsDao: DailyAnalyticsDao,
     private val clock: Clock = Clock.System
 ) {
@@ -246,6 +250,10 @@ class TaskRepository @Inject constructor(
                 }
             }
         }
+        // Recalculate goal progress if task is linked to a goal (GL-002)
+        task?.goalId?.let { goalId ->
+            recalculateGoalProgress(goalId)
+        }
     }
     
     /**
@@ -254,12 +262,17 @@ class TaskRepository @Inject constructor(
      */
     suspend fun uncompleteTask(taskId: Long) {
         val now = clock.now()
+        val task = taskDao.getById(taskId)
         taskDao.updateCompletionStatus(
             taskId = taskId,
             isCompleted = false,
             completedAt = null,
             updatedAt = now
         )
+        // Recalculate goal progress if task is linked to a goal (GL-002)
+        task?.goalId?.let { goalId ->
+            recalculateGoalProgress(goalId)
+        }
     }
     
     /**
@@ -427,6 +440,65 @@ class TaskRepository @Inject constructor(
     suspend fun recordAiOverride() {
         recordAnalyticsEvent { it.copy(aiOverrides = it.aiOverrides + 1) }
     }
+
+    // ==================== Goal Progress Recalculation ====================
+
+    /**
+     * Recalculate goal progress after a linked task is completed or uncompleted.
+     *
+     * Uses the same weighted formula as [GoalRepository.recalculateProgress]:
+     * - Both milestones + tasks: 60% milestone ratio + 40% task ratio
+     * - Milestones only: completedMilestones / totalMilestones
+     * - Tasks only: completedTasks / totalTasks
+     *
+     * This avoids a circular dependency between TaskRepository and GoalRepository
+     * by accessing GoalDao and MilestoneDao directly.
+     */
+    private suspend fun recalculateGoalProgress(goalId: Long) {
+        try {
+            val activeTasks = taskDao.getActiveByGoalId(goalId)
+            val completedTasks = taskDao.getCompletedByGoalId(goalId)
+
+            val totalMilestones = milestoneDao.getMilestoneCountForGoal(goalId)
+            val completedMilestones = milestoneDao.getCompletedMilestoneCountForGoal(goalId)
+
+            val totalTasks = activeTasks.size + completedTasks.size
+            val hasTasks = totalTasks > 0
+            val hasMilestones = totalMilestones > 0
+
+            val progress = when {
+                hasMilestones && hasTasks -> {
+                    val milestoneRatio = completedMilestones.toFloat() / totalMilestones
+                    val taskRatio = completedTasks.size.toFloat() / totalTasks
+                    ((MILESTONE_WEIGHT * milestoneRatio + TASK_WEIGHT * taskRatio) * 100).toInt()
+                }
+                hasMilestones -> {
+                    ((completedMilestones.toFloat() / totalMilestones) * 100).toInt()
+                }
+                hasTasks -> {
+                    ((completedTasks.size.toFloat() / totalTasks) * 100).toInt()
+                }
+                else -> 0
+            }
+
+            goalDao.updateProgress(
+                goalId = goalId,
+                progress = progress,
+                updatedAt = clock.now()
+            )
+        } catch (e: Exception) {
+            // Goal progress recalculation is best-effort; never crash the app
+        }
+    }
+
+    companion object {
+        /** Weight for milestone contribution to overall goal progress. */
+        const val MILESTONE_WEIGHT = 0.6f
+        /** Weight for task contribution to overall goal progress. */
+        const val TASK_WEIGHT = 0.4f
+    }
+
+    // ==================== Analytics Recording ====================
 
     /**
      * Lightweight analytics event recorder.

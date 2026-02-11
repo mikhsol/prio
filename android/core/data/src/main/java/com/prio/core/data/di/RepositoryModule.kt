@@ -34,9 +34,11 @@ object RepositoryModule {
     @Singleton
     fun provideTaskRepository(
         taskDao: TaskDao,
+        goalDao: GoalDao,
+        milestoneDao: MilestoneDao,
         dailyAnalyticsDao: DailyAnalyticsDao,
         clock: Clock
-    ): TaskRepository = TaskRepository(taskDao, dailyAnalyticsDao, clock)
+    ): TaskRepository = TaskRepository(taskDao, goalDao, milestoneDao, dailyAnalyticsDao, clock)
     
     @Provides
     @Singleton
