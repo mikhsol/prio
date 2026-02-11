@@ -296,7 +296,19 @@ class GoalDetailViewModel @Inject constructor(
                 deleteMilestone(event.milestoneId)
             }
             GoalDetailEvent.OnEditGoal -> {
-                // Will navigate to edit screen
+                enterEditMode()
+            }
+            is GoalDetailEvent.OnUpdateEditTitle -> {
+                _uiState.update { it.copy(editTitle = event.title) }
+            }
+            is GoalDetailEvent.OnUpdateEditDescription -> {
+                _uiState.update { it.copy(editDescription = event.description) }
+            }
+            GoalDetailEvent.OnSaveEdit -> {
+                saveEdit()
+            }
+            GoalDetailEvent.OnCancelEdit -> {
+                cancelEdit()
             }
             GoalDetailEvent.OnDeleteGoal -> {
                 deleteGoal()
@@ -312,6 +324,65 @@ class GoalDetailViewModel @Inject constructor(
             GoalDetailEvent.OnDismissConfetti -> {
                 _uiState.update { it.copy(showConfetti = false) }
             }
+        }
+    }
+
+    /**
+     * Enter inline edit mode.
+     * Populates edit fields with current values so the user can modify them.
+     */
+    private fun enterEditMode() {
+        val state = _uiState.value
+        _uiState.update {
+            it.copy(
+                isEditing = true,
+                editTitle = state.title,
+                editDescription = state.description ?: ""
+            )
+        }
+    }
+
+    /**
+     * Save inline edits to the repository.
+     * Updates the goal entity and exits edit mode.
+     */
+    private fun saveEdit() {
+        val state = _uiState.value
+        val trimmedTitle = state.editTitle.trim()
+        if (trimmedTitle.isBlank()) {
+            viewModelScope.launch {
+                _effect.send(GoalDetailEffect.ShowSnackbar("Title cannot be empty"))
+            }
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val goal = goalRepository.getGoalById(goalId)
+                if (goal != null) {
+                    val updated = goal.copy(
+                        title = trimmedTitle,
+                        description = state.editDescription.trim().ifBlank { null }
+                    )
+                    goalRepository.updateGoal(updated)
+                    _uiState.update { it.copy(isEditing = false) }
+                    _effect.send(GoalDetailEffect.ShowSnackbar("Goal updated"))
+                }
+            } catch (e: Exception) {
+                _effect.send(GoalDetailEffect.ShowSnackbar("Failed to save changes"))
+            }
+        }
+    }
+
+    /**
+     * Cancel inline editing and revert to current values.
+     */
+    private fun cancelEdit() {
+        _uiState.update {
+            it.copy(
+                isEditing = false,
+                editTitle = it.title,
+                editDescription = it.description ?: ""
+            )
         }
     }
 

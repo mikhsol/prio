@@ -3,6 +3,7 @@ package com.prio.app.e2e.robots
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -42,6 +43,9 @@ import androidx.test.espresso.Espresso
  *
  * GoalDetailScreen:
  * - Progress ring: contentDescription "{n} percent complete, status: {status.displayName}"
+ * - Edit: contentDescription "Edit goal" → enters inline edit mode
+ * - Save: contentDescription "Save goal" → saves edits and exits edit mode
+ * - Cancel: contentDescription "Cancel editing" → discards edits
  */
 class GoalsRobot(
     private val rule: ComposeTestRule
@@ -292,6 +296,99 @@ class GoalsRobot(
             Thread.sleep(200)
             chips = rule.onAllNodesWithContentDescription("Remove").fetchSemanticsNodes()
         }
+    }
+
+    // =========================================================================
+    // Goal Detail — Inline Edit helpers (Bug fix: Edit button not working)
+    // =========================================================================
+
+    /**
+     * Tap the "Edit goal" button in the GoalDetailScreen top bar.
+     * Enters inline edit mode.
+     */
+    fun tapEditGoal() {
+        rule.onNodeWithContentDescription("Edit goal")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Tap the "Save goal" button in the GoalDetailScreen top bar.
+     * Saves edits and exits edit mode.
+     */
+    fun tapSaveGoalEdit() {
+        rule.onNodeWithContentDescription("Save goal")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Tap the "Cancel editing" back arrow in the GoalDetailScreen top bar.
+     * Discards edits and exits edit mode.
+     */
+    fun tapCancelGoalEdit() {
+        rule.onNodeWithContentDescription("Cancel editing")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Edit the goal title in inline edit mode.
+     * Clears existing text and types the new title.
+     */
+    fun editGoalTitle(newTitle: String) {
+        rule.onNode(hasSetTextAction() and hasText("Goal title", substring = true))
+            .performTextClearance()
+        rule.waitForIdle()
+        rule.onNode(hasSetTextAction() and hasText("Goal title", substring = true))
+            .performTextInput(newTitle)
+        rule.waitForIdle()
+    }
+
+    /**
+     * Edit the goal title by matching existing text first.
+     */
+    fun editGoalTitle(newTitle: String, currentTitle: String) {
+        rule.onNode(hasSetTextAction() and hasText(currentTitle, substring = true))
+            .performTextClearance()
+        rule.waitForIdle()
+        // After clearing, the field shows the "Goal title" placeholder
+        rule.onNode(hasSetTextAction() and hasText("Goal title", substring = true))
+            .performTextInput(newTitle)
+        rule.waitForIdle()
+    }
+
+    /**
+     * Type into the description field in edit mode.
+     */
+    fun editGoalDescription(description: String) {
+        rule.onNode(hasSetTextAction() and hasText("Describe your goal", substring = true))
+            .performTextInput(description)
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert that the Edit goal button is visible (view mode).
+     */
+    fun assertEditButtonVisible() {
+        rule.onNodeWithContentDescription("Edit goal")
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert that the Save goal button is visible (edit mode).
+     */
+    fun assertSaveButtonVisible() {
+        rule.onNodeWithContentDescription("Save goal")
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert that the goal title is displayed (view mode).
+     */
+    fun assertGoalDetailTitle(title: String) {
+        rule.onNodeWithText(title, substring = true)
+            .assertIsDisplayed()
     }
 
     // =========================================================================

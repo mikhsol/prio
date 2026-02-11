@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -128,23 +129,46 @@ fun GoalDetailScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = uiState.title,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
+                    if (uiState.isEditing) {
+                        OutlinedTextField(
+                            value = uiState.editTitle,
+                            onValueChange = { viewModel.onEvent(GoalDetailEvent.OnUpdateEditTitle(it)) },
+                            textStyle = MaterialTheme.typography.titleLarge,
+                            singleLine = true,
+                            placeholder = { Text("Goal title") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Text(
+                            text = uiState.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
                 },
                 navigationIcon = {
-                    IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnNavigateBack) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                    if (uiState.isEditing) {
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnCancelEdit) }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Cancel editing")
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnNavigateBack) }) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                        }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnEditGoal) }) {
-                        Icon(Icons.Default.Edit, "Edit goal")
-                    }
-                    IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnDeleteGoal) }) {
-                        Icon(Icons.Default.Delete, "Delete goal")
+                    if (uiState.isEditing) {
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnSaveEdit) }) {
+                            Icon(Icons.Default.Check, "Save goal")
+                        }
+                    } else {
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnEditGoal) }) {
+                            Icon(Icons.Default.Edit, "Edit goal")
+                        }
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnDeleteGoal) }) {
+                            Icon(Icons.Default.Delete, "Delete goal")
+                        }
                     }
                 }
             )
@@ -181,6 +205,30 @@ fun GoalDetailScreen(
                         milestoneContribution = uiState.milestoneContribution,
                         taskContribution = uiState.taskContribution
                     )
+                }
+
+                // Description edit section — visible in edit mode
+                if (uiState.isEditing) {
+                    item(key = "edit_description") {
+                        OutlinedTextField(
+                            value = uiState.editDescription,
+                            onValueChange = { viewModel.onEvent(GoalDetailEvent.OnUpdateEditDescription(it)) },
+                            label = { Text("Description") },
+                            placeholder = { Text("Describe your goal…") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            maxLines = 6,
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                } else if (!uiState.description.isNullOrBlank()) {
+                    item(key = "description") {
+                        Text(
+                            text = uiState.description!!,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
 
                 // AI Insight Card

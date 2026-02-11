@@ -31,6 +31,7 @@
                                                           -> Task
     Progress for goal -> Progress for each milestones.
 32. Design MONETISATION model!!!
+33. Add donation in crypto screen.
 
 ## Bugs:
 * [GOAL] Create goal -> Add multiple milestones -> Last added milestone not saved.
@@ -38,8 +39,9 @@
 * [GOAL] Can't undo goal deletion.
 * [GOAL] Refine with AI not working.
 * [GOAL] Complete task -> goal progress not updated
-* [TASK] Create task -> Task Created at the botton don't disappears
 * [GOAL] No complete goal button.
+
+* [TASK] Create task -> "Task created" caption at the botton don't disappears
 
 * [TASK] No time picker when choose date.
 * [CALENDAR] Month/Week view missing.

@@ -3,6 +3,8 @@ package com.prio.app.e2e.scenarios
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
 import com.prio.app.e2e.BaseE2ETest
@@ -25,8 +27,7 @@ import org.junit.Test
  * Bug 5 — Single FAB for add task (was: duplicate FAB on Tasks screen)
  * Bug 6 — Delete task undo restores task (was: undo called uncomplete instead of re-insert)
  * Bug 7 — Single create-goal CTA on empty goals screen (was: FAB + empty-state button)
- * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub)
- *
+ * Bug 8 — "Add First Task" after goal creation opens quick capture (was: TODO stub) * Bug 9 — Goal Edit button not working (was: OnEditGoal was a no-op stub) *
  * Test naming: regression_{bugNumber}_{scenario}
  */
 @HiltAndroidTest
@@ -700,8 +701,133 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
             ).fetchSemanticsNodes().isNotEmpty()
         }
 
-        // Should be on goal detail screen showing the goal title
-        composeRule.onNodeWithText("Ship v1.0", substring = true)
+        // Should be on goal detail screen showing the goal title.
+        // Use onAllNodesWithText + onFirst because the title may also appear
+        // in the description section.
+        composeRule.onAllNodesWithText("Ship v1.0", substring = true)
+            .onFirst()
             .assertIsDisplayed()
+    }
+
+    // =========================================================================
+    // Bug 9: Goal Edit button not working
+    // Was: GoalDetailEvent.OnEditGoal handler was a no-op stub:
+    //      `// Will navigate to edit screen`
+    // Fix: Inline edit mode — tapping Edit enters edit mode with editable
+    //      title/description. Save persists via goalRepository.updateGoal().
+    //      Cancel discards edits.
+    // =========================================================================
+
+    /**
+     * Navigate to goal detail for a pre-created goal.
+     */
+    private fun navigateToGoalDetail(goalTitle: String) {
+        nav.goToGoals()
+        waitForIdle()
+        Thread.sleep(2_000) // Wait for Room → Flow pipeline
+        goals.tapGoal(goalTitle)
+        waitForIdle()
+        // Wait for GoalDetailScreen to load (progress ring appears)
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithContentDescription("Edit goal")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    @Test
+    fun regression_bug9_editButtonEntersEditMode() = runTest {
+        goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Edit mode test goal")
+        )
+
+        navigateToGoalDetail("Edit mode test goal")
+
+        // Edit button should be visible in view mode
+        goals.assertEditButtonVisible()
+
+        // Tap Edit
+        goals.tapEditGoal()
+        waitForIdle()
+
+        // Should now be in edit mode — Save button visible instead of Edit
+        goals.assertSaveButtonVisible()
+    }
+
+    @Test
+    fun regression_bug9_editGoalTitlePersists() = runTest {
+        goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Old goal title")
+        )
+
+        navigateToGoalDetail("Old goal title")
+
+        // Enter edit mode
+        goals.tapEditGoal()
+        waitForIdle()
+
+        // Edit title
+        goals.editGoalTitle("New goal title", currentTitle = "Old goal title")
+
+        // Save
+        goals.tapSaveGoalEdit()
+        waitForIdle()
+        Thread.sleep(2_000) // Room → Flow pipeline
+
+        // Title should be updated in the top bar
+        goals.assertGoalDetailTitle("New goal title")
+
+        // Navigate back to goals list and verify
+        nav.pressBack()
+        waitForIdle()
+        Thread.sleep(1_000)
+        goals.assertGoalDisplayed("New goal title")
+        goals.assertGoalNotDisplayed("Old goal title")
+    }
+
+    @Test
+    fun regression_bug9_cancelEditDiscardsChanges() = runTest {
+        goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Keep this title")
+        )
+
+        navigateToGoalDetail("Keep this title")
+
+        // Enter edit mode
+        goals.tapEditGoal()
+        waitForIdle()
+
+        // Edit title
+        goals.editGoalTitle("Discarded title", currentTitle = "Keep this title")
+
+        // Cancel
+        goals.tapCancelGoalEdit()
+        waitForIdle()
+
+        // Original title should be restored
+        goals.assertGoalDetailTitle("Keep this title")
+
+        // Edit button should be back (view mode)
+        goals.assertEditButtonVisible()
+    }
+
+    @Test
+    fun regression_bug9_editModeRestoredAfterSave() = runTest {
+        goalRepository.insertGoal(
+            TestDataFactory.goal(title = "Save and restore")
+        )
+
+        navigateToGoalDetail("Save and restore")
+
+        // Enter edit mode
+        goals.tapEditGoal()
+        waitForIdle()
+        goals.assertSaveButtonVisible()
+
+        // Save without changes
+        goals.tapSaveGoalEdit()
+        waitForIdle()
+
+        // Should be back in view mode — Edit button visible, not Save
+        goals.assertEditButtonVisible()
     }
 }

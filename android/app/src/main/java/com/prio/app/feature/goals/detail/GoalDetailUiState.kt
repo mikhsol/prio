@@ -42,6 +42,10 @@ data class GoalDetailUiState(
     // Milestone creation dialog state (3.2.4)
     val showAddMilestoneDialog: Boolean = false,
     val canAddMilestone: Boolean = true, // false when max 5 reached
+    // Inline editing state (Bug fix: Edit button not working)
+    val isEditing: Boolean = false,
+    val editTitle: String = "",
+    val editDescription: String = "",
     // Analytics data
     val weeklyActivity: List<Int> = emptyList(), // tasks completed per day over 7 days
     val progressHistory: List<Float> = emptyList() // weekly progress snapshots
@@ -108,6 +112,10 @@ sealed interface GoalDetailEvent {
     data class OnConfirmAddMilestone(val title: String) : GoalDetailEvent
     data object OnDismissAddMilestoneDialog : GoalDetailEvent
     data object OnEditGoal : GoalDetailEvent
+    data class OnUpdateEditTitle(val title: String) : GoalDetailEvent
+    data class OnUpdateEditDescription(val description: String) : GoalDetailEvent
+    data object OnSaveEdit : GoalDetailEvent
+    data object OnCancelEdit : GoalDetailEvent
     data object OnDeleteGoal : GoalDetailEvent
     data object OnCompleteGoal : GoalDetailEvent
     data object OnNavigateBack : GoalDetailEvent
