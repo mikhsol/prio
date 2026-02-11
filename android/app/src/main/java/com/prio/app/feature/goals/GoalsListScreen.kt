@@ -1,8 +1,10 @@
 package com.prio.app.feature.goals
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Card
@@ -41,14 +44,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -263,20 +270,10 @@ private fun GoalsListContent(
                     items = section.goals,
                     key = { "goal_${it.id}" }
                 ) { goal ->
-                    GoalCard(
-                        goal = GoalCardData(
-                            id = goal.id.toString(),
-                            title = goal.title,
-                            category = com.prio.core.ui.components.GoalCategory.valueOf(goal.category.name),
-                            progress = goal.progress,
-                            status = mapToUiStatus(goal.status),
-                            targetDate = goal.targetDate,
-                            milestonesCompleted = goal.milestonesCompleted,
-                            milestonesTotal = goal.milestonesTotal,
-                            linkedTasksCount = goal.linkedTasksCount
-                        ),
+                    SwipeableGoalCard(
+                        goal = goal,
                         onTap = { onEvent(GoalsListEvent.OnGoalClick(goal.id)) },
-                        onOverflowTap = { /* TODO: Goal overflow menu */ }
+                        onDelete = { onEvent(GoalsListEvent.OnGoalDelete(goal.id)) }
                     )
                 }
             }
@@ -286,6 +283,89 @@ private fun GoalsListContent(
         item(key = "bottom_spacer") {
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+}
+
+/**
+ * Swipeable GoalCard with end-to-start swipe to delete.
+ * Follows the same SwipeToDismissBox pattern used in TaskListScreen.
+ *
+ * The LaunchedEffect(goal.id) resets dismiss state when the card
+ * re-enters composition after an undo re-insert.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeableGoalCard(
+    goal: GoalUiModel,
+    onTap: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            when (dismissValue) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    onDelete()
+                    true
+                }
+                // Only delete swipe supported for goals
+                SwipeToDismissBoxValue.StartToEnd -> false
+                SwipeToDismissBoxValue.Settled -> true
+            }
+        }
+    )
+
+    // Reset dismiss state when card re-enters composition (e.g. after undo).
+    // rememberSwipeToDismissBoxState uses rememberSaveable, so LazyList's
+    // SaveableStateHolder may restore a dismissed position when the same key
+    // reappears. Snap back to Settled to show the goal card properly.
+    LaunchedEffect(goal.id) {
+        if (dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
+            dismissState.snapTo(SwipeToDismissBoxValue.Settled)
+        }
+    }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val color = when (dismissState.targetValue) {
+                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+                else -> Color.Transparent
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(color)
+                    .padding(horizontal = 24.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Delete goal",
+                        tint = Color.White
+                    )
+                }
+            }
+        },
+        enableDismissFromEndToStart = true,
+        enableDismissFromStartToEnd = false,
+        modifier = Modifier.animateContentSize()
+    ) {
+        GoalCard(
+            goal = GoalCardData(
+                id = goal.id.toString(),
+                title = goal.title,
+                category = com.prio.core.ui.components.GoalCategory.valueOf(goal.category.name),
+                progress = goal.progress,
+                status = mapToUiStatus(goal.status),
+                targetDate = goal.targetDate,
+                milestonesCompleted = goal.milestonesCompleted,
+                milestonesTotal = goal.milestonesTotal,
+                linkedTasksCount = goal.linkedTasksCount
+            ),
+            onTap = onTap
+        )
     }
 }
 

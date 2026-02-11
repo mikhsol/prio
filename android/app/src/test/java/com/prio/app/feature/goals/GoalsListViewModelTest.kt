@@ -268,4 +268,97 @@ class GoalsListViewModelTest {
             assertEquals(1, stats.atRiskCount)
         }
     }
+
+    @Nested
+    @DisplayName("Delete with Undo")
+    inner class DeleteWithUndo {
+
+        @Test
+        @DisplayName("deletes goal and shows snackbar with undo action")
+        fun deletesGoalAndShowsSnackbar() = runTest {
+            val goal = createGoal(id = 1, title = "Goal to Delete")
+            every { goalRepository.getAllActiveGoals() } returns flowOf(listOf(goal))
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(1)
+            coEvery { goalRepository.getGoalById(1L) } returns goal
+            coEvery { goalRepository.deleteGoalById(1L) } returns Unit
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.effect.test {
+                viewModel.onEvent(GoalsListEvent.OnGoalDelete(1L))
+                advanceUntilIdle()
+
+                val effect = awaitItem()
+                assertTrue(effect is GoalsListEffect.ShowSnackbar)
+                val snackbar = effect as GoalsListEffect.ShowSnackbar
+                assertTrue(snackbar.message.contains("Goal to Delete"))
+                assertEquals("Undo", snackbar.actionLabel)
+
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        @DisplayName("undo restores deleted goal via insert")
+        fun undoRestoresDeletedGoal() = runTest {
+            val goal = createGoal(id = 1, title = "Goal to Restore")
+            every { goalRepository.getAllActiveGoals() } returns flowOf(listOf(goal))
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(1)
+            coEvery { goalRepository.getGoalById(1L) } returns goal
+            coEvery { goalRepository.deleteGoalById(1L) } returns Unit
+            coEvery { goalRepository.insertGoal(goal) } returns 1L
+
+            createViewModel()
+            advanceUntilIdle()
+
+            // Delete the goal first
+            viewModel.onEvent(GoalsListEvent.OnGoalDelete(1L))
+            advanceUntilIdle()
+
+            // Undo the delete
+            viewModel.onEvent(GoalsListEvent.OnUndoDelete)
+            advanceUntilIdle()
+
+            // Verify the goal was re-inserted
+            io.mockk.coVerify { goalRepository.insertGoal(goal) }
+        }
+
+        @Test
+        @DisplayName("undo does nothing when no goal was deleted")
+        fun undoDoesNothingWhenNoDelete() = runTest {
+            every { goalRepository.getAllActiveGoals() } returns flowOf(emptyList())
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(0)
+
+            createViewModel()
+            advanceUntilIdle()
+
+            // Undo without prior delete
+            viewModel.onEvent(GoalsListEvent.OnUndoDelete)
+            advanceUntilIdle()
+
+            // Verify no insert was called
+            io.mockk.coVerify(exactly = 0) { goalRepository.insertGoal(any()) }
+        }
+
+        @Test
+        @DisplayName("delete does nothing when goal not found")
+        fun deleteDoesNothingWhenGoalNotFound() = runTest {
+            every { goalRepository.getAllActiveGoals() } returns flowOf(emptyList())
+            every { goalRepository.getActiveGoalCountFlow() } returns flowOf(0)
+            coEvery { goalRepository.getGoalById(999L) } returns null
+
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.effect.test {
+                viewModel.onEvent(GoalsListEvent.OnGoalDelete(999L))
+                advanceUntilIdle()
+
+                // No effect should be emitted
+                expectNoEvents()
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
 }

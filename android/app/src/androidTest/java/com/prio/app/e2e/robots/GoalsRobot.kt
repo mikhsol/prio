@@ -17,6 +17,8 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.test.espresso.Espresso
 
 /**
@@ -195,7 +197,12 @@ class GoalsRobot(
     }
 
     fun assertGoalDisplayed(title: String) {
-        rule.onNodeWithText(title, substring = true)
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(title, substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        // Use onAllNodes to handle cases where snackbar also contains the title
+        rule.onAllNodesWithText(title, substring = true)[0]
             .assertIsDisplayed()
     }
 
@@ -424,6 +431,45 @@ class GoalsRobot(
     fun tapMilestoneToggle(title: String) {
         rule.onNode(hasText(title, substring = true) and hasClickAction())
             .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    // =========================================================================
+    // Swipe-to-Delete & Undo actions
+    // =========================================================================
+
+    /**
+     * Swipe a goal card left to trigger deletion.
+     * Targets the card by matching goal title text with a left swipe gesture.
+     */
+    fun swipeGoalToDelete(title: String) {
+        rule.onNodeWithText(title, substring = true)
+            .performScrollTo()
+        rule.onNodeWithText(title, substring = true)
+            .performTouchInput { swipeLeft() }
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert the "deleted" snackbar is shown with an Undo action.
+     */
+    fun assertDeleteSnackbarWithUndo(goalTitle: String) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("deleted", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Undo")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * Tap the "Undo" action on the snackbar to restore the deleted goal.
+     */
+    fun tapSnackbarUndo() {
+        rule.onNodeWithText("Undo")
             .performClick()
         rule.waitForIdle()
     }

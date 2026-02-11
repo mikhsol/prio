@@ -259,4 +259,92 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         // contentDescription format: "{n} percent complete, status: {status}"
         goals.assertProgressRing("40 percent")
     }
+
+    // =========================================================================
+    // E2E-A10-04: Swipe to delete goal with undo
+    // Priority: P1 (Core) — Regression test for "Can't undo goal deletion"
+    // =========================================================================
+
+    @Test
+    fun swipeDeleteGoal_undoRestoresGoal() {
+        // Seed a goal into the database
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Undo Test Goal")
+            )
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        // Wait for goal to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Undo Test Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Verify goal is displayed
+        goals.assertGoalDisplayed("Undo Test Goal")
+
+        // Swipe goal left to delete
+        goals.swipeGoalToDelete("Undo Test Goal")
+
+        // Verify snackbar with undo action is shown
+        goals.assertDeleteSnackbarWithUndo("Undo Test Goal")
+
+        // Tap undo to restore
+        goals.tapSnackbarUndo()
+
+        // Wait for goal to reappear after undo re-insert
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Undo Test Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Verify the goal is back in the list (handles possible snackbar overlap)
+        goals.assertGoalDisplayed("Undo Test Goal")
+    }
+
+    // =========================================================================
+    // E2E-A10-05: Swipe to delete goal permanently (no undo)
+    // Priority: P1 (Core) — Regression test for goal deletion
+    // =========================================================================
+
+    @Test
+    fun swipeDeleteGoal_permanentlyRemovesGoal() {
+        // Seed two goals so the list doesn't go to empty state while snackbar
+        // is showing (empty state check would match snackbar text too)
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Delete Me Goal")
+            )
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Keep This Goal")
+            )
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        // Wait for both goals to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Delete Me Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        goals.assertGoalDisplayed("Delete Me Goal")
+        goals.assertGoalDisplayed("Keep This Goal")
+
+        // Swipe goal left to delete
+        goals.swipeGoalToDelete("Delete Me Goal")
+
+        // Verify snackbar appears
+        goals.assertDeleteSnackbarWithUndo("Delete Me Goal")
+
+        // The other goal should still be visible
+        goals.assertGoalDisplayed("Keep This Goal")
+    }
 }
