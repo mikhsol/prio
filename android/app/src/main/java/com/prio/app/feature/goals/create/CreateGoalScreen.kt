@@ -791,7 +791,15 @@ private fun TimelineStepContent(
             }
 
             Button(
-                onClick = { onEvent(CreateGoalEvent.OnCreateGoal) },
+                onClick = {
+                    // Auto-add any pending milestone text so the last typed
+                    // milestone is not silently discarded (fixes Bug 3 regression).
+                    if (milestoneInput.isNotBlank()) {
+                        onEvent(CreateGoalEvent.OnAddMilestone(milestoneInput))
+                        milestoneInput = ""
+                    }
+                    onEvent(CreateGoalEvent.OnCreateGoal)
+                },
                 modifier = Modifier.weight(1f),
                 enabled = !state.isLoading && state.canCreateGoal,
                 shape = RoundedCornerShape(12.dp)

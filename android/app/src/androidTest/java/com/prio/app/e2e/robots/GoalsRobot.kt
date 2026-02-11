@@ -260,6 +260,25 @@ class GoalsRobot(
     }
 
     /**
+     * Type a milestone title into the input field WITHOUT tapping the Add button.
+     * Used to reproduce Bug 3 (secondary): pending input text should be
+     * auto-saved when the user taps "Create Goal" directly.
+     */
+    fun typeMilestoneWithoutAdd(title: String) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodes(hasTestTag("milestone_input"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        Thread.sleep(300)
+        val field = rule.onNodeWithTag("milestone_input")
+        field.performScrollTo()
+        field.performTextReplacement(title)
+        rule.waitForIdle()
+        Espresso.closeSoftKeyboard()
+        rule.waitForIdle()
+    }
+
+    /**
      * Remove all existing milestone chips (e.g. AI-suggested ones) on the CreateGoalScreen.
      * Taps the "Remove" icon on each chip until none remain.
      */

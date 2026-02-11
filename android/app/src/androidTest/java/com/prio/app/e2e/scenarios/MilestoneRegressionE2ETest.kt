@@ -25,9 +25,15 @@ import org.junit.Test
  *   weighted formula: milestones 60%, tasks 40%.
  *
  * Bug 3: Create goal → add multiple milestones → last added milestone lost.
- *   Root cause: [CreateGoalViewModel.addMilestone] captured the milestone
+ *   Original root cause: [CreateGoalViewModel.addMilestone] captured the milestone
  *   list outside the StateFlow.update lambda, causing stale overwrites
  *   when milestones were added in quick succession.
+ *   Secondary root cause: user types last milestone into the input field and
+ *   taps "Create Goal" without first tapping the "+" Add button. The pending
+ *   text in the local Compose state was silently discarded because the
+ *   Create button only dispatched [OnCreateGoal] without flushing the input.
+ *   Fix: [CreateGoalScreen] now auto-adds pending milestone text before
+ *   dispatching [OnCreateGoal].
  */
 @HiltAndroidTest
 class MilestoneRegressionE2ETest : BaseE2ETest() {
@@ -463,5 +469,97 @@ class MilestoneRegressionE2ETest : BaseE2ETest() {
 
         // All tasks done, no milestones done → 0.6×(0/1) + 0.4×(2/2) = 40%
         goals.assertProgressRing("40 percent")
+    }
+
+    // =========================================================================
+    // REG-M08: Pending milestone input auto-saved on "Create Goal"
+    // Regression for Bug 3 (secondary) — user types last milestone but taps
+    // "Create Goal" without pressing "+", losing the pending text.
+    // =========================================================================
+
+    @Test
+    fun createGoal_pendingMilestoneInput_autoSavedOnCreate() {
+        nav.goToGoals()
+        goals.assertEmptyState()
+        goals.tapCreateFirstGoal()
+        goals.assertCreateScreenVisible()
+
+        // Step 1: Describe
+        goals.typeGoalTitle("Master cooking")
+        Thread.sleep(500)
+
+        goals.tapRefineWithAi()
+
+        // Wait for AI processing to complete (success or fallback)
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(hasText("SMART Goal", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Step 2 → Step 3
+        goals.tapNextTimeline()
+        Thread.sleep(500)
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(hasText("Milestones", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        Thread.sleep(500)
+
+        // Clear any AI-suggested milestones
+        goals.clearAllMilestoneChips()
+        Thread.sleep(1_000)
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodesWithContentDescription("Remove")
+                .fetchSemanticsNodes().isEmpty()
+        }
+
+        composeRule.waitUntil(timeoutMillis = 5_000) {
+            composeRule.onAllNodes(hasTestTag("milestone_input"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Add first two milestones via the "+" button
+        goals.typeMilestoneAndAdd("Knife skills")
+        Thread.sleep(500)
+        goals.typeMilestoneAndAdd("Sauce basics")
+        Thread.sleep(500)
+
+        // Type the THIRD milestone but do NOT tap "+" — leave it pending
+        goals.typeMilestoneWithoutAdd("Baking bread")
+        Thread.sleep(500)
+
+        // Verify only 2 chips visible so far; the third is still in the input
+        goals.assertMilestoneChip("Knife skills")
+        goals.assertMilestoneChip("Sauce basics")
+
+        // Tap "Create Goal" — the pending input should be auto-added
+        goals.tapCreateGoalButton()
+
+        // Wait for celebration
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(hasText("Goal Created!"))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.assertCelebrationVisible()
+
+        // Navigate to goal detail to verify ALL 3 milestones persisted
+        goals.tapViewGoalDetails()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Switch to Milestones tab
+        goals.tapDetailTab("Milestones")
+        Thread.sleep(1_500)
+
+        // All 3 milestones must be present — including the one from the input field
+        goals.assertMilestoneDisplayed("Knife skills")
+        goals.assertMilestoneDisplayed("Sauce basics")
+        goals.assertMilestoneDisplayed("Baking bread")
     }
 }
