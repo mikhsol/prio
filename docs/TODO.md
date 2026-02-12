@@ -46,9 +46,9 @@
 * [FIXED][CALENDAR] Month/Week view missing.
 
 * [FIXED][GOAL] Adding milestone (more than 2), new milestone hidden under keyboard and you don't see what are you typing.
-* [TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
+* [FIXED][TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
 
-* [GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
+* [FIXED][GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
 * [GOAL] Ugly UI to change goal for task.
 
 * [TASK] Recurrent tasks not implemented.

@@ -1140,4 +1140,168 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         // 6. Verify task is still in the list after snackbar disappears
         taskList.assertTaskDisplayed("Snackbar dismiss test")
     }
+
+    // =========================================================================
+    // Bug 13: QuickCapture shows stale data after goal creation "Add First Task"
+    // Was: After creating a task via QuickCapture and dismissing, the
+    //      activity-scoped QuickCaptureViewModel retained parsedResult,
+    //      inputText, and showPreview state. When QuickCapture was re-opened
+    //      (e.g. via "Add First Task" on the goal celebration overlay), the
+    //      previous task's title and priority were displayed instead of a
+    //      clean empty placeholder.
+    // Fix: 1) createTask() now clears inputText, parsedResult, showPreview
+    //         alongside setting isCreated=true.
+    //      2) PrioAppShell onDismiss/onTaskCreated callbacks fire Reset.
+    //      3) LaunchedEffect uses a counter key instead of Unit so reset
+    //         fires reliably on every re-open.
+    // =========================================================================
+
+    @Test
+    fun regression_bug13_quickCaptureCleanAfterTaskCreation() {
+        // Bug 13: Create task → Create goal → "Add First Task" popup
+        // shows stale data from the last created task instead of a clean form.
+        nav.goToTasks()
+        waitForIdle()
+
+        // 1. Create a task via QuickCapture (the real bug path)
+        nav.tapFab()
+        quickCapture.assertSheetVisible()
+        quickCapture.typeTaskText("Buy groceries tomorrow")
+        quickCapture.submitInput()
+        quickCapture.waitForAiClassification()
+
+        // Tap Create Task — auto-dismiss fires after 500ms
+        quickCapture.tapCreateTask()
+
+        // Wait for the "Task created" snackbar to appear AND disappear.
+        // The snackbar (SnackbarDuration.Short ≈ 4s) overlaps the bottom nav
+        // and can intercept the Goals tab click.
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("Task created", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("Task created", substring = true)
+                .fetchSemanticsNodes().isEmpty()
+        }
+        waitForIdle()
+
+        // Navigate to Goals, create a goal, and tap "Add First Task"
+        nav.goToGoals()
+        waitForIdle()
+
+        // Wait for the Goals empty state to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("No Goals Yet", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        goals.typeGoalTitle("Learn guitar")
+        goals.tapRefineWithAi()
+
+        Thread.sleep(3_000)
+        try {
+            goals.tapSkipAi()
+        } catch (_: Throwable) {
+            // AI may have already completed
+        }
+        waitForIdle()
+
+        goals.tapNextTimeline()
+        waitForIdle()
+        goals.tapCreateGoalButton()
+        Thread.sleep(3_000)
+
+        // Tap "Add First Task" on celebration overlay
+        goals.assertCelebrationVisible()
+        goals.tapAddFirstTask()
+        Thread.sleep(3_000)
+        waitForIdle()
+
+        // QuickCapture should open with a CLEAN form — no stale data
+        quickCapture.assertSheetVisible()
+        Thread.sleep(2_000)
+        waitForIdle()
+        quickCapture.assertInputEmpty()
+        quickCapture.assertCreateTaskButtonNotVisible()
+
+        // 5. Clean up
+        quickCapture.dismiss()
+        quickCapture.assertSheetDismissed()
+    }
+
+    @Test
+    fun regression_bug13_addFirstTaskAfterGoalShowsCleanCapture() {
+        // Same scenario with different task text to verify no text leaks.
+        
+        // 1. Create a task via QuickCapture first (the real bug path)
+        nav.goToTasks()
+        waitForIdle()
+        nav.tapFab()
+        quickCapture.assertSheetVisible()
+        quickCapture.typeTaskText("Prepare presentation for Monday")
+        quickCapture.submitInput()
+        quickCapture.waitForAiClassification()
+
+        // Tap Create Task — auto-dismiss fires after 500ms
+        quickCapture.tapCreateTask()
+
+        // Wait for the "Task created" snackbar to appear AND disappear.
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("Task created", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("Task created", substring = true)
+                .fetchSemanticsNodes().isEmpty()
+        }
+        waitForIdle()
+
+        // 2. Navigate to Goals and create a goal
+        nav.goToGoals()
+        waitForIdle()
+
+        // Wait for the Goals empty state to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodesWithText("No Goals Yet", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        goals.tapCreateFirstGoal()
+        waitForIdle()
+
+        goals.typeGoalTitle("Learn Rust programming")
+        goals.tapRefineWithAi()
+
+        Thread.sleep(3_000)
+        try {
+            goals.tapSkipAi()
+        } catch (_: Throwable) {
+            // AI may have already completed
+        }
+        waitForIdle()
+
+        goals.tapNextTimeline()
+        waitForIdle()
+        goals.tapCreateGoalButton()
+        Thread.sleep(3_000)
+
+        // 3. Tap "Add First Task" on celebration overlay
+        goals.assertCelebrationVisible()
+        goals.tapAddFirstTask()
+        Thread.sleep(3_000)
+        waitForIdle()
+
+        // 4. QuickCapture should open with a CLEAN form — no stale data
+        quickCapture.assertSheetVisible()
+        Thread.sleep(2_000)
+        waitForIdle()
+        quickCapture.assertInputEmpty()
+        quickCapture.assertCreateTaskButtonNotVisible()
+
+        // 5. Clean up
+        quickCapture.dismiss()
+        quickCapture.assertSheetDismissed()
+    }
 }

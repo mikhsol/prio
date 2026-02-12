@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -131,19 +132,28 @@ fun PrioAppShell(
         )
     }
     
+    // Counter incremented each time QuickCapture is opened, used as a key
+    // for LaunchedEffect to guarantee the Reset event fires on every open.
+    var quickCaptureOpenCount by remember { mutableIntStateOf(0) }
+    LaunchedEffect(showQuickCapture) {
+        if (showQuickCapture) quickCaptureOpenCount++
+    }
+
     // Quick Capture modal overlay - accessible from any screen
     // Per TM-001: "FAB visible on all main screens"
     if (showQuickCapture) {
         val viewModel: QuickCaptureViewModel = hiltViewModel()
-        val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-        // Reset ViewModel state every time the sheet opens.
+        // Reset ViewModel state synchronously every time the sheet opens.
         // hiltViewModel() returns the same activity-scoped instance, so stale
         // data from a previous capture (title, priority, etc.) would show if
-        // we don't clear it on each open.
-        LaunchedEffect(Unit) {
+        // we don't clear it on each open.  The counter key guarantees the
+        // reset runs on every open, not just the first one.
+        LaunchedEffect(quickCaptureOpenCount) {
             viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
         }
+
+        val state by viewModel.uiState.collectAsStateWithLifecycle()
         
         // Create VoiceInputManager when QuickCapture is visible
         DisposableEffect(Unit) {
@@ -230,9 +240,11 @@ fun PrioAppShell(
             onEvent = viewModel::onEvent,
             onDismiss = { 
                 voiceInputManager?.cancel()
+                viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
                 showQuickCapture = false 
             },
             onTaskCreated = { taskId ->
+                viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
                 showQuickCapture = false
             }
         )

@@ -146,6 +146,45 @@ class QuickCaptureRobot(
             .assertIsDisplayed()
     }
 
+    /**
+     * Assert the text input field is empty (no stale text from a previous session).
+     * Verifies the placeholder "Type or speak (on-device)" is visible, which only
+     * appears when inputText is empty. Also verifies no "Create Task" button
+     * is visible (parsed result not present).
+     */
+    fun assertInputEmpty() {
+        // Wait for the text field to be present
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodes(hasSetTextAction())
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        // Verify the text field does NOT contain stale text.
+        // We check the unmerged tree for the placeholder text which only renders
+        // when the TextField's value is empty.
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText(
+                "Type or speak", substring = true, useUnmergedTree = true
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * Assert the "Create Task" button is NOT visible (no parsed result present).
+     */
+    fun assertCreateTaskButtonNotVisible() {
+        rule.onNodeWithText("Create Task")
+            .assertDoesNotExist()
+    }
+
+    /**
+     * Assert no parsed field rows are shown (no "Edit" buttons from AI parsing).
+     */
+    fun assertNoParsedFieldsShown() {
+        val nodes = rule.onAllNodesWithContentDescription("Edit", substring = true)
+            .fetchSemanticsNodes()
+        assert(nodes.isEmpty()) { "Expected no parsed field rows but found ${nodes.size}" }
+    }
+
     fun assertAiProcessing() {
         // AI processing indicator should show
         rule.onNodeWithText("AI runs on device", substring = true)

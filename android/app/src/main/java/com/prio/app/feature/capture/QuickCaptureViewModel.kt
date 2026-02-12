@@ -99,7 +99,8 @@ class QuickCaptureViewModel @Inject constructor(
                 delay(PARSE_DEBOUNCE_MS)
                 // Only parse if text hasn't changed during delay (user stopped typing)
                 if (_uiState.value.inputText == text) {
-                    parseInputSilently()
+                    // Inline silent parsing (no separate coroutine launch)
+                    performParsing(text, silent = true)
                 }
             }
         } else {
@@ -197,30 +198,15 @@ class QuickCaptureViewModel @Inject constructor(
         val input = _uiState.value.inputText.trim()
         if (input.isBlank()) return
         
-        viewModelScope.launch {
+        parseJob?.cancel()
+        parseJob = viewModelScope.launch {
             _uiState.update { it.copy(isAiParsing = true) }
             performParsing(input)
         }
     }
     
     /**
-     * Parse input silently in background without showing loading indicator.
-     * This prevents keyboard dismissal and UI disruption while typing.
-     */
-    private fun parseInputSilently() {
-        val input = _uiState.value.inputText.trim()
-        if (input.isBlank()) return
-        
-        viewModelScope.launch {
-            // Don't show isAiParsing = true to avoid UI disruption.
-            // Silent mode: stores parsed result but does NOT expand the preview
-            // card, preventing the bottom sheet from resizing mid-typing.
-            performParsing(input, silent = true)
-        }
-    }
-    
-    /**
-     * Common parsing logic used by both parseInput and parseInputSilently.
+     * Common parsing logic used by parseInput and debounced updateInput.
      *
      * @param input The text to parse
      * @param silent When true (background debounce), stores the result but does NOT
@@ -493,7 +479,11 @@ class QuickCaptureViewModel @Inject constructor(
                 _uiState.update { 
                     it.copy(
                         isCreating = false,
-                        isCreated = true
+                        isCreated = true,
+                        // Clear form fields so stale data doesn't show on next open
+                        inputText = "",
+                        parsedResult = null,
+                        showPreview = false
                     )
                 }
                 
@@ -544,6 +534,8 @@ class QuickCaptureViewModel @Inject constructor(
     }
     
     private fun reset() {
+        parseJob?.cancel()
+        parseJob = null
         _uiState.update { QuickCaptureUiState() }  // voiceState defaults to Idle
     }
     
