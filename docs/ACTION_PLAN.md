@@ -1386,9 +1386,11 @@ Respond in exactly this JSON format:
 | 4.2.3 | Write notification tests | Android Developer | 1h | Verify notification content and timing |
 
 **Milestone Exit Criteria**:
-- [ ] Notifications appear correctly on Android 10+
-- [ ] Nudges trigger for overdue tasks
-- [ ] Briefing notifications at configured times
+- [x] Notifications appear correctly on Android 10+ — **6 channels with per-type user preferences, verified on Pixel 9a (Android 16)**
+- [x] Nudges trigger for overdue tasks — **OverdueNudgeWorker runs every 4h, scans for overdue non-completed tasks**
+- [x] Briefing notifications at configured times — **BriefingScheduler initialized from PrioApplication, reads user-configured times**
+
+**Milestone Status**: ✅ **COMPLETE** - 3/3 tasks done. 17 unit tests, 0 regressions. Verified on Pixel 9a (Android 16). See [docs/results/4.2/](results/4.2/) for details.
 
 ### Milestone 4.3: Performance & Testing
 **Goal**: Meet performance targets, essential test coverage  
