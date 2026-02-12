@@ -1,0 +1,41 @@
+# Prio Baseline Profile
+# Pre-compiles critical startup paths for faster cold start (<4s target)
+# See: https://developer.android.com/topic/performance/baselineprofiles
+
+# Application class
+HSPLcom/prio/app/PrioApplication;->onCreate()V
+HSPLcom/prio/app/PrioApplication;->getWorkManagerConfiguration()Landroidx/work/Configuration;
+
+# MainActivity startup path
+HSPLcom/prio/app/MainActivity;->onCreate(Landroid/os/Bundle;)V
+
+# Compose core rendering
+HSPLandroidx/compose/runtime/**;->**(**)**
+HSPLandroidx/compose/ui/**;->**(**)**
+HSPLandroidx/compose/foundation/**;->**(**)**
+HSPLandroidx/compose/material3/**;->**(**)**
+
+# Navigation
+HSPLandroidx/navigation/compose/**;->**(**)**
+HSPLcom/prio/app/navigation/**;->**(**)**
+
+# Hilt injection
+HSPLdagger/hilt/**;->**(**)**
+
+# Theme
+HSPLcom/prio/core/ui/theme/**;->**(**)**
+
+# Today screen (default start destination)
+HSPLcom/prio/app/feature/today/**;->**(**)**
+
+# Bottom navigation
+HSPLcom/prio/core/ui/components/PrioBottomNavigationKt;->**(**)**
+
+# DataStore preferences (read onboarding state)
+HSPLandroidx/datastore/**;->**(**)**
+
+# Room database (task loading)
+HSPLandroidx/room/**;->**(**)**
+
+# Coroutines
+HSPLkotlinx/coroutines/**;->**(**)**

@@ -50,7 +50,6 @@ class MainActivity : ComponentActivity() {
     lateinit var userPreferencesRepository: UserPreferencesRepository
     
     override fun onCreate(savedInstanceState: Bundle?) {
-        android.util.Log.d("PrioTest", "=== MainActivity.onCreate START ===")
         // Install splash screen before super.onCreate()
         val splashScreen = installSplashScreen()
         
@@ -72,11 +71,9 @@ class MainActivity : ComponentActivity() {
             userPreferencesRepository.onboardingCompleted.first()
         }
 
-        android.util.Log.d("PrioTest", "=== MainActivity calling setContent ===")
         // Set content synchronously so Compose hierarchy is available
         // immediately for both production and test scenarios
         setContent {
-            android.util.Log.d("PrioTest", "=== Inside setContent composable ===")
             val onboardingCompleted by userPreferencesRepository
                 .onboardingCompleted
                 .collectAsStateWithLifecycle(initialValue = initialOnboardingCompleted)
@@ -103,7 +100,6 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
-        android.util.Log.d("PrioTest", "=== MainActivity.onCreate END ===")
     }
 
     override fun onNewIntent(intent: Intent) {

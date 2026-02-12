@@ -6,6 +6,7 @@ import androidx.work.Configuration
 import com.prio.app.worker.BriefingScheduler
 import com.prio.app.worker.OverdueNudgeScheduler
 import dagger.hilt.android.HiltAndroidApp
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
 
@@ -48,10 +49,13 @@ class PrioApplication : Application(), Configuration.Provider {
         
         Timber.d("Prio Application started")
 
-        // Initialize notification schedulers
-        briefingScheduler.initialize()
-        overdueNudgeScheduler.initialize()
-        Timber.d("Notification schedulers initialized")
+        // Initialize notification schedulers off main thread to reduce cold start time
+        // WorkManager enqueue is thread-safe and doesn't need the main thread
+        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob()).launch {
+            briefingScheduler.initialize()
+            overdueNudgeScheduler.initialize()
+            Timber.d("Notification schedulers initialized")
+        }
     }
     
     /**

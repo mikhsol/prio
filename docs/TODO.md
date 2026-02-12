@@ -1,5 +1,7 @@
 ## Ideas for future.
+41. Disable AI Model setting. Use only android embeded geminin nano for first release
 5. Go through all reports and collect list of next steps/items which should be implemented later.
+40. How migration would be done (app updates via google play)
 32. Design MONETISATION model!!!
 17. iOS/Desktop app.
 33. Add donation in crypto screen.
@@ -67,8 +69,30 @@
 
 * [TASK] Task overview not updated after new task was added.
 
-* [TASK] Recurrent tasks not implemented.
-* [TASK] Reminder not implemented.
-
 * [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
 * [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
+
+[SETTINGS][AI] Download AI Model button not working
+[SETTINGS][AI] Verify that "Use AI for Classification Toggle" actually works.
+[SETTINGS][AI] Verify that "Reset AI Learning" actually works.
+[SETTINGS][NOTIFICATIONS] Quiet Hours From/TO hardcoded
+[SETTINGS][NOTIFICATIONS] Verify each toggle actually do something
+[SETTINGS][APPEARANCE] Display - can't change formats
+[SETTINGS][CALENDAR SYNC] Lead to Settings screen with profile
+[SETTINGS][CALENDAR SYNC] Profile should be hidden
+[SETTINGS][CALENDAR SYNC] Backup & Export not working
+[SETTINGS][CALENDAR SYNC] Privacy Policy - empty
+[SETTINGS][CALENDAR SYNC] About prio:
+    * Remove Website
+    * Remove Contact Support
+    * Remove Open Source Licenses
+[SETTINGS] Help And Support Lead to About Prio
+[TASK] Voice input fill task partially. It should recognise full phrase, use AI to summarize title and create title and add the actual text into notes.
+[GOAL] NO option to edit suggested milestones. Target date not automatically catched from the Goal if it exists.
+[TASKS] Can't easily move tasks between categories (Do fist, etc...)
+[TODAY]Task overview not udated
+[PRODUCTIVITY INSIGHTS] Not updating:
+    * Eisenhower AI Accuracy always 100%
+    * Quadrant breakdown not updated
+[TASK] Recurrent tasks not implemented.
+[TASK] Reminder not implemented.
