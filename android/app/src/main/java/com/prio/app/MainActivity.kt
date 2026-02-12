@@ -5,13 +5,16 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
+import com.prio.core.common.model.ThemeMode
 import com.prio.core.data.preferences.UserPreferencesRepository
 import com.prio.core.ui.theme.PrioTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import timber.log.Timber
 import javax.inject.Inject
@@ -63,6 +66,12 @@ class MainActivity : ComponentActivity() {
         
         val deepLinkRoute = parseDeepLink(intent)
 
+        // Read initial onboarding state synchronously to set correct start destination
+        // before NavHost is composed (prevents flash of wrong screen)
+        val initialOnboardingCompleted = kotlinx.coroutines.runBlocking {
+            userPreferencesRepository.onboardingCompleted.first()
+        }
+
         android.util.Log.d("PrioTest", "=== MainActivity calling setContent ===")
         // Set content synchronously so Compose hierarchy is available
         // immediately for both production and test scenarios
@@ -70,9 +79,19 @@ class MainActivity : ComponentActivity() {
             android.util.Log.d("PrioTest", "=== Inside setContent composable ===")
             val onboardingCompleted by userPreferencesRepository
                 .onboardingCompleted
-                .collectAsStateWithLifecycle(initialValue = true)
+                .collectAsStateWithLifecycle(initialValue = initialOnboardingCompleted)
 
-            PrioTheme {
+            val themeMode by userPreferencesRepository
+                .themeMode
+                .collectAsStateWithLifecycle(initialValue = "system")
+            
+            val darkTheme = when (ThemeMode.fromString(themeMode)) {
+                ThemeMode.LIGHT -> false
+                ThemeMode.DARK -> true
+                ThemeMode.SYSTEM -> isSystemInDarkTheme()
+            }
+
+            PrioTheme(darkTheme = darkTheme) {
                 PrioAppShell(
                     showOnboarding = !onboardingCompleted,
                     deepLinkRoute = deepLinkRoute,

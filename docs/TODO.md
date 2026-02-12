@@ -65,6 +65,8 @@
 * [FIXED][CALENDAR] Month/Week view missing.
 * [FIXED][CALENDAR] Week view navigation broken. Previous/Next week buttons did not update week view content because navigateWeek() always loaded DAY mode data.
 
+* [TASK] Task overview not updated after new task was added.
+
 * [TASK] Recurrent tasks not implemented.
 * [TASK] Reminder not implemented.
 

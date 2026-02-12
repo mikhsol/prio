@@ -101,7 +101,7 @@ fun PrioAppShell(
     // Determine if bottom nav should be visible
     // Hide on detail screens and onboarding
     val showBottomNav = remember(currentRoute) {
-        isMainDestination(currentRoute)
+        isMainDestination(currentRoute) && currentRoute != NavRoutes.ONBOARDING
     }
     
     // Map current route to nav item route string for selection
@@ -128,7 +128,9 @@ fun PrioAppShell(
         PrioNavHost(
             navController = navController,
             contentPadding = contentPadding,
-            onShowQuickCapture = { showQuickCapture = true }
+            onShowQuickCapture = { showQuickCapture = true },
+            showOnboarding = showOnboarding,
+            onOnboardingComplete = onFirstLaunchComplete
         )
     }
     

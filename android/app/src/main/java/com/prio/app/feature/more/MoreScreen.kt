@@ -73,6 +73,9 @@ fun MoreScreen(
     onNavigateToInsights: () -> Unit = {},
     onNavigateToPrivacyPolicy: () -> Unit = {},
     onNavigateToAbout: () -> Unit = {},
+    onNavigateToNotifications: () -> Unit = {},
+    onNavigateToAppearance: () -> Unit = {},
+    onNavigateToAiModel: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -113,19 +116,19 @@ fun MoreScreen(
                             icon = Icons.Outlined.Notifications,
                             title = "Notifications",
                             subtitle = "Reminders, alerts, and daily briefings",
-                            onClick = onNavigateToSettings
+                            onClick = onNavigateToNotifications
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.DarkMode,
                             title = "Appearance",
                             subtitle = "Theme, colors, and display options",
-                            onClick = onNavigateToSettings
+                            onClick = onNavigateToAppearance
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.Psychology,
                             title = "AI & Classification",
                             subtitle = "Eisenhower settings, AI model preferences",
-                            onClick = onNavigateToSettings
+                            onClick = onNavigateToAiModel
                         ),
                         SettingsItem(
                             icon = Icons.Outlined.Sync,

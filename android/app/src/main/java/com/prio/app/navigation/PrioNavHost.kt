@@ -25,6 +25,13 @@ import com.prio.app.feature.goals.detail.GoalDetailScreen
 import com.prio.app.feature.insights.InsightsScreen
 import com.prio.app.feature.meeting.MeetingDetailScreen
 import com.prio.app.feature.more.MoreScreen
+import com.prio.app.feature.onboarding.OnboardingScreen
+import com.prio.app.feature.settings.AboutScreen
+import com.prio.app.feature.settings.AiModelSettingsScreen
+import com.prio.app.feature.settings.AppearanceSettingsScreen
+import com.prio.app.feature.settings.BriefingSettingsScreen
+import com.prio.app.feature.settings.NotificationSettingsScreen
+import com.prio.app.feature.settings.SettingsScreen
 import com.prio.app.feature.tasks.TaskListScreen
 import com.prio.app.feature.tasks.detail.TaskDetailScreen
 import com.prio.app.feature.today.TodayScreen
@@ -47,8 +54,15 @@ object NavRoutes {
     const val GOAL_DETAIL = "goal/{goalId}"
     const val MEETING_DETAIL = "meeting/{meetingId}"
     
+    // Onboarding
+    const val ONBOARDING = "onboarding"
+    
     // Settings destinations
     const val SETTINGS = "settings"
+    const val SETTINGS_BRIEFINGS = "settings_briefings"
+    const val SETTINGS_NOTIFICATIONS = "settings_notifications"
+    const val SETTINGS_APPEARANCE = "settings_appearance"
+    const val SETTINGS_AI_MODEL = "settings_ai_model"
     const val INSIGHTS = "insights"
     const val PRIVACY_POLICY = "privacy_policy"
     const val ABOUT = "about"
@@ -94,11 +108,13 @@ fun PrioNavHost(
     navController: NavHostController,
     contentPadding: PaddingValues,
     onShowQuickCapture: () -> Unit,
+    showOnboarding: Boolean = false,
+    onOnboardingComplete: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.TODAY,
+        startDestination = if (showOnboarding) NavRoutes.ONBOARDING else NavRoutes.TODAY,
         modifier = modifier.padding(contentPadding),
         enterTransition = { defaultEnterTransition() },
         exitTransition = { defaultExitTransition() },
@@ -201,6 +217,15 @@ fun PrioNavHost(
                 },
                 onNavigateToAbout = {
                     navController.navigate(NavRoutes.ABOUT)
+                },
+                onNavigateToNotifications = {
+                    navController.navigate(NavRoutes.SETTINGS_NOTIFICATIONS)
+                },
+                onNavigateToAppearance = {
+                    navController.navigate(NavRoutes.SETTINGS_APPEARANCE)
+                },
+                onNavigateToAiModel = {
+                    navController.navigate(NavRoutes.SETTINGS_AI_MODEL)
                 }
             )
         }
@@ -278,10 +303,48 @@ fun PrioNavHost(
         // Settings & More Destinations
         // =====================================================
         
+        composable(route = NavRoutes.ONBOARDING) {
+            OnboardingScreen(
+                onOnboardingComplete = {
+                    onOnboardingComplete()
+                    navController.navigate(NavRoutes.TODAY) {
+                        popUpTo(NavRoutes.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
+        }
+        
         composable(route = NavRoutes.SETTINGS) {
-            PlaceholderDetailScreen(
-                title = "Settings",
-                subtitle = "Configure Prio",
+            SettingsScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToBriefings = { navController.navigate(NavRoutes.SETTINGS_BRIEFINGS) },
+                onNavigateToNotifications = { navController.navigate(NavRoutes.SETTINGS_NOTIFICATIONS) },
+                onNavigateToAppearance = { navController.navigate(NavRoutes.SETTINGS_APPEARANCE) },
+                onNavigateToAiModel = { navController.navigate(NavRoutes.SETTINGS_AI_MODEL) },
+                onNavigateToAbout = { navController.navigate(NavRoutes.ABOUT) }
+            )
+        }
+        
+        composable(route = NavRoutes.SETTINGS_BRIEFINGS) {
+            BriefingSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(route = NavRoutes.SETTINGS_NOTIFICATIONS) {
+            NotificationSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(route = NavRoutes.SETTINGS_APPEARANCE) {
+            AppearanceSettingsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable(route = NavRoutes.SETTINGS_AI_MODEL) {
+            AiModelSettingsScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
@@ -304,10 +367,9 @@ fun PrioNavHost(
         }
         
         composable(route = NavRoutes.ABOUT) {
-            PlaceholderDetailScreen(
-                title = "About Prio",
-                subtitle = "Version ${com.prio.app.BuildConfig.VERSION_NAME}",
-                onNavigateBack = { navController.popBackStack() }
+            AboutScreen(
+                onNavigateBack = { navController.popBackStack() },
+                versionName = com.prio.app.BuildConfig.VERSION_NAME
             )
         }
         
