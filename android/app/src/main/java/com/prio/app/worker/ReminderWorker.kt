@@ -17,9 +17,11 @@ import androidx.work.WorkerParameters
 import com.prio.app.MainActivity
 import com.prio.app.R
 import com.prio.core.common.model.EisenhowerQuadrant
+import com.prio.core.data.preferences.UserPreferencesRepository
 import com.prio.core.data.repository.TaskRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -46,6 +48,7 @@ class ReminderWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted params: WorkerParameters,
     private val taskRepository: TaskRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val clock: Clock
 ) : CoroutineWorker(context, params) {
 
@@ -102,6 +105,14 @@ class ReminderWorker @AssistedInject constructor(
                 return Result.success()
             }
 
+            // Check if task reminders are enabled
+            val taskRemindersEnabled = userPreferencesRepository.taskRemindersEnabled.first()
+            val notificationsEnabled = userPreferencesRepository.notificationsEnabled.first()
+            if (!notificationsEnabled || !taskRemindersEnabled) {
+                Timber.d("$TAG: Task reminders disabled, skipping")
+                return Result.success()
+            }
+
             // Don't send reminders for Q4 tasks (per TM-009)
             if (task.quadrant == EisenhowerQuadrant.ELIMINATE) {
                 Timber.d("$TAG: Task $taskId is Q4, skipping reminder per TM-009")
@@ -132,16 +143,23 @@ class ReminderWorker @AssistedInject constructor(
 
     /**
      * Check if current time is within quiet hours.
+     * Reads user preferences for quiet hours configuration.
      */
-    private fun isInQuietHours(): Boolean {
+    private suspend fun isInQuietHours(): Boolean {
+        val quietHoursEnabled = userPreferencesRepository.quietHoursEnabled.first()
+        if (!quietHoursEnabled) return false
+
+        val quietStart = userPreferencesRepository.quietHoursStart.first()
+        val quietEnd = userPreferencesRepository.quietHoursEnd.first()
+
         val now = clock.now().toLocalDateTime(TimeZone.currentSystemDefault())
         val currentHour = now.hour
         
-        return if (QUIET_HOUR_START > QUIET_HOUR_END) {
+        return if (quietStart > quietEnd) {
             // Quiet hours span midnight (e.g., 22:00 to 07:00)
-            currentHour >= QUIET_HOUR_START || currentHour < QUIET_HOUR_END
+            currentHour >= quietStart || currentHour < quietEnd
         } else {
-            currentHour in QUIET_HOUR_START until QUIET_HOUR_END
+            currentHour in quietStart until quietEnd
         }
     }
 

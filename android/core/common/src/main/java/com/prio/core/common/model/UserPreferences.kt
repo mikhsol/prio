@@ -22,6 +22,12 @@ data class UserPreferences(
     // Notifications
     val notificationsEnabled: Boolean = true,
     val reminderAdvanceMinutes: Int = 15,
+    val eveningSummaryEnabled: Boolean = true,
+    val taskRemindersEnabled: Boolean = true,
+    val overdueAlertsEnabled: Boolean = true,
+    val quietHoursEnabled: Boolean = true,
+    val quietHoursStart: Int = 22,
+    val quietHoursEnd: Int = 7,
     
     // AI settings
     val aiModelId: String = "phi-3-mini-4k-instruct-q4",

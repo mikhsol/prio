@@ -3,6 +3,8 @@ package com.prio.app
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.prio.app.worker.BriefingScheduler
+import com.prio.app.worker.OverdueNudgeScheduler
 import dagger.hilt.android.HiltAndroidApp
 import timber.log.Timber
 import javax.inject.Inject
@@ -17,6 +19,12 @@ class PrioApplication : Application(), Configuration.Provider {
     
     @Inject
     lateinit var workerFactory: HiltWorkerFactory
+
+    @Inject
+    lateinit var briefingScheduler: BriefingScheduler
+
+    @Inject
+    lateinit var overdueNudgeScheduler: OverdueNudgeScheduler
     
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
@@ -39,6 +47,11 @@ class PrioApplication : Application(), Configuration.Provider {
         }
         
         Timber.d("Prio Application started")
+
+        // Initialize notification schedulers
+        briefingScheduler.initialize()
+        overdueNudgeScheduler.initialize()
+        Timber.d("Notification schedulers initialized")
     }
     
     /**

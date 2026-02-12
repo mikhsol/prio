@@ -136,8 +136,8 @@ private fun NotificationSettingsContent(
                         )
                         ToggleRow(
                             label = "Evening Summary",
-                            checked = state.preferences.notificationsEnabled,
-                            onCheckedChange = {},
+                            checked = state.preferences.notificationsEnabled && state.preferences.eveningSummaryEnabled,
+                            onCheckedChange = { onEvent(SettingsEvent.SetEveningSummaryEnabled(it)) },
                             enabled = state.preferences.notificationsEnabled
                         )
                         HorizontalDivider(
@@ -146,8 +146,8 @@ private fun NotificationSettingsContent(
                         )
                         ToggleRow(
                             label = "Task Reminders",
-                            checked = state.preferences.notificationsEnabled,
-                            onCheckedChange = {},
+                            checked = state.preferences.notificationsEnabled && state.preferences.taskRemindersEnabled,
+                            onCheckedChange = { onEvent(SettingsEvent.SetTaskRemindersEnabled(it)) },
                             enabled = state.preferences.notificationsEnabled
                         )
                         HorizontalDivider(
@@ -156,18 +156,8 @@ private fun NotificationSettingsContent(
                         )
                         ToggleRow(
                             label = "Overdue Task Alerts",
-                            checked = state.preferences.notificationsEnabled,
-                            onCheckedChange = {},
-                            enabled = state.preferences.notificationsEnabled
-                        )
-                        HorizontalDivider(
-                            modifier = Modifier.padding(start = 16.dp),
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-                        )
-                        ToggleRow(
-                            label = "Goal Milestones",
-                            checked = state.preferences.notificationsEnabled,
-                            onCheckedChange = {},
+                            checked = state.preferences.notificationsEnabled && state.preferences.overdueAlertsEnabled,
+                            onCheckedChange = { onEvent(SettingsEvent.SetOverdueAlertsEnabled(it)) },
                             enabled = state.preferences.notificationsEnabled
                         )
                     }
@@ -196,19 +186,25 @@ private fun NotificationSettingsContent(
                     Column {
                         ToggleRow(
                             label = "Enable Quiet Hours",
-                            checked = true,
-                            onCheckedChange = {}
+                            checked = state.preferences.quietHoursEnabled,
+                            onCheckedChange = { onEvent(SettingsEvent.SetQuietHoursEnabled(it)) }
                         )
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 16.dp),
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
-                        TimeDisplayRow(label = "From", value = "10:00 PM")
+                        TimeDisplayRow(
+                            label = "From",
+                            value = formatHour(state.preferences.quietHoursStart)
+                        )
                         HorizontalDivider(
                             modifier = Modifier.padding(start = 16.dp),
                             color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
                         )
-                        TimeDisplayRow(label = "To", value = "7:00 AM")
+                        TimeDisplayRow(
+                            label = "To",
+                            value = formatHour(state.preferences.quietHoursEnd)
+                        )
                     }
                 }
             }
@@ -218,6 +214,19 @@ private fun NotificationSettingsContent(
             }
         }
     }
+}
+
+/**
+ * Format a 24-hour integer to a display string like "10:00 PM".
+ */
+private fun formatHour(hour: Int): String {
+    val period = if (hour < 12) "AM" else "PM"
+    val displayHour = when {
+        hour == 0 -> 12
+        hour > 12 -> hour - 12
+        else -> hour
+    }
+    return "$displayHour:00 $period"
 }
 
 @Composable

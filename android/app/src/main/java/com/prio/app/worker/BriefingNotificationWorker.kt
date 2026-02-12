@@ -16,9 +16,11 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.prio.app.MainActivity
 import com.prio.app.R
+import com.prio.core.data.preferences.UserPreferencesRepository
 import com.prio.core.data.repository.TaskRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
@@ -49,6 +51,7 @@ class BriefingNotificationWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted params: WorkerParameters,
     private val taskRepository: TaskRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     private val clock: Clock
 ) : CoroutineWorker(context, params) {
 
@@ -79,6 +82,31 @@ class BriefingNotificationWorker @AssistedInject constructor(
         val briefingType = BriefingType.entries.getOrNull(typeOrdinal) ?: BriefingType.MORNING
 
         return try {
+            // Check if notifications are globally enabled
+            val notificationsEnabled = userPreferencesRepository.notificationsEnabled.first()
+            if (!notificationsEnabled) {
+                Timber.d("$TAG: Notifications disabled, skipping ${briefingType.name}")
+                return Result.success()
+            }
+
+            // Check per-type preference
+            when (briefingType) {
+                BriefingType.MORNING -> {
+                    val briefingEnabled = userPreferencesRepository.briefingEnabled.first()
+                    if (!briefingEnabled) {
+                        Timber.d("$TAG: Morning briefing disabled, skipping")
+                        return Result.success()
+                    }
+                }
+                BriefingType.EVENING -> {
+                    val eveningEnabled = userPreferencesRepository.eveningSummaryEnabled.first()
+                    if (!eveningEnabled) {
+                        Timber.d("$TAG: Evening summary disabled, skipping")
+                        return Result.success()
+                    }
+                }
+            }
+
             // Gather quick stats for notification content
             val timeZone = TimeZone.currentSystemDefault()
             val now = clock.now()

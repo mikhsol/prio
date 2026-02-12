@@ -26,6 +26,12 @@ sealed interface SettingsEvent {
     // Notifications
     data class SetNotificationsEnabled(val enabled: Boolean) : SettingsEvent
     data class SetReminderAdvanceMinutes(val minutes: Int) : SettingsEvent
+    data class SetEveningSummaryEnabled(val enabled: Boolean) : SettingsEvent
+    data class SetTaskRemindersEnabled(val enabled: Boolean) : SettingsEvent
+    data class SetOverdueAlertsEnabled(val enabled: Boolean) : SettingsEvent
+    data class SetQuietHoursEnabled(val enabled: Boolean) : SettingsEvent
+    data class SetQuietHoursStart(val hour: Int) : SettingsEvent
+    data class SetQuietHoursEnd(val hour: Int) : SettingsEvent
 
     // Briefings
     data class SetBriefingEnabled(val enabled: Boolean) : SettingsEvent
@@ -70,6 +76,30 @@ class SettingsViewModel @Inject constructor(
 
                 is SettingsEvent.SetReminderAdvanceMinutes -> {
                     userPreferencesRepository.setReminderAdvanceMinutes(event.minutes)
+                }
+
+                is SettingsEvent.SetEveningSummaryEnabled -> {
+                    userPreferencesRepository.setEveningSummaryEnabled(event.enabled)
+                }
+
+                is SettingsEvent.SetTaskRemindersEnabled -> {
+                    userPreferencesRepository.setTaskRemindersEnabled(event.enabled)
+                }
+
+                is SettingsEvent.SetOverdueAlertsEnabled -> {
+                    userPreferencesRepository.setOverdueAlertsEnabled(event.enabled)
+                }
+
+                is SettingsEvent.SetQuietHoursEnabled -> {
+                    userPreferencesRepository.setQuietHoursEnabled(event.enabled)
+                }
+
+                is SettingsEvent.SetQuietHoursStart -> {
+                    userPreferencesRepository.setQuietHoursStart(event.hour)
+                }
+
+                is SettingsEvent.SetQuietHoursEnd -> {
+                    userPreferencesRepository.setQuietHoursEnd(event.hour)
                 }
 
                 is SettingsEvent.SetBriefingEnabled -> {

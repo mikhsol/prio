@@ -19,6 +19,7 @@ import javax.inject.Inject
  * are lost when the device reboots.
  *
  * Implements TM-009: Smart Reminders must survive device reboot.
+ * Also re-initializes briefing schedule and overdue nudge checks.
  */
 @AndroidEntryPoint
 class BootReceiver : BroadcastReceiver() {
@@ -26,20 +27,28 @@ class BootReceiver : BroadcastReceiver() {
     @Inject
     lateinit var reminderScheduler: ReminderScheduler
 
+    @Inject
+    lateinit var briefingScheduler: BriefingScheduler
+
+    @Inject
+    lateinit var overdueNudgeScheduler: OverdueNudgeScheduler
+
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
 
-        Timber.d("BootReceiver: Device rebooted, rescheduling all reminders")
+        Timber.d("BootReceiver: Device rebooted, rescheduling all notifications")
 
         val pendingResult = goAsync()
         scope.launch {
             try {
                 reminderScheduler.rescheduleAllReminders()
-                Timber.d("BootReceiver: All reminders rescheduled successfully")
+                briefingScheduler.initialize()
+                overdueNudgeScheduler.initialize()
+                Timber.d("BootReceiver: All notifications rescheduled successfully")
             } catch (e: Exception) {
-                Timber.e(e, "BootReceiver: Failed to reschedule reminders")
+                Timber.e(e, "BootReceiver: Failed to reschedule notifications")
             } finally {
                 pendingResult.finish()
             }

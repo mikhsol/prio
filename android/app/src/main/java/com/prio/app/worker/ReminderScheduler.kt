@@ -6,6 +6,7 @@ import androidx.work.Data
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import com.prio.core.data.repository.TaskRepository
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
@@ -40,6 +41,7 @@ import javax.inject.Singleton
 @Singleton
 class ReminderScheduler @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val taskRepository: TaskRepository,
     private val clock: Clock
 ) {
     
@@ -248,15 +250,24 @@ class ReminderScheduler @Inject constructor(
      * Reschedules all reminders after device reboot.
      *
      * Per TM-009: Smart Reminders must survive device reboot.
-     * Queries all pending tasks with due dates and re-schedules their reminders.
+     * Queries all active tasks with due dates and re-schedules their reminders.
      */
     suspend fun rescheduleAllReminders() {
         val workManager = WorkManager.getInstance(context)
-        // Cancel all existing reminder work and let the app re-schedule on next launch
-        // This is a best-effort approach: the ViewModel/UseCase layer will re-schedule
-        // reminders for visible tasks when the user opens the app.
+        // Cancel all existing reminder work first
         workManager.cancelAllWorkByTag("reminder_")
-        Timber.i("$TAG: All reminders cleared for re-scheduling after boot")
+
+        // Re-schedule reminders for all active tasks with due dates
+        val activeTasks = taskRepository.getAllActiveTasksSync()
+        var scheduled = 0
+        for (task in activeTasks) {
+            if (task.dueDate != null && !task.isCompleted) {
+                scheduleDefaultReminders(task.id, task.dueDate)
+                scheduled++
+            }
+        }
+
+        Timber.i("$TAG: Rescheduled reminders for $scheduled tasks after boot")
     }
 
     /**
