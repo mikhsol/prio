@@ -88,6 +88,52 @@ class AiProviderRouterTest {
         fun routerProviderId() {
             assertEquals("router", router.providerId)
         }
+        
+        @Test
+        @DisplayName("Router auto-initializes on first complete() call")
+        fun routerAutoInitializesOnComplete() = runTest {
+            // Do NOT call router.initialize() — simulates real app behaviour
+            val request = AiRequest(
+                type = AiRequestType.CLASSIFY_EISENHOWER,
+                input = "Test task"
+            )
+
+            // Should auto-initialize and return a rule-based result
+            val result = router.complete(request)
+            assertTrue(result.isSuccess)
+        }
+
+        @Test
+        @DisplayName("Auto-init enables Gemini Nano routing for SMART goals")
+        fun autoInitEnablesNanoRoutingForSmartGoals() = runTest {
+            // Simulate Gemini Nano being available at init time
+            nanoAvailable.value = true
+            coEvery { geminiNanoProvider.initialize() } returns true
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(
+                AiResponse(
+                    success = true,
+                    requestId = "test",
+                    result = AiResult.SmartGoalSuggestion(
+                        refinedGoal = "AI refined",
+                        specific = "s", measurable = "m",
+                        achievable = "a", relevant = "r",
+                        timeBound = "t",
+                        suggestedMilestones = emptyList()
+                    ),
+                    metadata = AiResponseMetadata(confidenceScore = 0.8f)
+                )
+            )
+
+            // No explicit initialize() — should auto-init and route to Nano
+            val request = AiRequest(
+                type = AiRequestType.SUGGEST_SMART_GOAL,
+                input = "Get fit"
+            )
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrThrow().result is AiResult.SmartGoalSuggestion)
+        }
     }
     
     @Nested
@@ -419,16 +465,73 @@ class AiProviderRouterTest {
         }
 
         @Test
-        @DisplayName("Hybrid mode: returns failure when LLM also unavailable for SMART goal")
-        fun hybridMode_failsWhenLlmUnavailableForSmartGoal() = runTest {
+        @DisplayName("Hybrid mode: returns failure when all LLMs unavailable for SMART goal")
+        fun hybridMode_failsWhenAllLlmsUnavailableForSmartGoal() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
             llmAvailable.value = false
+            nanoAvailable.value = false
 
             val request = createSmartGoalRequest("Get promoted")
             val result = router.complete(request)
 
-            // When rule-based fails and LLM is unavailable, should propagate failure
+            // When rule-based fails and ALL LLMs are unavailable, should propagate failure
             assertTrue(result.isFailure)
+        }
+
+        @Test
+        @DisplayName("Hybrid mode: escalates SUGGEST_SMART_GOAL to Gemini Nano when llama.cpp unavailable")
+        fun hybridMode_escalatesSmartGoalToNanoWhenLlmUnavailable() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
+            llmAvailable.value = false
+            nanoAvailable.value = true
+
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Learn to cook")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
+            coVerify(exactly = 0) { onDeviceProvider.complete(any()) }
+        }
+
+        @Test
+        @DisplayName("Hybrid mode: prefers Gemini Nano over llama.cpp for SMART goal escalation")
+        fun hybridMode_prefersNanoOverLlmForSmartGoal() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
+            llmAvailable.value = true
+            nanoAvailable.value = true
+
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Write a book")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            // Nano should be tried first and succeed — llama.cpp should NOT be called
+            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
+            coVerify(exactly = 0) { onDeviceProvider.complete(any()) }
+        }
+
+        @Test
+        @DisplayName("Hybrid mode: falls to llama.cpp when Nano fails for SMART goal")
+        fun hybridMode_fallsToLlmWhenNanoFails() = runTest {
+            router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
+            llmAvailable.value = true
+            nanoAvailable.value = true
+
+            coEvery { geminiNanoProvider.complete(any()) } returns Result.failure(RuntimeException("Nano error"))
+            coEvery { onDeviceProvider.complete(any()) } returns Result.success(smartGoalResponse)
+
+            val request = createSmartGoalRequest("Run marathon")
+            val result = router.complete(request)
+
+            assertTrue(result.isSuccess)
+            assertTrue(result.getOrThrow().result is AiResult.SmartGoalSuggestion)
+            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
+            coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
         }
 
         @Test

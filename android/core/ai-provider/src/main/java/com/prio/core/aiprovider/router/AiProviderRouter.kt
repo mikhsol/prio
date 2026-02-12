@@ -141,6 +141,21 @@ class AiProviderRouter @Inject constructor(
     
     private val overrideHistory = mutableListOf<OverrideRecord>()
     
+    /** Whether [initialize] has been called at least once. */
+    @Volatile
+    private var initialized = false
+    
+    /**
+     * Ensure the router has been initialized exactly once.
+     * Called lazily on first [complete] so that callers who forget to
+     * invoke [initialize] still get correct provider availability.
+     */
+    private suspend fun ensureInitialized() {
+        if (!initialized) {
+            initialize()
+        }
+    }
+    
     override suspend fun initialize(): Boolean {
         Timber.tag(TAG).i("Initializing AiProviderRouter")
         
@@ -169,6 +184,7 @@ class AiProviderRouter @Inject constructor(
             Timber.tag(TAG).i("Gemini Nano available — auto-selecting HYBRID_NANO mode")
         }
         
+        initialized = true
         Timber.tag(TAG).i("Router initialized. Nano=$nanoReady, LLM=$llmReady")
         return true // Router is always ready (rule-based always works)
     }
@@ -185,6 +201,7 @@ class AiProviderRouter @Inject constructor(
      * Process an AI request with smart routing.
      */
     override suspend fun complete(request: AiRequest): Result<AiResponse> {
+        ensureInitialized()
         val startTime = System.currentTimeMillis()
         
         return when (_routingMode.value) {
@@ -244,26 +261,49 @@ class AiProviderRouter @Inject constructor(
         
         if (ruleBasedResult.isFailure) {
             // Rule-based doesn't support this request type (e.g. SUGGEST_SMART_GOAL).
-            // If the type is escalation-eligible, skip straight to LLM instead of
-            // propagating the failure — this is the normal path for generation tasks.
-            if (request.type in ESCALATION_ELIGIBLE_TYPES && onDeviceProvider.isAvailable.value) {
-                Timber.tag(TAG).d("Rule-based unsupported for ${request.type}, escalating to LLM")
-                val llmResult = try {
-                    onDeviceProvider.complete(request)
-                } catch (e: Exception) {
-                    Timber.tag(TAG).w(e, "LLM escalation after rule-based failure also failed")
-                    null
+            // If the type is escalation-eligible, try available LLM providers
+            // before propagating the failure.
+            if (request.type in ESCALATION_ELIGIBLE_TYPES) {
+                Timber.tag(TAG).d("Rule-based unsupported for ${request.type}, escalating to LLMs")
+
+                // Try Gemini Nano first (zero cost, already on device)
+                if (geminiNanoProvider.isAvailable.value) {
+                    val nanoResult = try {
+                        geminiNanoProvider.complete(request)
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).w(e, "Gemini Nano escalation failed")
+                        null
+                    }
+                    if (nanoResult?.isSuccess == true) {
+                        val totalLatency = System.currentTimeMillis() - startTime
+                        updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
+                        return Result.success(nanoResult.getOrThrow().copy(
+                            metadata = nanoResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
+                        ))
+                    }
                 }
+
+                // Try llama.cpp
+                if (onDeviceProvider.isAvailable.value) {
+                    val llmResult = try {
+                        onDeviceProvider.complete(request)
+                    } catch (e: Exception) {
+                        Timber.tag(TAG).w(e, "llama.cpp escalation after rule-based failure also failed")
+                        null
+                    }
+                    if (llmResult?.isSuccess == true) {
+                        val totalLatency = System.currentTimeMillis() - startTime
+                        updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
+                        return Result.success(llmResult.getOrThrow().copy(
+                            metadata = llmResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
+                        ))
+                    }
+                }
+
+                // All LLMs failed or unavailable
                 val totalLatency = System.currentTimeMillis() - startTime
-                return if (llmResult?.isSuccess == true) {
-                    updateStats(ruleBasedOnly = false, llmEscalated = true, latencyMs = totalLatency, llmLatencyMs = totalLatency)
-                    Result.success(llmResult.getOrThrow().copy(
-                        metadata = llmResult.getOrThrow().metadata.copy(provider = PROVIDER_ID, wasLlmFallback = true)
-                    ))
-                } else {
-                    updateStats(ruleBasedOnly = true, llmFailed = true, latencyMs = totalLatency)
-                    ruleBasedResult
-                }
+                updateStats(ruleBasedOnly = true, llmFailed = true, latencyMs = totalLatency)
+                return ruleBasedResult
             }
             Timber.tag(TAG).w("Rule-based failed unexpectedly")
             updateStats(ruleBasedOnly = true, latencyMs = ruleBasedLatency)
