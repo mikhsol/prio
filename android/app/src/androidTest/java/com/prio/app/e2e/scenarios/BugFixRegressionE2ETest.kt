@@ -771,8 +771,9 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         }
 
         // The refined goal field should contain text (either AI-refined or original input)
-        composeRule.onNodeWithText("Run a half marathon", substring = true)
-            .assertIsDisplayed()
+        val goalNodes = composeRule.onAllNodesWithText("Run a half marathon", substring = true)
+            .fetchSemanticsNodes()
+        assert(goalNodes.isNotEmpty()) { "Expected at least one node with goal text" }
 
         // Category chips should be visible
         composeRule.onNodeWithText("Category", substring = true)

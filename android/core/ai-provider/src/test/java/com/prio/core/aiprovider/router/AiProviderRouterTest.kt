@@ -445,7 +445,7 @@ class AiProviderRouterTest {
         )
 
         @Test
-        @DisplayName("Hybrid mode: escalates SUGGEST_SMART_GOAL to LLM when rule-based fails")
+        @DisplayName("Hybrid mode: escalates SUGGEST_SMART_GOAL to LLM when available")
         fun hybridMode_escalatesSmartGoalToLlm() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
             llmAvailable.value = true
@@ -461,12 +461,13 @@ class AiProviderRouterTest {
             val suggestion = response.result as AiResult.SmartGoalSuggestion
             assertEquals("Get promoted to Senior Engineer by December 2026", suggestion.refinedGoal)
 
+            // Rule-based returns 0.5 confidence (below threshold) → escalates to LLM
             coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
         }
 
         @Test
-        @DisplayName("Hybrid mode: returns failure when all LLMs unavailable for SMART goal")
-        fun hybridMode_failsWhenAllLlmsUnavailableForSmartGoal() = runTest {
+        @DisplayName("Hybrid mode: returns rule-based template when all LLMs unavailable for SMART goal")
+        fun hybridMode_returnsTemplateWhenAllLlmsUnavailableForSmartGoal() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
             llmAvailable.value = false
             nanoAvailable.value = false
@@ -474,8 +475,11 @@ class AiProviderRouterTest {
             val request = createSmartGoalRequest("Get promoted")
             val result = router.complete(request)
 
-            // When rule-based fails and ALL LLMs are unavailable, should propagate failure
-            assertTrue(result.isFailure)
+            // Rule-based now handles SMART goals with a template — should succeed
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+            assertTrue(response.metadata.wasRuleBased)
         }
 
         @Test
@@ -485,53 +489,50 @@ class AiProviderRouterTest {
             llmAvailable.value = false
             nanoAvailable.value = true
 
-            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(smartGoalResponse)
-
+            // Rule-based returns 0.5 confidence, which is below threshold.
+            // Nano not tried via confidence-escalation in HYBRID mode (only llama.cpp),
+            // but the result should still be SUCCESS from rule-based template.
             val request = createSmartGoalRequest("Learn to cook")
             val result = router.complete(request)
 
             assertTrue(result.isSuccess)
             val response = result.getOrThrow()
             assertTrue(response.result is AiResult.SmartGoalSuggestion)
-            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
-            coVerify(exactly = 0) { onDeviceProvider.complete(any()) }
         }
 
         @Test
-        @DisplayName("Hybrid mode: prefers Gemini Nano over llama.cpp for SMART goal escalation")
-        fun hybridMode_prefersNanoOverLlmForSmartGoal() = runTest {
+        @DisplayName("Hybrid mode: escalates to llama.cpp when available for higher quality SMART goal")
+        fun hybridMode_escalatesToLlmWhenAvailableForSmartGoal() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
             llmAvailable.value = true
             nanoAvailable.value = true
 
-            coEvery { geminiNanoProvider.complete(any()) } returns Result.success(smartGoalResponse)
+            coEvery { onDeviceProvider.complete(any()) } returns Result.success(smartGoalResponse)
 
             val request = createSmartGoalRequest("Write a book")
             val result = router.complete(request)
 
             assertTrue(result.isSuccess)
-            // Nano should be tried first and succeed — llama.cpp should NOT be called
-            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
-            coVerify(exactly = 0) { onDeviceProvider.complete(any()) }
+            // HYBRID confidence-based escalation uses llama.cpp for higher quality
+            coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
         }
 
         @Test
-        @DisplayName("Hybrid mode: falls to llama.cpp when Nano fails for SMART goal")
-        fun hybridMode_fallsToLlmWhenNanoFails() = runTest {
+        @DisplayName("Hybrid mode: falls back to rule-based template when llama.cpp fails for SMART goal")
+        fun hybridMode_fallsToTemplateWhenLlmFails() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID)
             llmAvailable.value = true
-            nanoAvailable.value = true
+            nanoAvailable.value = false
 
-            coEvery { geminiNanoProvider.complete(any()) } returns Result.failure(RuntimeException("Nano error"))
-            coEvery { onDeviceProvider.complete(any()) } returns Result.success(smartGoalResponse)
+            coEvery { onDeviceProvider.complete(any()) } returns Result.failure(RuntimeException("LLM error"))
 
             val request = createSmartGoalRequest("Run marathon")
             val result = router.complete(request)
 
+            // llama.cpp failed, should fall back to rule-based template
             assertTrue(result.isSuccess)
             assertTrue(result.getOrThrow().result is AiResult.SmartGoalSuggestion)
-            coVerify(atLeast = 1) { geminiNanoProvider.complete(any()) }
-            coVerify(atLeast = 1) { onDeviceProvider.complete(any()) }
+            assertTrue(result.getOrThrow().metadata.wasRuleBased)
         }
 
         @Test
@@ -574,8 +575,8 @@ class AiProviderRouterTest {
         }
 
         @Test
-        @DisplayName("Hybrid Nano mode: returns failure when all LLMs fail for SMART goal")
-        fun hybridNanoMode_allLlmsFail() = runTest {
+        @DisplayName("Hybrid Nano mode: returns rule-based template when all LLMs fail for SMART goal")
+        fun hybridNanoMode_returnsTemplateWhenAllLlmsFail() = runTest {
             router.setRoutingMode(AiProviderRouter.RoutingMode.HYBRID_NANO)
             nanoAvailable.value = false
             llmAvailable.value = false
@@ -583,8 +584,13 @@ class AiProviderRouterTest {
             val request = createSmartGoalRequest("Save money")
             val result = router.complete(request)
 
-            // All LLMs unavailable, rule-based doesn't support it → failure
-            assertTrue(result.isFailure)
+            // Rule-based now handles SMART goals — should succeed with template
+            assertTrue(result.isSuccess)
+            val response = result.getOrThrow()
+            assertTrue(response.result is AiResult.SmartGoalSuggestion)
+            val suggestion = response.result as AiResult.SmartGoalSuggestion
+            assertEquals("Save money", suggestion.refinedGoal)
+            assertTrue(response.metadata.wasRuleBased)
         }
     }
 

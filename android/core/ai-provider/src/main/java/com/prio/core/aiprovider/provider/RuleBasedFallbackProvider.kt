@@ -66,7 +66,8 @@ class RuleBasedFallbackProvider @Inject constructor(
     
     override val capabilities: Set<AiCapability> = setOf(
         AiCapability.CLASSIFICATION,
-        AiCapability.EXTRACTION
+        AiCapability.EXTRACTION,
+        AiCapability.GENERATION
     )
     
     // ========================================================================
@@ -85,6 +86,7 @@ class RuleBasedFallbackProvider @Inject constructor(
             val response = when (request.type) {
                 AiRequestType.CLASSIFY_EISENHOWER -> classifyEisenhower(request)
                 AiRequestType.PARSE_TASK -> parseTask(request)
+                AiRequestType.SUGGEST_SMART_GOAL -> suggestSmartGoal(request)
                 else -> {
                     Result.failure(UnsupportedOperationException(
                         "Request type ${request.type} not supported by rule-based provider"
@@ -180,6 +182,54 @@ class RuleBasedFallbackProvider @Inject constructor(
         ))
     }
     
+    // ========================================================================
+    // SMART Goal Suggestion (rule-based template)
+    // ========================================================================
+
+    /**
+     * Generate a basic SMART goal template from user input using heuristics.
+     *
+     * This is a lightweight fallback for when no LLM provider is available.
+     * It structures the user's raw goal text into SMART components using
+     * simple string analysis — no AI model required.
+     */
+    private fun suggestSmartGoal(request: AiRequest): Result<AiResponse> {
+        val input = request.input.trim()
+
+        // Clean & capitalize the goal text
+        val refinedGoal = input
+            .replaceFirstChar { it.uppercase() }
+            .let { if (it.endsWith('.')) it else it }
+
+        // Build simple SMART scaffolding from the input
+        val result = AiResult.SmartGoalSuggestion(
+            refinedGoal = refinedGoal,
+            specific = "Define exactly what \"$refinedGoal\" means to you and the key actions involved.",
+            measurable = "Decide how you will track progress (e.g., frequency, quantity, milestones).",
+            achievable = "Break this into smaller steps you can start this week.",
+            relevant = "Consider why this goal matters to you right now.",
+            timeBound = "Set a target date or timeframe to complete this goal.",
+            suggestedMilestones = listOf(
+                "Define success criteria",
+                "Complete first step",
+                "Reach halfway point",
+                "Final review & completion"
+            )
+        )
+
+        return Result.success(
+            AiResponse(
+                success = true,
+                requestId = request.id,
+                result = result,
+                metadata = AiResponseMetadata(
+                    wasRuleBased = true,
+                    confidenceScore = 0.5f // Lower confidence — template, not AI-generated
+                )
+            )
+        )
+    }
+
     // ========================================================================
     // Date/Time Extraction Helpers
     // ========================================================================
