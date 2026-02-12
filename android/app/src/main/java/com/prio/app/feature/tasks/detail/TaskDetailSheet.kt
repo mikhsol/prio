@@ -118,7 +118,8 @@ data class LinkedGoalInfo(
     val id: Long,
     val title: String,
     val progress: Int,
-    val category: String
+    val category: String,
+    val emoji: String = "🎯"
 )
 
 /**
@@ -282,11 +283,8 @@ fun TaskDetailSheet(
             }
             
             item {
-                PropertyRow(
-                    icon = Icons.Default.Flag,
-                    label = state.linkedGoal?.let { 
-                        "${it.title} (${it.progress}%)" 
-                    } ?: "No goal linked",
+                GoalPropertyRow(
+                    linkedGoal = state.linkedGoal,
                     onClick = { onEvent(TaskDetailEvent.OpenGoalPicker) }
                 )
             }
@@ -719,6 +717,77 @@ private fun PropertyRow(
         
         TextButton(onClick = onClick) {
             Text("Change")
+        }
+    }
+}
+
+/**
+ * Enhanced property row for the goal field.
+ *
+ * When a goal is linked, displays the category emoji, goal title, and
+ * a subtitle with category name + progress percentage.  Keeps the visual
+ * weight consistent with other PropertyRows while surfacing richer info.
+ *
+ * When no goal is linked, falls back to the standard PropertyRow style.
+ */
+@Composable
+private fun GoalPropertyRow(
+    linkedGoal: LinkedGoalInfo?,
+    onClick: () -> Unit
+) {
+    if (linkedGoal == null) {
+        PropertyRow(
+            icon = Icons.Default.Flag,
+            label = "No goal linked",
+            onClick = onClick
+        )
+    } else {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = linkedGoal.emoji,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = linkedGoal.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = linkedGoal.category,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "${linkedGoal.progress}%",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            TextButton(onClick = onClick) {
+                Text("Change")
+            }
         }
     }
 }

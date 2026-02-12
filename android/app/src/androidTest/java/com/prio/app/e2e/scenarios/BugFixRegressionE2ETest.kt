@@ -34,6 +34,9 @@ import org.junit.Test
  *          and uncompleteTask did not call recalculateGoalProgress for linked tasks)
  * Bug 12 — "Task created" snackbar never auto-dismisses (was: showSnackbar() with
  *          actionLabel="View" but no explicit duration, defaults to Indefinite)
+ * Bug 13 — Quick capture form retains stale data after task creation
+ * Bug 14 — Ugly UI to change goal for task (was: plain AlertDialog with bare ListItem;
+ *          Fix: Material 3 ModalBottomSheet with emoji, category, progress, subtitle)
  *
  * Test naming: regression_{bugNumber}_{scenario}
  */
@@ -1303,5 +1306,103 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         // 5. Clean up
         quickCapture.dismiss()
         quickCapture.assertSheetDismissed()
+    }
+
+    // =========================================================================
+    // Bug 14: Ugly UI to change goal for task
+    // Was: Goal picker used a plain AlertDialog with bare ListItem rows showing
+    //      only goal title + percentage. No emoji, no category, no subtitle,
+    //      no rich empty state. Inconsistent with QuickCaptureSheet picker.
+    // Fix: Replaced AlertDialog with a Material 3 ModalBottomSheet matching
+    //      QuickCaptureSheet's GoalPickerSheet: category emoji, title,
+    //      category + progress subtitle, helper text, and rich empty state.
+    // =========================================================================
+
+    @Test
+    fun regression_bug14_goalPickerShowsRichBottomSheet() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Stay Healthy", category = com.prio.core.common.model.GoalCategory.HEALTH)
+            )
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Rich picker test",
+                    quadrant = EisenhowerQuadrant.SCHEDULE
+                )
+            )
+        }
+
+        navigateToTaskDetail("Rich picker test")
+        taskDetail.tapChangeForProperty("No goal linked")
+
+        // Goal picker bottom sheet should appear with title and subtitle
+        taskDetail.assertGoalPickerVisible()
+        taskDetail.assertGoalPickerSubtitle()
+
+        // Goal row should show title and progress
+        taskDetail.assertGoalRowDetails("Stay Healthy", "0%")
+
+        // Dismiss
+        taskDetail.dismissGoalPicker()
+    }
+
+    @Test
+    fun regression_bug14_goalPickerLinksAndShowsRichDetail() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Ship MVP", category = com.prio.core.common.model.GoalCategory.CAREER)
+            )
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Link rich test",
+                    quadrant = EisenhowerQuadrant.DO_FIRST
+                )
+            )
+        }
+
+        navigateToTaskDetail("Link rich test")
+        taskDetail.tapChangeForProperty("No goal linked")
+        taskDetail.assertGoalPickerVisible()
+
+        // Select the goal
+        taskDetail.selectGoalInPicker("Ship MVP")
+
+        // Snackbar confirms linking
+        taskDetail.assertSnackbarMessage("Goal linked")
+
+        // After linking, the task detail should show the goal title (rich format)
+        taskDetail.assertLinkedGoalDisplayed("Ship MVP")
+    }
+
+    @Test
+    fun regression_bug14_goalPickerUnlinkShowsRemoveOption() {
+        runBlocking {
+            val goalId = goalRepository.insertGoal(
+                TestDataFactory.goal(title = "Learn Kotlin")
+            )
+            taskRepository.insertTask(
+                TestDataFactory.task(
+                    title = "Unlink test",
+                    quadrant = EisenhowerQuadrant.SCHEDULE,
+                    goalId = goalId
+                )
+            )
+        }
+
+        navigateToTaskDetail("Unlink test")
+
+        // Goal should be linked — tap to open picker
+        taskDetail.assertLinkedGoalDisplayed("Learn Kotlin")
+        taskDetail.tapChangeForProperty("Learn Kotlin")
+        taskDetail.assertGoalPickerVisible()
+
+        // "Remove goal link" option should be visible since a goal is linked
+        taskDetail.assertRemoveGoalLinkVisible()
+
+        // Unlink the goal
+        taskDetail.tapRemoveGoalLink()
+
+        // Snackbar confirms unlinking
+        taskDetail.assertSnackbarMessage("Goal unlinked")
     }
 }

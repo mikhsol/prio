@@ -49,7 +49,7 @@
 * [FIXED][TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
 
 * [FIXED][GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
-* [GOAL] Ugly UI to change goal for task.
+* [FIXED][GOAL] Ugly UI to change goal for task. Replaced AlertDialog with rich Material 3 ModalBottomSheet: category emoji, title, category + progress subtitle, helper text, and proper empty state.
 
 * [TASK] Recurrent tasks not implemented.
 * [TASK] Reminder not implemented.

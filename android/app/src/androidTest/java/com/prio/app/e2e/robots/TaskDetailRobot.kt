@@ -304,6 +304,58 @@ class TaskDetailRobot(
         }
     }
 
+    /**
+     * Assert the goal picker subtitle is shown (rich bottom sheet).
+     */
+    fun assertGoalPickerSubtitle() {
+        rule.onNodeWithText("Linking tasks to goals helps track progress", substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert a goal row shows category and progress in the goal picker.
+     */
+    fun assertGoalRowDetails(goalTitle: String, progress: String) {
+        rule.onNodeWithText(goalTitle, substring = true)
+            .assertIsDisplayed()
+        rule.onNodeWithText(progress, substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert the "Remove goal link" option is visible in the goal picker.
+     */
+    fun assertRemoveGoalLinkVisible() {
+        rule.onNodeWithText("Remove goal link", substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Tap "Remove goal link" in the goal picker to unlink the goal.
+     */
+    fun tapRemoveGoalLink() {
+        rule.onNodeWithText("Remove goal link", substring = true)
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert the goal picker empty state is shown.
+     */
+    fun assertGoalPickerEmpty() {
+        rule.onNodeWithText("No active goals yet", substring = true)
+            .assertIsDisplayed()
+    }
+
+    /**
+     * Assert the linked goal is displayed on the task detail property row
+     * with category info (rich format).
+     */
+    fun assertLinkedGoalDisplayed(goalTitle: String) {
+        rule.onNodeWithText(goalTitle, substring = true)
+            .assertIsDisplayed()
+    }
+
     fun assertSnackbarMessage(text: String) {
         rule.waitUntil(timeoutMillis = 5_000) {
             rule.onAllNodesWithText(text, substring = true)
@@ -337,11 +389,12 @@ class TaskDetailRobot(
     }
 
     /**
-     * Dismiss the goal picker by tapping Cancel.
+     * Dismiss the goal picker bottom sheet by pressing back.
+     * The goal picker is a ModalBottomSheet (not an AlertDialog),
+     * so we dismiss by pressing the back button.
      */
     fun dismissGoalPicker() {
-        rule.onNodeWithText("Cancel")
-            .performClick()
+        androidx.test.espresso.Espresso.pressBack()
         rule.waitForIdle()
     }
 

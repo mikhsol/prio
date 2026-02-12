@@ -70,7 +70,8 @@ class TaskDetailViewModel @Inject constructor(
                         id = goal.id,
                         title = goal.title,
                         progress = goal.progress.toInt(),
-                        category = goal.category.name
+                        category = goal.category.displayName,
+                        emoji = goal.category.emoji
                     )
                 }
             }
@@ -101,7 +102,8 @@ class TaskDetailViewModel @Inject constructor(
                                 id = goal.id,
                                 title = goal.title,
                                 progress = goal.progress.toInt(),
-                                category = goal.category.name
+                                category = goal.category.displayName,
+                                emoji = goal.category.emoji
                             )
                         }
                     }
@@ -246,7 +248,8 @@ class TaskDetailViewModel @Inject constructor(
                             id = goal.id,
                             title = goal.title,
                             progress = goal.progress.toInt(),
-                            category = goal.category.name
+                            category = goal.category.displayName,
+                            emoji = goal.category.emoji
                         )
                     }
                 }
