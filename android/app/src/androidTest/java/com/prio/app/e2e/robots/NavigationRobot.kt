@@ -62,6 +62,13 @@ class NavigationRobot(
         rule.waitForIdle()
     }
 
+    fun goToSettings() {
+        rule.onAllNodesWithContentDescription("Settings")
+            .onFirst()
+            .performClick()
+        rule.waitForIdle()
+    }
+
     fun tapFab() {
         // Use onLast() to get the PrioBottomNavigation center FAB,
         // which directly sets showQuickCapture=true (no ViewModel indirection).
@@ -123,6 +130,17 @@ class NavigationRobot(
     fun assertFabVisible() {
         rule.onAllNodesWithContentDescription("Add new task")
             .onFirst()
+            .assertIsDisplayed()
+    }
+
+    fun assertSettingsButtonVisible() {
+        rule.onAllNodesWithContentDescription("Settings")
+            .onFirst()
+            .assertIsDisplayed()
+    }
+
+    fun assertOnMoreScreen() {
+        rule.onNodeWithText("More")
             .assertIsDisplayed()
     }
 

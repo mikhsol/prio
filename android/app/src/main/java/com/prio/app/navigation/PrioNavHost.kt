@@ -149,6 +149,9 @@ fun PrioNavHost(
                 },
                 onNavigateToEveningSummary = {
                     navController.navigate(NavRoutes.EVENING_SUMMARY)
+                },
+                onNavigateToSettings = {
+                    navController.navigate(NavRoutes.MORE)
                 }
             )
         }

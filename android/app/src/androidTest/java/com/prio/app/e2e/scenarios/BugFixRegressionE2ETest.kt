@@ -46,6 +46,9 @@ import org.junit.Test
  * Bug 16 — Calendar week view navigation broken (was: navigateWeek() called selectDate()
  *          which always loaded DAY mode data via reobserveData(), never calling
  *          loadWeekView(); fix: reloadCurrentViewData() dispatches by current view mode)
+ * Bug 17 — Settings button not visible (was: bottom nav only has 4 tabs, no "More" tab;
+ *          MoreScreen and SettingsScreen exist but are unreachable; fix: added Settings
+ *          gear icon to TodayScreen TopAppBar navigating to NavRoutes.MORE)
  *
  * Test naming: regression_{bugNumber}_{scenario}
  */
@@ -1570,6 +1573,63 @@ class BugFixRegressionE2ETest : BaseE2ETest() {
         // After today tap, view mode resets to day or stays in week —
         // either way, the screen should be visible and not crashed
         calendar.assertScreenVisible()
+    }
+
+    // =========================================================================
+    // Bug 17: Settings button not visible
+    // Was: Bottom navigation only has 4 tabs (Today, Tasks, Goals, Calendar).
+    //      No "More" tab exists despite NavRoutes.MORE, MoreScreen, and
+    //      SettingsScreen all being fully implemented. Users had no way to
+    //      reach Settings from the main UI.
+    // Fix: Added a Settings gear icon (IconButton) to the TodayScreen TopAppBar
+    //      actions area, navigating to NavRoutes.MORE (the Settings hub).
+    // =========================================================================
+
+    @Test
+    fun regression_bug17_settingsButtonVisibleOnTodayScreen() {
+        // GIVEN: user is on the Today screen (default start destination)
+        nav.assertOnTodayScreen()
+
+        // THEN: settings button should be visible in the top app bar
+        nav.assertSettingsButtonVisible()
+    }
+
+    @Test
+    fun regression_bug17_settingsButtonNavigatesToMoreScreen() {
+        // GIVEN: user is on the Today screen
+        nav.assertOnTodayScreen()
+
+        // WHEN: user taps the settings icon
+        nav.goToSettings()
+        waitForIdle()
+
+        // THEN: user should see the More/Settings screen
+        nav.assertOnMoreScreen()
+    }
+
+    @Test
+    fun regression_bug17_settingsAccessibleAfterTabSwitching() {
+        // GIVEN: user navigates through tabs and returns to Today
+        nav.goToTasks()
+        nav.goToGoals()
+        nav.goToCalendar()
+        nav.goToToday()
+        waitForIdle()
+
+        // THEN: settings button should still be visible
+        nav.assertSettingsButtonVisible()
+
+        // WHEN: user taps settings
+        nav.goToSettings()
+        waitForIdle()
+
+        // THEN: More screen is shown
+        nav.assertOnMoreScreen()
+
+        // AND: user can navigate back to Today
+        nav.pressBack()
+        waitForIdle()
+        nav.assertOnTodayScreen()
     }
 
     // =========================================================================
