@@ -153,6 +153,10 @@ class QuickCaptureRobot(
     }
 
     fun assertVoiceListening() {
+        rule.waitUntil(timeoutMillis = 15_000) {
+            rule.onAllNodes(hasText("Listening", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+        }
         rule.onNodeWithText("Listening", substring = true)
             .assertIsDisplayed()
     }
@@ -160,6 +164,68 @@ class QuickCaptureRobot(
     fun assertVoiceError() {
         rule.onNodeWithText("Try Again", substring = true)
             .assertIsDisplayed()
+    }
+
+    /**
+     * Assert that the "Getting ready..." text is NOT displayed,
+     * i.e. the voice input has transitioned past the Initializing state.
+     * Used in regression tests for the init timeout bug fix.
+     */
+    fun assertNotStuckOnGettingReady(timeoutMs: Long = 15_000) {
+        // Wait for the state to move past "Getting ready..." within the timeout.
+        // The fix adds a 5s init timeout + fallback, so within 15s the state
+        // should be either Listening, Processing, Result, or Error — never
+        // stuck on Initializing.
+        rule.waitUntil(timeoutMillis = timeoutMs) {
+            val hasListening = rule.onAllNodes(hasText("Listening", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+            val hasError = rule.onAllNodes(hasText("Try Again", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+            val hasTypeInstead = rule.onAllNodes(hasText("Type Instead", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+            val hasProcessing = rule.onAllNodes(hasText("Processing", substring = true))
+                .fetchSemanticsNodes().isNotEmpty()
+            hasListening || hasError || hasTypeInstead || hasProcessing
+        }
+    }
+
+    /**
+     * Assert that voice input transitioned past Initializing.
+     * Returns true if we see Listening, Error, Processing, or the overlay is gone.
+     * Returns false if still stuck on "Getting ready...".
+     */
+    fun isVoicePastInitializing(): Boolean {
+        val hasListening = rule.onAllNodes(hasText("Listening", substring = true))
+            .fetchSemanticsNodes().isNotEmpty()
+        val hasError = rule.onAllNodes(hasText("Try Again", substring = true))
+            .fetchSemanticsNodes().isNotEmpty()
+        val hasTypeInstead = rule.onAllNodes(hasText("Type Instead", substring = true))
+            .fetchSemanticsNodes().isNotEmpty()
+        val hasProcessing = rule.onAllNodes(hasText("Processing", substring = true))
+            .fetchSemanticsNodes().isNotEmpty()
+        return hasListening || hasError || hasTypeInstead || hasProcessing
+    }
+
+    /**
+     * Tap the "Type Instead" button shown on voice error state.
+     */
+    fun tapTypeInstead() {
+        rule.onNodeWithText("Type Instead")
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert that the voice overlay is no longer visible
+     * (voice input was cancelled or completed).
+     */
+    fun assertVoiceOverlayDismissed() {
+        rule.waitUntil(timeoutMillis = 3_000) {
+            rule.onAllNodes(hasText("Getting ready", substring = true))
+                .fetchSemanticsNodes().isEmpty() &&
+            rule.onAllNodes(hasText("Listening", substring = true))
+                .fetchSemanticsNodes().isEmpty()
+        }
     }
 
     /**

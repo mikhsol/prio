@@ -3,6 +3,8 @@ package com.prio.app.feature.capture.voice
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
@@ -64,6 +66,15 @@ class VoiceInputManager(private val context: Context) {
          * Prevents indefinite listening if silence detection fails.
          */
         private const val MAX_LISTEN_DURATION_MS = 30_000L
+
+        /**
+         * Timeout for the Initializing → Listening transition.
+         * If SpeechRecognizer doesn't call onReadyForSpeech within this
+         * window, we fall back to the default (cloud-capable) recognizer.
+         * This addresses devices where on-device models aren't downloaded
+         * or EXTRA_PREFER_OFFLINE causes a silent hang.
+         */
+        internal const val INIT_TIMEOUT_MS = 5_000L
     }
 
     private val _state = MutableStateFlow<VoiceInputState>(VoiceInputState.Idle)
@@ -122,22 +133,38 @@ class VoiceInputManager(private val context: Context) {
             return@callbackFlow
         }
 
-        // Prefer on-device recognizer for privacy (API 31+)
-        val recognizer = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
-            && isOnDeviceAvailable()
-        ) {
-            Timber.d("Using on-device SpeechRecognizer")
-            SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
-        } else {
-            Timber.d("Using default SpeechRecognizer (may use cloud)")
-            SpeechRecognizer.createSpeechRecognizer(context)
+        // Track whether onReadyForSpeech has fired
+        var isReady = false
+        // Track whether we already attempted fallback to prevent infinite retry
+        var isFallbackAttempt = false
+
+        val mainHandler = Handler(Looper.getMainLooper())
+
+        /**
+         * Create a SpeechRecognizer instance. Prefers on-device (API 31+)
+         * for privacy, but falls back to the default (cloud-capable)
+         * recognizer when [fallback] is true or on-device isn't available.
+         */
+        fun createRecognizer(fallback: Boolean): SpeechRecognizer {
+            return if (!fallback
+                && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+                && isOnDeviceAvailable()
+            ) {
+                Timber.d("Using on-device SpeechRecognizer")
+                SpeechRecognizer.createOnDeviceSpeechRecognizer(context)
+            } else {
+                Timber.d("Using default SpeechRecognizer (may use cloud)")
+                SpeechRecognizer.createSpeechRecognizer(context)
+            }
         }
 
+        var recognizer = createRecognizer(fallback = false)
         speechRecognizer = recognizer
 
         val listener = object : RecognitionListener {
             override fun onReadyForSpeech(params: Bundle?) {
                 Timber.d("$TAG: Ready for speech")
+                isReady = true
                 val listening = VoiceInputState.Listening()
                 _state.value = listening
                 trySend(listening)
@@ -236,14 +263,40 @@ class VoiceInputManager(private val context: Context) {
 
         recognizer.setRecognitionListener(listener)
 
-        // Build recognition intent
-        val intent = createRecognizerIntent()
+        // Build recognition intent — prefer offline only on first attempt
+        val intent = createRecognizerIntent(preferOffline = true)
         recognizer.startListening(intent)
 
         Timber.d("$TAG: Started listening")
 
+        // Safety timeout: if onReadyForSpeech never fires within INIT_TIMEOUT_MS,
+        // the on-device recognizer is likely hanging (no offline model downloaded,
+        // or createOnDeviceSpeechRecognizer stalled). Fall back to the default
+        // cloud-capable recognizer without EXTRA_PREFER_OFFLINE.
+        val initTimeoutRunnable = Runnable {
+            if (!isReady && !isFallbackAttempt) {
+                isFallbackAttempt = true
+                Timber.w("$TAG: Init timeout reached — on-device recognizer hung. Falling back to default recognizer.")
+                try {
+                    recognizer.cancel()
+                    recognizer.destroy()
+                } catch (e: Exception) {
+                    Timber.e(e, "$TAG: Error cleaning up hung recognizer")
+                }
+
+                recognizer = createRecognizer(fallback = true)
+                speechRecognizer = recognizer
+                recognizer.setRecognitionListener(listener)
+                val fallbackIntent = createRecognizerIntent(preferOffline = false)
+                recognizer.startListening(fallbackIntent)
+                Timber.d("$TAG: Fallback recognizer started")
+            }
+        }
+        mainHandler.postDelayed(initTimeoutRunnable, INIT_TIMEOUT_MS)
+
         awaitClose {
             Timber.d("$TAG: Flow closing, stopping recognizer")
+            mainHandler.removeCallbacks(initTimeoutRunnable)
             stopInternal()
         }
     }
@@ -291,14 +344,18 @@ class VoiceInputManager(private val context: Context) {
     }
 
     /**
-     * Create the recognition intent with on-device processing preferences.
+     * Create the recognition intent with configurable offline preference.
      *
      * Key settings per spec:
      * - Partial results enabled for real-time transcription
      * - Language model: free-form (natural language)
-     * - Prefer on-device processing for privacy
+     * - On-device processing preferred for privacy (when [preferOffline] is true)
+     *
+     * @param preferOffline If true, sets EXTRA_PREFER_OFFLINE to hint
+     *   the system to use on-device models. Set to false on fallback
+     *   attempts when on-device recognition hangs.
      */
-    private fun createRecognizerIntent(): Intent {
+    private fun createRecognizerIntent(preferOffline: Boolean = true): Intent {
         return Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(
                 RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -310,8 +367,10 @@ class VoiceInputManager(private val context: Context) {
             // Set max results
             putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 3)
 
-            // Prefer offline/on-device recognition for privacy (API 23+)
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            // Only prefer offline when requested — on fallback we allow cloud
+            if (preferOffline) {
+                putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            }
 
             // Silence detection: complete after 2s silence per spec
             // EXTRA_SPEECH_INPUT_COMPLETE_SILENCE_LENGTH_MILLIS controls

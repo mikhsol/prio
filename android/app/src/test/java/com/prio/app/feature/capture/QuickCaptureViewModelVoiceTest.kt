@@ -288,4 +288,76 @@ class QuickCaptureViewModelVoiceTest {
             assertEquals("", state.inputText)
         }
     }
+
+    @Nested
+    @DisplayName("Init timeout fallback (bug fix: 'Getting ready...' hang)")
+    inner class InitTimeoutFallback {
+
+        @Test
+        @DisplayName("Voice state stays Initializing until recognizer calls back — UI shows 'Getting ready...'")
+        fun voiceStateStaysInitializingUntilCallback() = runTest {
+            viewModel.onEvent(QuickCaptureEvent.StartVoiceInput)
+            advanceUntilIdle()
+
+            // Before any callback from VoiceInputManager, state must be Initializing
+            val state = viewModel.uiState.value
+            assertTrue(state.isVoiceInputActive)
+            assertTrue(state.voiceState is VoiceInputState.Initializing,
+                "State should be Initializing until onReadyForSpeech fires")
+        }
+
+        @Test
+        @DisplayName("After fallback, Listening state is propagated when recognizer becomes ready")
+        fun fallbackListeningStatePropagated() = runTest {
+            viewModel.onEvent(QuickCaptureEvent.StartVoiceInput)
+            advanceUntilIdle()
+
+            // Simulate: timeout fires, fallback recognizer starts, onReadyForSpeech fires
+            viewModel.updateVoiceState(VoiceInputState.Listening())
+
+            val state = viewModel.uiState.value
+            assertTrue(state.voiceState is VoiceInputState.Listening,
+                "After fallback recognizer ready, state should be Listening")
+        }
+
+        @Test
+        @DisplayName("Multiple rapid StartVoiceInput events don't cause duplicate effects")
+        fun rapidStartEventsHandled() = runTest {
+            viewModel.effect.test {
+                viewModel.onEvent(QuickCaptureEvent.StartVoiceInput)
+                advanceUntilIdle()
+                val first = awaitItem()
+                assertTrue(first is QuickCaptureEffect.StartVoiceRecognition)
+
+                // Simulate: user taps mic again quickly
+                viewModel.onEvent(QuickCaptureEvent.StopVoiceInput)
+                viewModel.onEvent(QuickCaptureEvent.StartVoiceInput)
+                advanceUntilIdle()
+                val second = awaitItem()
+                assertTrue(second is QuickCaptureEffect.StartVoiceRecognition)
+            }
+        }
+
+        @Test
+        @DisplayName("Voice result after fallback still triggers parsing pipeline")
+        fun voiceResultAfterFallbackTriggersParsing() = runTest {
+            coEvery { naturalLanguageParser.parse("send email to boss") } returns ParsedTask(
+                title = "Send email to boss", dueDate = null, dueTime = null
+            )
+
+            viewModel.onEvent(QuickCaptureEvent.StartVoiceInput)
+            advanceUntilIdle()
+
+            // Simulate: timeout occurred, fallback recognizer started, then result came
+            viewModel.updateVoiceState(VoiceInputState.Listening(partialText = "send email"))
+            viewModel.updateVoiceState(VoiceInputState.Result(text = "send email to boss", confidence = 0.85f))
+            advanceUntilIdle()
+
+            val state = viewModel.uiState.value
+            assertFalse(state.isVoiceInputActive, "Voice should deactivate on result")
+            assertEquals("send email to boss", state.inputText)
+            assertNotNull(state.parsedResult, "Parsing pipeline should have run")
+            assertEquals("Send email to boss", state.parsedResult?.title)
+        }
+    }
 }
