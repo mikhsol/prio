@@ -12,13 +12,16 @@
 19. [GEENERAL FEATURE] 200 test cases for each topic (work/health/etc..) to classify tasks, educate classifier.
 29. [GENERAL FEATURE] Spell checker and auto formatting of the text fields.
 30. [GENERAL FEATURE] Just random notes which can be imported to task. Or creation task from clipboard.
+38. [GENERAL FEATURE] Asses GOAL on SMARTness and propose improvements.
+39. [GENERAL FEATURE] Asses Task, is it defined properly?? Suggest improvement.
 
 12. [???PAID/GENERAL FEATURE]Set up notification to specific interval (5-mins every hour/etc...)
 
+37. [PAID FEATURE] Advance analytics (monthly/yearly, weekly can be generated on the general level).
 36. [PAID FEATURE] On-device AI like phi3, llama4, etc... models.
 10. [PAID FEATURE] Reasses tasks if it's more than Y days in lists (do in background, suggest to user).
 2. [PAID FEATURE] Agent specific to specific goal, additional prompt refining by user
-3. [PAID FEATURE] Personal/Work/etc... 
+3. [PAID FEATURE] [BUSINESS FEATURE ] Personal/Work/etc... 
 4. [PAID FEATURE] Identify duplicates.
 6. [PAID FEATURE] Tags for tasks/goals.
 7. [PAID FEATURE] Pomodoro/flowtime.
@@ -54,9 +57,13 @@
 
 * [FIXED][GOAL] Adding milestone (more than 2), new milestone hidden under keyboard and you don't see what are you typing.
 * [FIXED][TASK] Voice creation not working. "Getting ready..." appears on the screen but nothing happens.
+* [FIXED][TASK] Voice creation permission never requested. shouldShowRationale=false on first install treated as "permanently denied" instead of "never asked".
 
 * [FIXED][GOAL/TASK] Create goal -> Add first task -> You see the last task created (title, priority...), not a clean placeholder.
 * [FIXED][GOAL] Ugly UI to change goal for task. Replaced AlertDialog with rich Material 3 ModalBottomSheet: category emoji, title, category + progress subtitle, helper text, and proper empty state.
+
+* [FIXED][CALENDAR] Month/Week view missing.
+* [FIXED][CALENDAR] Week view navigation broken. Previous/Next week buttons did not update week view content because navigateWeek() always loaded DAY mode data.
 
 * [TASK] Recurrent tasks not implemented.
 * [TASK] Reminder not implemented.

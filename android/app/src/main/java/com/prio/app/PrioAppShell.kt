@@ -172,25 +172,21 @@ fun PrioAppShell(
                         // Check permission before starting
                         if (audioPermissionState.status.isGranted) {
                             startVoiceRecognition(voiceInputManager, viewModel)
-                        } else if (!audioPermissionState.status.shouldShowRationale) {
-                            // Permanently denied — direct user to app settings
-                            Timber.d("RECORD_AUDIO permanently denied, directing to settings")
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = "Microphone access required for voice input. Enable in Settings.",
-                                    actionLabel = "Settings"
-                                ).let { result ->
-                                    if (result == SnackbarResult.ActionPerformed) {
-                                        val intent = android.content.Intent(
-                                            android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                            android.net.Uri.fromParts("package", context.packageName, null)
-                                        )
-                                        context.startActivity(intent)
-                                    }
-                                }
-                            }
+                        } else if (audioPermissionState.status.shouldShowRationale) {
+                            // User previously denied — show rationale then request again
+                            Timber.d("RECORD_AUDIO denied before, showing rationale and re-requesting")
+                            audioPermissionState.launchPermissionRequest()
                         } else {
-                            Timber.d("RECORD_AUDIO permission not granted, requesting")
+                            // First time asking OR permanently denied.
+                            // On Android, shouldShowRationale is false in both cases.
+                            // We attempt the system permission dialog first.
+                            // If user previously selected "Don't ask again", the
+                            // system dialog will be a no-op and the LaunchedEffect
+                            // below (which watches isGranted) won't fire — the
+                            // voice stays on Initializing until the 5s timeout
+                            // triggers an error with PERMISSION_DENIED, which
+                            // shows the error overlay with "Type Instead".
+                            Timber.d("RECORD_AUDIO not granted, launching permission request")
                             audioPermissionState.launchPermissionRequest()
                         }
                     }
@@ -228,10 +224,24 @@ fun PrioAppShell(
             }
         }
         
-        // Handle permission result: if just granted after request, start voice
-        LaunchedEffect(audioPermissionState.status.isGranted) {
+        // Handle permission result: if just granted after request, start voice.
+        // If denied permanently (shouldShowRationale = false after denial),
+        // show a snackbar directing user to app Settings.
+        LaunchedEffect(audioPermissionState.status.isGranted, audioPermissionState.status.shouldShowRationale) {
             if (audioPermissionState.status.isGranted && state.isVoiceInputActive) {
                 startVoiceRecognition(voiceInputManager, viewModel)
+            } else if (!audioPermissionState.status.isGranted
+                && !audioPermissionState.status.shouldShowRationale
+                && state.isVoiceInputActive
+            ) {
+                // Permanently denied — guide user to Settings
+                Timber.d("RECORD_AUDIO permanently denied, directing to settings")
+                viewModel.updateVoiceState(
+                    VoiceInputState.Error(
+                        errorType = com.prio.app.feature.capture.voice.VoiceErrorType.PERMISSION_DENIED,
+                        message = "Microphone permission denied. Enable in Settings."
+                    )
+                )
             }
         }
         

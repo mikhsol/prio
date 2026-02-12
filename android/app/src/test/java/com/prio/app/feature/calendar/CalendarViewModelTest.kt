@@ -266,4 +266,97 @@ class CalendarViewModelTest {
             assertTrue(state.untimedTaskItems.isEmpty())
         }
     }
+
+    // ==================== Week View Navigation (Bug 16 Fix) ====================
+
+    @Nested
+    @DisplayName("Week View Navigation")
+    inner class WeekViewNavigation {
+
+        @Test
+        @DisplayName("navigateWeek in WEEK mode updates selectedDate and reloads week view data")
+        fun navigateWeekInWeekMode() = runTest {
+            every { calendarHelper.hasCalendarPermission() } returns true
+            createViewModel()
+            advanceUntilIdle()
+
+            // Switch to week mode
+            viewModel.onEvent(CalendarEvent.OnViewModeChanged(CalendarViewMode.WEEK))
+            advanceUntilIdle()
+
+            val originalDate = viewModel.uiState.value.selectedDate
+            val originalWeekDays = viewModel.uiState.value.weekViewDays
+
+            // Navigate to next week
+            viewModel.onEvent(CalendarEvent.OnNextWeek)
+            advanceUntilIdle()
+
+            val newState = viewModel.uiState.value
+            assertEquals(originalDate.plusWeeks(1), newState.selectedDate)
+            // weekViewDays should be reloaded (not empty, 7 days)
+            assertEquals(7, newState.weekViewDays.size)
+            // The dates in weekViewDays should be different from original
+            if (originalWeekDays.isNotEmpty()) {
+                assertFalse(
+                    originalWeekDays.map { it.date } == newState.weekViewDays.map { it.date },
+                    "Week view days should have different dates after navigation"
+                )
+            }
+        }
+
+        @Test
+        @DisplayName("navigateWeek in WEEK mode goes back correctly")
+        fun navigateWeekBackInWeekMode() = runTest {
+            every { calendarHelper.hasCalendarPermission() } returns true
+            createViewModel()
+            advanceUntilIdle()
+
+            // Switch to week mode
+            viewModel.onEvent(CalendarEvent.OnViewModeChanged(CalendarViewMode.WEEK))
+            advanceUntilIdle()
+
+            val originalDate = viewModel.uiState.value.selectedDate
+
+            // Navigate forward then back
+            viewModel.onEvent(CalendarEvent.OnNextWeek)
+            advanceUntilIdle()
+            viewModel.onEvent(CalendarEvent.OnPreviousWeek)
+            advanceUntilIdle()
+
+            assertEquals(originalDate, viewModel.uiState.value.selectedDate)
+        }
+
+        @Test
+        @DisplayName("navigateWeek in DAY mode still works correctly")
+        fun navigateWeekInDayMode() = runTest {
+            every { calendarHelper.hasCalendarPermission() } returns true
+            createViewModel()
+            advanceUntilIdle()
+
+            // Ensure we're in DAY mode (default)
+            assertEquals(CalendarViewMode.DAY, viewModel.uiState.value.viewMode)
+
+            val originalDate = viewModel.uiState.value.selectedDate
+            viewModel.onEvent(CalendarEvent.OnNextWeek)
+            advanceUntilIdle()
+
+            assertEquals(originalDate.plusWeeks(1), viewModel.uiState.value.selectedDate)
+        }
+
+        @Test
+        @DisplayName("week view shows 7 day summaries after switching to WEEK mode")
+        fun weekViewShows7DaySummaries() = runTest {
+            every { calendarHelper.hasCalendarPermission() } returns true
+            createViewModel()
+            advanceUntilIdle()
+
+            viewModel.onEvent(CalendarEvent.OnViewModeChanged(CalendarViewMode.WEEK))
+            advanceUntilIdle()
+
+            val weekDays = viewModel.uiState.value.weekViewDays
+            assertEquals(7, weekDays.size)
+            // Should contain today
+            assertTrue(weekDays.any { it.isToday })
+        }
+    }
 }

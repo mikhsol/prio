@@ -120,13 +120,28 @@ class CalendarViewModel @Inject constructor(
     private fun selectDate(date: LocalDate) {
         _uiState.update { it.copy(selectedDate = date) }
         updateWeekStrip()
-        reobserveData()
+        reloadCurrentViewData()
     }
 
     private fun navigateWeek(direction: Int) {
         val current = _uiState.value.selectedDate
         val newDate = current.plusWeeks(direction.toLong())
-        selectDate(newDate)
+        _uiState.update { it.copy(selectedDate = newDate) }
+        updateWeekStrip()
+        reloadCurrentViewData()
+    }
+
+    /**
+     * Reload data for whichever view mode is currently active.
+     * Day mode re-observes timeline data, Week mode loads weekly summaries,
+     * Month mode loads the month grid.
+     */
+    private fun reloadCurrentViewData() {
+        when (_uiState.value.viewMode) {
+            CalendarViewMode.DAY -> reobserveData()
+            CalendarViewMode.WEEK -> loadWeekView()
+            CalendarViewMode.MONTH -> loadMonthView()
+        }
     }
 
     private fun updateWeekStrip() {

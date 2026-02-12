@@ -135,6 +135,26 @@ fun CalendarScreen(
 
     val monthYear = uiState.selectedDate.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
 
+    // Compute week label: "Feb 10 – 16" or "This Week" when current week
+    val weekLabel = remember(uiState.selectedDate) {
+        val selected = uiState.selectedDate
+        val startOfWeek = selected.minusDays(selected.dayOfWeek.value.toLong() - 1)
+        val endOfWeek = startOfWeek.plusDays(6)
+        val today = java.time.LocalDate.now()
+        val todayStart = today.minusDays(today.dayOfWeek.value.toLong() - 1)
+        if (startOfWeek == todayStart) {
+            "This Week"
+        } else {
+            val startFmt = startOfWeek.format(DateTimeFormatter.ofPattern("MMM d"))
+            val endFmt = if (startOfWeek.month == endOfWeek.month) {
+                endOfWeek.format(DateTimeFormatter.ofPattern("d"))
+            } else {
+                endOfWeek.format(DateTimeFormatter.ofPattern("MMM d"))
+            }
+            "$startFmt – $endFmt"
+        }
+    }
+
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -169,6 +189,7 @@ fun CalendarScreen(
             // Week strip navigation (shown in Day mode)
             if (uiState.viewMode == CalendarViewMode.DAY) {
                 WeekNavigationBar(
+                    weekLabel = weekLabel,
                     onPreviousWeek = { viewModel.onEvent(CalendarEvent.OnPreviousWeek) },
                     onNextWeek = { viewModel.onEvent(CalendarEvent.OnNextWeek) },
                 )
@@ -193,6 +214,7 @@ fun CalendarScreen(
             // Week navigation (shown in Week mode)
             if (uiState.viewMode == CalendarViewMode.WEEK) {
                 WeekNavigationBar(
+                    weekLabel = weekLabel,
                     onPreviousWeek = { viewModel.onEvent(CalendarEvent.OnPreviousWeek) },
                     onNextWeek = { viewModel.onEvent(CalendarEvent.OnNextWeek) },
                 )
@@ -634,6 +656,7 @@ private fun MonthDayCell(
 
 @Composable
 private fun WeekNavigationBar(
+    weekLabel: String,
     onPreviousWeek: () -> Unit,
     onNextWeek: () -> Unit,
     modifier: Modifier = Modifier,
@@ -649,7 +672,7 @@ private fun WeekNavigationBar(
             Icon(Icons.Default.ChevronLeft, contentDescription = "Previous week")
         }
         Text(
-            text = "This Week",
+            text = weekLabel,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
