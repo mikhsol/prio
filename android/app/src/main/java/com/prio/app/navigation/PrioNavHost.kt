@@ -107,7 +107,7 @@ object NavRoutes {
 fun PrioNavHost(
     navController: NavHostController,
     contentPadding: PaddingValues,
-    onShowQuickCapture: () -> Unit,
+    onShowQuickCapture: (goalId: Long?) -> Unit,
     showOnboarding: Boolean = false,
     onOnboardingComplete: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -166,7 +166,7 @@ fun PrioNavHost(
                 onNavigateToTaskDetail = { taskId ->
                     navController.navigate(NavRoutes.taskDetail(taskId))
                 },
-                onNavigateToAddTask = onShowQuickCapture
+                onNavigateToAddTask = { onShowQuickCapture(null) }
             )
         }
         
@@ -268,7 +268,7 @@ fun PrioNavHost(
                 onNavigateToTask = { taskId ->
                     navController.navigate(NavRoutes.taskDetail(taskId))
                 },
-                onShowQuickCapture = onShowQuickCapture
+                onShowQuickCapture = { goalId -> onShowQuickCapture(goalId) }
             )
         }
         
@@ -282,7 +282,7 @@ fun PrioNavHost(
                 onNavigateToGoalsList = {
                     navController.popBackStack(route = NavRoutes.GOALS, inclusive = false)
                 },
-                onShowQuickCapture = onShowQuickCapture
+                onShowQuickCapture = { onShowQuickCapture(null) }
             )
         }
         

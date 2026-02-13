@@ -99,7 +99,7 @@ fun GoalDetailScreen(
     goalId: Long,
     onNavigateBack: () -> Unit,
     onNavigateToTask: (Long) -> Unit = {},
-    onShowQuickCapture: () -> Unit = {},
+    onShowQuickCapture: (goalId: Long?) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: GoalDetailViewModel = hiltViewModel()
 ) {
@@ -111,7 +111,7 @@ fun GoalDetailScreen(
             when (effect) {
                 GoalDetailEffect.NavigateBack -> onNavigateBack()
                 is GoalDetailEffect.NavigateToTask -> onNavigateToTask(effect.taskId)
-                GoalDetailEffect.OpenQuickCapture -> onShowQuickCapture()
+                is GoalDetailEffect.OpenQuickCapture -> onShowQuickCapture(effect.goalId)
                 is GoalDetailEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(effect.message)
                 }

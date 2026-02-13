@@ -224,8 +224,10 @@ class QuickCaptureViewModel @Inject constructor(
                 dueDate = parsed.dueDate
             )
             
-            // Find suggested goal based on content
+            // Find suggested goal based on content, but preserve preselected goal
+            val currentState = _uiState.value
             val suggestedGoal = findSuggestedGoal(parsed.title)
+                ?: currentState.parsedResult?.suggestedGoal  // preserve preselected/previous goal
             
             val result = ParsedTaskResult(
                 title = parsed.title,
@@ -458,6 +460,7 @@ class QuickCaptureViewModel @Inject constructor(
     
     private fun createTask() {
         val result = _uiState.value.parsedResult ?: return
+        val preselectedGoalId = _uiState.value.preselectedGoalId
         
         viewModelScope.launch {
             _uiState.update { it.copy(isCreating = true) }
@@ -466,6 +469,9 @@ class QuickCaptureViewModel @Inject constructor(
                 // Parse due date if present
                 val dueDate = result.dueDate?.let { parseDueDate(it) }
                 
+                // Use suggestedGoal if available, fall back to preselectedGoalId
+                val goalId = result.suggestedGoal?.id ?: preselectedGoalId
+
                 // Create task
                 val taskId = taskRepository.createTask(
                     title = result.title,
@@ -473,7 +479,7 @@ class QuickCaptureViewModel @Inject constructor(
                     dueDate = dueDate,
                     quadrant = result.quadrant,
                     aiExplanation = result.aiExplanation,
-                    goalId = result.suggestedGoal?.id
+                    goalId = goalId
                 )
                 
                 _uiState.update { 
@@ -508,18 +514,22 @@ class QuickCaptureViewModel @Inject constructor(
     private fun openEditDetails() {
         viewModelScope.launch {
             val result = _uiState.value.parsedResult ?: return@launch
+            val preselectedGoalId = _uiState.value.preselectedGoalId
             
             try {
                 // Create task first, then open detail
                 val dueDate = result.dueDate?.let { parseDueDate(it) }
                 
+                // Use suggestedGoal if available, fall back to preselectedGoalId
+                val goalId = result.suggestedGoal?.id ?: preselectedGoalId
+
                 val taskId = taskRepository.createTask(
                     title = result.title,
                     notes = null,
                     dueDate = dueDate,
                     quadrant = result.quadrant,
                     aiExplanation = result.aiExplanation,
-                    goalId = result.suggestedGoal?.id
+                    goalId = goalId
                 )
                 
                 _effect.send(QuickCaptureEffect.OpenTaskDetail(taskId))
@@ -531,6 +541,39 @@ class QuickCaptureViewModel @Inject constructor(
     
     private fun dismiss() {
         reset()
+    }
+    
+    /**
+     * Pre-select a goal for linking when QuickCapture is opened from a Goal Detail screen.
+     * Fetches the goal title from the repository and sets it as the suggestedGoal
+     * so the created task will be automatically linked to this goal.
+     */
+    fun preselectGoal(goalId: Long) {
+        viewModelScope.launch {
+            try {
+                val goals = goalRepository.getAllActiveGoals().firstOrNull() ?: emptyList()
+                val goal = goals.find { it.id == goalId }
+                if (goal != null) {
+                    val suggested = SuggestedGoal(
+                        id = goal.id,
+                        title = goal.title,
+                        reason = "Linked from goal detail"
+                    )
+                    _uiState.update { current ->
+                        current.copy(
+                            parsedResult = current.parsedResult?.copy(suggestedGoal = suggested)
+                                ?: ParsedTaskResult(
+                                    title = "",
+                                    suggestedGoal = suggested
+                                ),
+                            preselectedGoalId = goalId
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Silently fail — goal linking is a convenience, not critical
+            }
+        }
     }
     
     private fun reset() {

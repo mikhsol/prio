@@ -91,6 +91,8 @@ fun PrioAppShell(
     
     // Track quick capture state
     var showQuickCapture by rememberSaveable { mutableStateOf(false) }
+    // Track which goal to pre-link when opening QuickCapture from a goal detail screen
+    var pendingGoalId by rememberSaveable { mutableStateOf<Long?>(null) }
     
     // RECORD_AUDIO runtime permission (required for voice input)
     val audioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
@@ -120,7 +122,10 @@ fun PrioAppShell(
                     onItemSelected = { route ->
                         navigateToTab(navController, route)
                     },
-                    onFabClick = { showQuickCapture = true }
+                    onFabClick = {
+                        pendingGoalId = null
+                        showQuickCapture = true
+                    }
                 )
             }
         }
@@ -128,7 +133,10 @@ fun PrioAppShell(
         PrioNavHost(
             navController = navController,
             contentPadding = contentPadding,
-            onShowQuickCapture = { showQuickCapture = true },
+            onShowQuickCapture = { goalId ->
+                pendingGoalId = goalId
+                showQuickCapture = true
+            },
             showOnboarding = showOnboarding,
             onOnboardingComplete = onFirstLaunchComplete
         )
@@ -153,6 +161,9 @@ fun PrioAppShell(
         // reset runs on every open, not just the first one.
         LaunchedEffect(quickCaptureOpenCount) {
             viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
+            pendingGoalId?.let { goalId ->
+                viewModel.preselectGoal(goalId)
+            }
         }
 
         val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -253,10 +264,12 @@ fun PrioAppShell(
             onDismiss = { 
                 voiceInputManager?.cancel()
                 viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
+                pendingGoalId = null
                 showQuickCapture = false 
             },
             onTaskCreated = { taskId ->
                 viewModel.onEvent(com.prio.app.feature.capture.QuickCaptureEvent.Reset)
+                pendingGoalId = null
                 showQuickCapture = false
             }
         )

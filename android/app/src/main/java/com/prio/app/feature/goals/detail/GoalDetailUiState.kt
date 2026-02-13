@@ -128,7 +128,7 @@ sealed interface GoalDetailEvent {
 sealed interface GoalDetailEffect {
     data object NavigateBack : GoalDetailEffect
     data class NavigateToTask(val taskId: Long) : GoalDetailEffect
-    data object OpenQuickCapture : GoalDetailEffect
+    data class OpenQuickCapture(val goalId: Long) : GoalDetailEffect
     data class ShowSnackbar(val message: String) : GoalDetailEffect
     data object ShowConfetti : GoalDetailEffect
 }

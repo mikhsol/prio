@@ -1,5 +1,8 @@
 package com.prio.app.e2e.scenarios
 
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.GoalCategory
@@ -471,5 +474,73 @@ class GoalsFlowE2ETest : BaseE2ETest() {
 
         // Verify archive button (not delete) is visible
         goals.assertArchiveButtonVisible()
+    }
+
+    // =========================================================================
+    // E2E-A10-08: Create task from goal detail — task appears in goal's list
+    // Priority: P1 (Core) — Regression: "Create task on goal screen → not shown"
+    // Bug: goalId was not threaded from GoalDetailScreen through QuickCapture,
+    //      so tasks created from a goal had no goal association.
+    // =========================================================================
+
+    @Test
+    fun createTaskFromGoalDetail_taskAppearsInGoalTaskList() {
+        // Seed an active goal
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Linked Task Goal")
+            )
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        // Wait for goal to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Linked Task Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Navigate to goal detail
+        goals.tapGoal("Linked Task Goal")
+
+        // Wait for GoalDetailScreen to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Tap "Add Task" (empty state shows "Add Task" button)
+        composeRule.onNodeWithText("Add Task")
+            .performClick()
+        composeRule.waitForIdle()
+
+        // QuickCapture sheet should appear
+        quickCapture.assertSheetVisible()
+
+        // Type a task and submit
+        quickCapture.typeTaskText("Study coroutines")
+        quickCapture.submitInput()
+
+        // Wait for AI classification
+        quickCapture.waitForAiClassification()
+
+        // Create the task
+        quickCapture.tapCreateTask()
+        Thread.sleep(2_000)
+
+        // QuickCapture should close (via snackbar/dismiss)
+        // Wait for goal detail to show the linked task
+        composeRule.waitUntil(timeoutMillis = 15_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Study coroutines", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Assert the task is visible in the goal's task list
+        composeRule.onNodeWithText("Study coroutines", substring = true)
+            .assertIsDisplayed()
     }
 }

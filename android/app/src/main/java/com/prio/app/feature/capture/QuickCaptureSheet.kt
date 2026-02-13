@@ -125,7 +125,9 @@ data class QuickCaptureUiState(
     /** Whether the goal picker sheet is visible. */
     val showGoalPicker: Boolean = false,
     /** Available goals for the goal picker. */
-    val availableGoals: List<GoalPickerItem> = emptyList()
+    val availableGoals: List<GoalPickerItem> = emptyList(),
+    /** Pre-selected goal ID when opened from a Goal Detail screen. */
+    val preselectedGoalId: Long? = null
 )
 
 /**

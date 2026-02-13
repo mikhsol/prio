@@ -271,7 +271,7 @@ class GoalDetailViewModel @Inject constructor(
             }
             GoalDetailEvent.OnAddTask -> {
                 viewModelScope.launch {
-                    _effect.send(GoalDetailEffect.OpenQuickCapture)
+                    _effect.send(GoalDetailEffect.OpenQuickCapture(goalId))
                 }
             }
             GoalDetailEvent.OnAddMilestone -> {
