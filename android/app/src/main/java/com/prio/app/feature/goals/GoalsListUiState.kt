@@ -22,7 +22,10 @@ data class GoalsListUiState(
     val overviewStats: GoalOverviewStats = GoalOverviewStats(),
     val selectedCategoryFilter: GoalCategory? = null,
     val activeGoalCount: Int = 0,
-    val canCreateNewGoal: Boolean = true
+    val canCreateNewGoal: Boolean = true,
+    val showArchivedGoals: Boolean = false,
+    val archivedGoals: List<GoalUiModel> = emptyList(),
+    val archivedGoalCount: Int = 0
 ) {
     val isEmpty: Boolean
         get() = sections.all { it.goals.isEmpty() }
@@ -67,7 +70,8 @@ data class GoalUiModel(
     val milestonesCompleted: Int = 0,
     val milestonesTotal: Int = 0,
     val linkedTasksCount: Int = 0,
-    val isCompleted: Boolean = false
+    val isCompleted: Boolean = false,
+    val isArchived: Boolean = false
 )
 
 /**
@@ -90,11 +94,13 @@ sealed interface GoalsListEvent {
     data class OnGoalClick(val goalId: Long) : GoalsListEvent
     data class OnCategoryFilterSelect(val category: GoalCategory?) : GoalsListEvent
     data class OnSectionToggle(val status: GoalStatus) : GoalsListEvent
-    data class OnGoalDelete(val goalId: Long) : GoalsListEvent
+    data class OnGoalArchive(val goalId: Long) : GoalsListEvent
+    data class OnGoalUnarchive(val goalId: Long) : GoalsListEvent
     data class OnGoalComplete(val goalId: Long) : GoalsListEvent
     data object OnCreateGoalClick : GoalsListEvent
     data object OnRefresh : GoalsListEvent
-    data object OnUndoDelete : GoalsListEvent
+    data object OnUndoArchive : GoalsListEvent
+    data object OnToggleArchivedGoals : GoalsListEvent
 }
 
 /**

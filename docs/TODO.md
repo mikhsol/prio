@@ -3,7 +3,6 @@
 ## BUGS
 
 ### TO VERIFY
-* [FIXED][GOAL] Can't undo goal deletion.
 * [FIXED][GOAL] Refine with AI not working. Router short-circuited on rule-based failure for SUGGEST_SMART_GOAL without trying LLM; OnDeviceAiProvider was missing a SUGGEST_SMART_GOAL handler.
 * [FIXED][GOAL] Complete task -> goal progress not updated
 * [FIXED][GOAL] No complete goal button.
@@ -19,6 +18,7 @@
 * [FIXED][CALENDAR] Week view navigation broken. Previous/Next week buttons did not update week view content because navigateWeek() always loaded DAY mode data.
 
 ### TO FIX
+* [GOAL] Undo goal, snackbar permanently shown on screen. Pressing on the goal do nothing, I can't go to the goal screen. Instead of goal/task deletion implement archive functionality, so it can be viewed later. Add button to show archived goals
 * [TASK] Task overview not updated after new task was added.
 * [APP] Swipe left while task creation -> leaving app, not closing create task dialog. How to cancel task creation? Left swipe will create it. Is it good UX?
 * [TASK] Create task -> Edit -> You can create task by swipe left, but same time can complete it.
@@ -56,6 +56,7 @@
 0. Add donation in crypto screen.
 
 ## FREE FEATURES
+0. Protection from prompt injections.
 0. Gemini nano only AI refinement. 
 0. Limit number of DO_IT tasks to 3 - you can't have a lot urgent and important tasks.
 0. Limint number of In Progress tasks to X days.
@@ -92,6 +93,9 @@
 0. T-shape task size & [RETHINK] progress update accordingly. Goal -> Milestone -> Task
                                                           -> Task
     Progress for goal -> Progress for each milestones.
+0. Checkin for flights
+0. Connect to openclaw
+0. Think about finance features?
 
 ## MARKETING
 0. Generate Videos on how to use app. Learn about marketing part of it (releases/how often/how to make it useful).

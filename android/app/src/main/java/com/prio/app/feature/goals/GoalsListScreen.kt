@@ -26,9 +26,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Button
@@ -41,6 +42,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -52,11 +54,14 @@ import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -69,6 +74,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.prio.core.common.model.GoalCategory
 import com.prio.core.common.model.GoalStatus
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
 import com.prio.core.ui.components.GoalCard
 import com.prio.core.ui.components.GoalCardData
 import com.prio.core.ui.theme.PrioTheme
@@ -101,9 +108,10 @@ fun GoalsListScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
 
-    // Handle one-time effects
+    // Handle one-time effects — collectLatest so a new effect cancels
+    // any suspended showSnackbar() from a previous effect.
     LaunchedEffect(Unit) {
-        viewModel.effect.collect { effect ->
+        viewModel.effect.collectLatest { effect ->
             when (effect) {
                 is GoalsListEffect.NavigateToGoalDetail -> {
                     onNavigateToGoalDetail(effect.goalId)
@@ -112,12 +120,14 @@ fun GoalsListScreen(
                     onNavigateToCreateGoal()
                 }
                 is GoalsListEffect.ShowSnackbar -> {
+                    snackbarHostState.currentSnackbarData?.dismiss()
                     val result = snackbarHostState.showSnackbar(
                         message = effect.message,
-                        actionLabel = effect.actionLabel
+                        actionLabel = effect.actionLabel,
+                        duration = SnackbarDuration.Indefinite
                     )
                     if (result == SnackbarResult.ActionPerformed) {
-                        viewModel.onEvent(GoalsListEvent.OnUndoDelete)
+                        viewModel.onEvent(GoalsListEvent.OnUndoArchive)
                     }
                 }
                 GoalsListEffect.ShowMaxGoalsWarning -> {
@@ -130,6 +140,14 @@ fun GoalsListScreen(
                     snackbarHostState.showSnackbar(message = "🎉 Goal completed!")
                 }
             }
+        }
+    }
+
+    // Auto-dismiss snackbar after ~1.5 seconds
+    LaunchedEffect(snackbarHostState.currentSnackbarData) {
+        snackbarHostState.currentSnackbarData?.let {
+            delay(1500L)
+            it.dismiss()
         }
     }
 
@@ -273,7 +291,46 @@ private fun GoalsListContent(
                     SwipeableGoalCard(
                         goal = goal,
                         onTap = { onEvent(GoalsListEvent.OnGoalClick(goal.id)) },
-                        onDelete = { onEvent(GoalsListEvent.OnGoalDelete(goal.id)) }
+                        onArchive = { onEvent(GoalsListEvent.OnGoalArchive(goal.id)) }
+                    )
+                }
+            }
+        }
+
+        // Archived goals section
+        if (uiState.archivedGoalCount > 0) {
+            item(key = "archived_header") {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onEvent(GoalsListEvent.OnToggleArchivedGoals) }
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "📦 Archived (${uiState.archivedGoalCount})",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.semantics { heading() }
+                    )
+                    IconButton(onClick = { onEvent(GoalsListEvent.OnToggleArchivedGoals) }) {
+                        Icon(
+                            imageVector = if (uiState.showArchivedGoals) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (uiState.showArchivedGoals) "Hide archived goals" else "Show archived goals"
+                        )
+                    }
+                }
+            }
+
+            if (uiState.showArchivedGoals) {
+                items(
+                    items = uiState.archivedGoals,
+                    key = { "archived_goal_${it.id}" }
+                ) { goal ->
+                    ArchivedGoalCard(
+                        goal = goal,
+                        onUnarchive = { onEvent(GoalsListEvent.OnGoalUnarchive(goal.id)) }
                     )
                 }
             }
@@ -287,29 +344,38 @@ private fun GoalsListContent(
 }
 
 /**
- * Swipeable GoalCard with end-to-start swipe to delete.
+ * Swipeable GoalCard with end-to-start swipe to archive.
  * Follows the same SwipeToDismissBox pattern used in TaskListScreen.
  *
  * The LaunchedEffect(goal.id) resets dismiss state when the card
- * re-enters composition after an undo re-insert.
+ * re-enters composition after an undo restore.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SwipeableGoalCard(
     goal: GoalUiModel,
     onTap: () -> Unit,
-    onDelete: () -> Unit
+    onArchive: () -> Unit
 ) {
+    // Track whether archive was already fired for this swipe gesture
+    // to prevent SwipeToDismissBox.confirmValueChange firing twice.
+    var archiveFired by remember { mutableStateOf(false) }
     val dismissState = rememberSwipeToDismissBoxState(
         confirmValueChange = { dismissValue ->
             when (dismissValue) {
                 SwipeToDismissBoxValue.EndToStart -> {
-                    onDelete()
+                    if (!archiveFired) {
+                        archiveFired = true
+                        onArchive()
+                    }
                     true
                 }
-                // Only delete swipe supported for goals
+                // Only archive swipe supported for goals
                 SwipeToDismissBoxValue.StartToEnd -> false
-                SwipeToDismissBoxValue.Settled -> true
+                SwipeToDismissBoxValue.Settled -> {
+                    archiveFired = false
+                    true
+                }
             }
         }
     )
@@ -328,7 +394,7 @@ private fun SwipeableGoalCard(
         state = dismissState,
         backgroundContent = {
             val color = when (dismissState.targetValue) {
-                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.tertiary
                 else -> Color.Transparent
             }
             Box(
@@ -341,8 +407,8 @@ private fun SwipeableGoalCard(
             ) {
                 if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Delete goal",
+                        imageVector = Icons.Default.Archive,
+                        contentDescription = "Archive goal",
                         tint = Color.White
                     )
                 }
@@ -378,6 +444,62 @@ private fun mapToUiStatus(status: GoalStatus): com.prio.core.ui.components.GoalS
         GoalStatus.BEHIND -> com.prio.core.ui.components.GoalStatus.SLIGHTLY_BEHIND
         GoalStatus.AT_RISK -> com.prio.core.ui.components.GoalStatus.AT_RISK
         GoalStatus.COMPLETED -> com.prio.core.ui.components.GoalStatus.COMPLETED
+    }
+}
+
+/**
+ * Archived goal card with an unarchive button instead of swipe gesture.
+ * Visually distinct from active goals with reduced emphasis.
+ */
+@Composable
+private fun ArchivedGoalCard(
+    goal: GoalUiModel,
+    onUnarchive: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, top = 12.dp, bottom = 12.dp, end = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Restore button on the LEFT side to avoid FAB overlap at bottom-right
+            IconButton(
+                onClick = onUnarchive,
+                modifier = Modifier.testTag("unarchive_button")
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Unarchive,
+                    contentDescription = "Restore goal",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+            ) {
+                Text(
+                    text = "${goal.category.emoji} ${goal.title}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+                Text(
+                    text = "${(goal.progress * 100).toInt()}% complete",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                )
+            }
+        }
     }
 }
 

@@ -18,6 +18,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.swipeLeft
 import androidx.test.espresso.Espresso
 
@@ -486,14 +487,14 @@ class GoalsRobot(
     }
 
     // =========================================================================
-    // Swipe-to-Delete & Undo actions
+    // Swipe-to-Archive & Undo actions
     // =========================================================================
 
     /**
-     * Swipe a goal card left to trigger deletion.
+     * Swipe a goal card left to trigger archiving.
      * Targets the card by matching goal title text with a left swipe gesture.
      */
-    fun swipeGoalToDelete(title: String) {
+    fun swipeGoalToArchive(title: String) {
         rule.onNodeWithText(title, substring = true)
             .performScrollTo()
         rule.onNodeWithText(title, substring = true)
@@ -502,11 +503,11 @@ class GoalsRobot(
     }
 
     /**
-     * Assert the "deleted" snackbar is shown with an Undo action.
+     * Assert the "archived" snackbar is shown with an Undo action.
      */
-    fun assertDeleteSnackbarWithUndo(goalTitle: String) {
+    fun assertArchiveSnackbarWithUndo(goalTitle: String) {
         rule.waitUntil(timeoutMillis = 5_000) {
-            rule.onAllNodesWithText("deleted", substring = true)
+            rule.onAllNodesWithText("archived", substring = true)
                 .fetchSemanticsNodes().isNotEmpty()
         }
         rule.waitUntil(timeoutMillis = 5_000) {
@@ -516,11 +517,73 @@ class GoalsRobot(
     }
 
     /**
-     * Tap the "Undo" action on the snackbar to restore the deleted goal.
+     * Tap the "Undo" action on the snackbar to restore the archived goal.
      */
     fun tapSnackbarUndo() {
         rule.onNodeWithText("Undo")
             .performClick()
         rule.waitForIdle()
+    }
+
+    // =========================================================================
+    // Archived Goals section actions
+    // =========================================================================
+
+    /**
+     * Tap the archived goals header to toggle visibility.
+     */
+    fun tapArchivedGoalsHeader() {
+        rule.onNodeWithText("Archived", substring = true)
+            .performScrollTo()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert the archived goals header is displayed with the given count.
+     */
+    fun assertArchivedHeaderDisplayed(count: Int) {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithText("Archived ($count)", substring = true)
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
+    /**
+     * Assert the archived goals header is not displayed.
+     * Waits for the header to disappear after unarchive operation completes.
+     */
+    fun assertArchivedHeaderNotDisplayed() {
+        rule.waitUntil(timeoutMillis = 10_000) {
+            rule.onAllNodesWithText("\uD83D\uDCE6 Archived", substring = true)
+                .fetchSemanticsNodes().isEmpty()
+        }
+    }
+
+    /**
+     * Tap the unarchive button on an archived goal card to restore it.
+     * Uses performTouchInput with a real click. Scrolls extra to ensure
+     * the button is clear of the FAB overlay area.
+     */
+    fun tapUnarchiveGoal() {
+        rule.waitUntil(timeoutMillis = 5_000) {
+            rule.onAllNodesWithContentDescription("Restore goal")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        rule.onNodeWithContentDescription("Restore goal")
+            .performScrollTo()
+        rule.waitForIdle()
+        rule.onNodeWithContentDescription("Restore goal")
+            .assertIsDisplayed()
+            .performClick()
+        rule.waitForIdle()
+    }
+
+    /**
+     * Assert the archive button is visible in GoalDetailScreen top bar.
+     */
+    fun assertArchiveButtonVisible() {
+        rule.onNodeWithContentDescription("Archive goal")
+            .assertIsDisplayed()
     }
 }

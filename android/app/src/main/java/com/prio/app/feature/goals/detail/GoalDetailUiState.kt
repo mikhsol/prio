@@ -116,7 +116,7 @@ sealed interface GoalDetailEvent {
     data class OnUpdateEditDescription(val description: String) : GoalDetailEvent
     data object OnSaveEdit : GoalDetailEvent
     data object OnCancelEdit : GoalDetailEvent
-    data object OnDeleteGoal : GoalDetailEvent
+    data object OnArchiveGoal : GoalDetailEvent
     data object OnCompleteGoal : GoalDetailEvent
     data object OnNavigateBack : GoalDetailEvent
     data object OnDismissConfetti : GoalDetailEvent

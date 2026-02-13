@@ -1,6 +1,5 @@
 package com.prio.app.e2e.scenarios
 
-import androidx.compose.ui.test.onNodeWithText
 import com.prio.app.e2e.BaseE2ETest
 import com.prio.app.e2e.util.TestDataFactory
 import com.prio.core.common.model.GoalCategory
@@ -308,12 +307,12 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     }
 
     // =========================================================================
-    // E2E-A10-04: Swipe to delete goal with undo
-    // Priority: P1 (Core) — Regression test for "Can't undo goal deletion"
+    // E2E-A10-04: Swipe to archive goal with undo
+    // Priority: P1 (Core) — Regression test for snackbar + archive flow
     // =========================================================================
 
     @Test
-    fun swipeDeleteGoal_undoRestoresGoal() {
+    fun swipeArchiveGoal_undoRestoresGoal() {
         // Seed a goal into the database
         runBlocking {
             goalRepository.insertGoal(
@@ -334,16 +333,16 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         // Verify goal is displayed
         goals.assertGoalDisplayed("Undo Test Goal")
 
-        // Swipe goal left to delete
-        goals.swipeGoalToDelete("Undo Test Goal")
+        // Swipe goal left to archive
+        goals.swipeGoalToArchive("Undo Test Goal")
 
         // Verify snackbar with undo action is shown
-        goals.assertDeleteSnackbarWithUndo("Undo Test Goal")
+        goals.assertArchiveSnackbarWithUndo("Undo Test Goal")
 
         // Tap undo to restore
         goals.tapSnackbarUndo()
 
-        // Wait for goal to reappear after undo re-insert
+        // Wait for goal to reappear after undo unarchive
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodes(
                 androidx.compose.ui.test.hasText("Undo Test Goal", substring = true)
@@ -355,17 +354,17 @@ class GoalsFlowE2ETest : BaseE2ETest() {
     }
 
     // =========================================================================
-    // E2E-A10-05: Swipe to delete goal permanently (no undo)
-    // Priority: P1 (Core) — Regression test for goal deletion
+    // E2E-A10-05: Swipe to archive goal (no undo)
+    // Priority: P1 (Core) — Regression test for archive persistence
     // =========================================================================
 
     @Test
-    fun swipeDeleteGoal_permanentlyRemovesGoal() {
+    fun swipeArchiveGoal_movesToArchivedSection() {
         // Seed two goals so the list doesn't go to empty state while snackbar
         // is showing (empty state check would match snackbar text too)
         runBlocking {
             goalRepository.insertGoal(
-                TestDataFactory.onTrackGoal(title = "Delete Me Goal")
+                TestDataFactory.onTrackGoal(title = "Archive Me Goal")
             )
             goalRepository.insertGoal(
                 TestDataFactory.onTrackGoal(title = "Keep This Goal")
@@ -378,20 +377,99 @@ class GoalsFlowE2ETest : BaseE2ETest() {
         // Wait for both goals to load
         composeRule.waitUntil(timeoutMillis = 10_000) {
             composeRule.onAllNodes(
-                androidx.compose.ui.test.hasText("Delete Me Goal", substring = true)
+                androidx.compose.ui.test.hasText("Archive Me Goal", substring = true)
             ).fetchSemanticsNodes().isNotEmpty()
         }
 
-        goals.assertGoalDisplayed("Delete Me Goal")
+        goals.assertGoalDisplayed("Archive Me Goal")
         goals.assertGoalDisplayed("Keep This Goal")
 
-        // Swipe goal left to delete
-        goals.swipeGoalToDelete("Delete Me Goal")
+        // Swipe goal left to archive
+        goals.swipeGoalToArchive("Archive Me Goal")
 
         // Verify snackbar appears
-        goals.assertDeleteSnackbarWithUndo("Delete Me Goal")
+        goals.assertArchiveSnackbarWithUndo("Archive Me Goal")
 
         // The other goal should still be visible
         goals.assertGoalDisplayed("Keep This Goal")
+
+        // Archived goals section should appear with count 1
+        goals.assertArchivedHeaderDisplayed(1)
+    }
+
+    // =========================================================================
+    // E2E-A10-06: Archived goals section toggle and unarchive
+    // Priority: P1 (Core) — Tests archive section UI
+    // =========================================================================
+
+    @Test
+    fun archivedGoalsSection_toggleAndUnarchive() {
+        // Seed one active goal and one pre-archived goal directly
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Active Goal")
+            )
+            val archivedGoal = TestDataFactory.onTrackGoal(title = "Archive Toggle Goal")
+            val archivedGoalId = goalRepository.insertGoal(archivedGoal)
+            // Archive it directly via repository — no swipe, no snackbar
+            goalRepository.archiveGoal(archivedGoalId)
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        // Wait for goals to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Active Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Archived header should show with count 1
+        goals.assertArchivedHeaderDisplayed(1)
+
+        // Toggle to show archived goals
+        goals.tapArchivedGoalsHeader()
+
+        // Tap the unarchive button via robot
+        goals.tapUnarchiveGoal()
+
+        // After unarchive the goal should return to active list
+        goals.assertGoalDisplayed("Archive Toggle Goal")
+    }
+
+    // =========================================================================
+    // E2E-A10-07: Archive button visible on goal detail
+    // Priority: P2 (Extended) — Regression: delete → archive icon
+    // =========================================================================
+
+    @Test
+    fun goalDetail_showsArchiveButton() {
+        runBlocking {
+            goalRepository.insertGoal(
+                TestDataFactory.onTrackGoal(title = "Detail Archive Goal")
+            )
+        }
+        Thread.sleep(2_000)
+
+        nav.goToGoals()
+
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasText("Detail Archive Goal", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        goals.tapGoal("Detail Archive Goal")
+
+        // Wait for GoalDetailScreen to load
+        composeRule.waitUntil(timeoutMillis = 10_000) {
+            composeRule.onAllNodes(
+                androidx.compose.ui.test.hasContentDescription("percent complete", substring = true)
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+
+        // Verify archive button (not delete) is visible
+        goals.assertArchiveButtonVisible()
     }
 }

@@ -289,6 +289,49 @@ class GoalRepository @Inject constructor(
         )
     }
     
+    // ==================== Goal Archive Operations ====================
+    
+    /**
+     * Archive a goal (soft-delete).
+     * The goal remains in the database but is hidden from active views.
+     * Can be viewed later in the archived goals section.
+     */
+    suspend fun archiveGoal(goalId: Long) {
+        val now = clock.now()
+        goalDao.updateArchiveStatus(
+            goalId = goalId,
+            isArchived = true,
+            archivedAt = now,
+            updatedAt = now
+        )
+    }
+    
+    /**
+     * Unarchive (restore) a goal.
+     * The goal becomes visible again in the active goals list.
+     */
+    suspend fun unarchiveGoal(goalId: Long) {
+        val now = clock.now()
+        goalDao.updateArchiveStatus(
+            goalId = goalId,
+            isArchived = false,
+            archivedAt = null,
+            updatedAt = now
+        )
+    }
+    
+    /**
+     * Get all archived goals.
+     */
+    fun getArchivedGoals(): Flow<List<GoalEntity>> =
+        goalDao.getArchivedGoals()
+    
+    /**
+     * Get archived goal count as Flow.
+     */
+    fun getArchivedGoalCountFlow(): Flow<Int> =
+        goalDao.getArchivedGoalCountFlow()
+    
     // ==================== Goal Delete Operations ====================
     
     /**

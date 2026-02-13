@@ -49,8 +49,8 @@ class GoalsListViewModel @Inject constructor(
     private val _effect = Channel<GoalsListEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
-    // For undo delete
-    private var lastDeletedGoal: GoalEntity? = null
+    // For undo archive
+    private var lastArchivedGoalId: Long? = null
 
     // Filter state
     private val categoryFilterFlow = MutableStateFlow<GoalCategory?>(null)
@@ -67,6 +67,7 @@ class GoalsListViewModel @Inject constructor(
 
     init {
         observeGoals()
+        observeArchivedGoals()
     }
 
     /**
@@ -81,6 +82,24 @@ class GoalsListViewModel @Inject constructor(
             sectionCollapseState
         ) { goals, activeCount, categoryFilter, collapseState ->
             transformToUiState(goals, activeCount, categoryFilter, collapseState)
+        }.launchIn(viewModelScope)
+    }
+
+    /**
+     * Observe archived goals for the archived section.
+     */
+    private fun observeArchivedGoals() {
+        combine(
+            goalRepository.getArchivedGoals(),
+            goalRepository.getArchivedGoalCountFlow()
+        ) { archivedGoals, archivedCount ->
+            val archivedModels = archivedGoals.map { mapToUiModel(it) }
+            _uiState.update { current ->
+                current.copy(
+                    archivedGoals = archivedModels,
+                    archivedGoalCount = archivedCount
+                )
+            }
         }.launchIn(viewModelScope)
     }
 
@@ -165,7 +184,8 @@ class GoalsListViewModel @Inject constructor(
             milestonesCompleted = milestonesCompleted,
             milestonesTotal = milestonesTotal,
             linkedTasksCount = linkedTasksCount,
-            isCompleted = entity.isCompleted
+            isCompleted = entity.isCompleted,
+            isArchived = entity.isArchived
         )
     }
 
@@ -206,8 +226,11 @@ class GoalsListViewModel @Inject constructor(
                     }
                 }
             }
-            is GoalsListEvent.OnGoalDelete -> {
-                deleteGoal(event.goalId)
+            is GoalsListEvent.OnGoalArchive -> {
+                archiveGoal(event.goalId)
+            }
+            is GoalsListEvent.OnGoalUnarchive -> {
+                unarchiveGoal(event.goalId)
             }
             is GoalsListEvent.OnGoalComplete -> {
                 completeGoal(event.goalId)
@@ -226,21 +249,24 @@ class GoalsListViewModel @Inject constructor(
                 // Goals are observed via Flow, state will auto-update
                 _uiState.update { it.copy(isLoading = false) }
             }
-            GoalsListEvent.OnUndoDelete -> {
-                undoDelete()
+            GoalsListEvent.OnUndoArchive -> {
+                undoArchive()
+            }
+            GoalsListEvent.OnToggleArchivedGoals -> {
+                _uiState.update { it.copy(showArchivedGoals = !it.showArchivedGoals) }
             }
         }
     }
 
-    private fun deleteGoal(goalId: Long) {
+    private fun archiveGoal(goalId: Long) {
         viewModelScope.launch {
             val goal = goalRepository.getGoalById(goalId)
             if (goal != null) {
-                lastDeletedGoal = goal
-                goalRepository.deleteGoalById(goalId)
+                lastArchivedGoalId = goalId
+                goalRepository.archiveGoal(goalId)
                 _effect.send(
                     GoalsListEffect.ShowSnackbar(
-                        message = "\"${goal.title}\" deleted",
+                        message = "\"${goal.title}\" archived",
                         actionLabel = "Undo"
                     )
                 )
@@ -248,12 +274,23 @@ class GoalsListViewModel @Inject constructor(
         }
     }
 
-    private fun undoDelete() {
+    private fun undoArchive() {
         viewModelScope.launch {
-            lastDeletedGoal?.let { goal ->
-                goalRepository.insertGoal(goal)
-                lastDeletedGoal = null
+            lastArchivedGoalId?.let { goalId ->
+                goalRepository.unarchiveGoal(goalId)
+                lastArchivedGoalId = null
             }
+        }
+    }
+
+    private fun unarchiveGoal(goalId: Long) {
+        viewModelScope.launch {
+            goalRepository.unarchiveGoal(goalId)
+            _effect.send(
+                GoalsListEffect.ShowSnackbar(
+                    message = "Goal restored from archive"
+                )
+            )
         }
     }
 

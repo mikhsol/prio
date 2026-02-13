@@ -41,10 +41,10 @@ interface GoalDao {
     suspend fun deleteById(goalId: Long)
     
     // Query operations
-    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
+    @Query("SELECT * FROM goals WHERE is_completed = 0 AND is_archived = 0 ORDER BY target_date ASC")
     fun getAllActiveGoals(): Flow<List<GoalEntity>>
 
-    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
+    @Query("SELECT * FROM goals WHERE is_completed = 0 AND is_archived = 0 ORDER BY target_date ASC")
     suspend fun getAllActiveGoalsSync(): List<GoalEntity>
     
     @Query("SELECT * FROM goals ORDER BY created_at DESC")
@@ -56,28 +56,38 @@ interface GoalDao {
     @Query("SELECT * FROM goals WHERE id = :goalId")
     fun getByIdFlow(goalId: Long): Flow<GoalEntity?>
     
-    @Query("SELECT * FROM goals WHERE category = :category AND is_completed = 0 ORDER BY target_date ASC")
+    @Query("SELECT * FROM goals WHERE category = :category AND is_completed = 0 AND is_archived = 0 ORDER BY target_date ASC")
     fun getByCategory(category: GoalCategory): Flow<List<GoalEntity>>
     
-    @Query("SELECT * FROM goals WHERE is_completed = 1 ORDER BY completed_at DESC")
+    @Query("SELECT * FROM goals WHERE is_completed = 1 AND is_archived = 0 ORDER BY completed_at DESC")
     fun getCompletedGoals(): Flow<List<GoalEntity>>
     
     // Progress queries for GL-002
-    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY progress ASC LIMIT :limit")
+    @Query("SELECT * FROM goals WHERE is_completed = 0 AND is_archived = 0 ORDER BY progress ASC LIMIT :limit")
     fun getGoalsNeedingAttention(limit: Int = 3): Flow<List<GoalEntity>>
     
     // Count queries for GL-001 (max 10 active goals)
-    @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 0")
+    @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 0 AND is_archived = 0")
     suspend fun getActiveGoalCount(): Int
     
-    @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 0")
+    @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 0 AND is_archived = 0")
     fun getActiveGoalCountFlow(): Flow<Int>
 
     // Suspend list query for dashboard stats calculation (GL-005)
-    @Query("SELECT * FROM goals WHERE is_completed = 0 ORDER BY target_date ASC")
+    @Query("SELECT * FROM goals WHERE is_completed = 0 AND is_archived = 0 ORDER BY target_date ASC")
     suspend fun getActiveGoalsList(): List<GoalEntity>
 
     // Completed goals within date range (GL-005)
     @Query("SELECT COUNT(*) FROM goals WHERE is_completed = 1 AND completed_at >= :since")
     suspend fun getCompletedGoalCountSince(since: Instant): Int
+
+    // Archive operations
+    @Query("UPDATE goals SET is_archived = :isArchived, archived_at = :archivedAt, updated_at = :updatedAt WHERE id = :goalId")
+    suspend fun updateArchiveStatus(goalId: Long, isArchived: Boolean, archivedAt: Instant?, updatedAt: Instant)
+
+    @Query("SELECT * FROM goals WHERE is_archived = 1 ORDER BY archived_at DESC")
+    fun getArchivedGoals(): Flow<List<GoalEntity>>
+
+    @Query("SELECT COUNT(*) FROM goals WHERE is_archived = 1")
+    fun getArchivedGoalCountFlow(): Flow<Int>
 }

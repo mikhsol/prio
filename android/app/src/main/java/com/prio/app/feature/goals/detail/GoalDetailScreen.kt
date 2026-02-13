@@ -28,7 +28,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -171,8 +171,8 @@ fun GoalDetailScreen(
                         IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnEditGoal) }) {
                             Icon(Icons.Default.Edit, "Edit goal")
                         }
-                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnDeleteGoal) }) {
-                            Icon(Icons.Default.Delete, "Delete goal")
+                        IconButton(onClick = { viewModel.onEvent(GoalDetailEvent.OnArchiveGoal) }) {
+                            Icon(Icons.Default.Archive, "Archive goal")
                         }
                     }
                 }

@@ -310,8 +310,8 @@ class GoalDetailViewModel @Inject constructor(
             GoalDetailEvent.OnCancelEdit -> {
                 cancelEdit()
             }
-            GoalDetailEvent.OnDeleteGoal -> {
-                deleteGoal()
+            GoalDetailEvent.OnArchiveGoal -> {
+                archiveGoal()
             }
             GoalDetailEvent.OnCompleteGoal -> {
                 completeGoal()
@@ -401,9 +401,9 @@ class GoalDetailViewModel @Inject constructor(
         }
     }
 
-    private fun deleteGoal() {
+    private fun archiveGoal() {
         viewModelScope.launch {
-            goalRepository.deleteGoalById(goalId)
+            goalRepository.archiveGoal(goalId)
             _effect.send(GoalDetailEffect.NavigateBack)
         }
     }

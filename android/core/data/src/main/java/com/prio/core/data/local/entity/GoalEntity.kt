@@ -20,7 +20,8 @@ import kotlinx.datetime.LocalDate
     indices = [
         Index(value = ["category"]),
         Index(value = ["target_date"]),
-        Index(value = ["is_completed"])
+        Index(value = ["is_completed"]),
+        Index(value = ["is_archived"])
     ]
 )
 data class GoalEntity(
@@ -50,6 +51,12 @@ data class GoalEntity(
     
     @ColumnInfo(name = "completed_at")
     val completedAt: Instant? = null,
+    
+    @ColumnInfo(name = "is_archived")
+    val isArchived: Boolean = false,
+    
+    @ColumnInfo(name = "archived_at")
+    val archivedAt: Instant? = null,
     
     @ColumnInfo(name = "created_at")
     val createdAt: Instant,

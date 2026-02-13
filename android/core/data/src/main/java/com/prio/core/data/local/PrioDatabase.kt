@@ -33,7 +33,7 @@ import com.prio.core.data.local.entity.TaskEntity
         MeetingEntity::class,
         DailyAnalyticsEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(PrioTypeConverters::class)
